@@ -1,0 +1,248 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #eef2f6;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #eef2f6;
+  overscroll-behavior: none;
+}
+
+button, input { font: inherit; }
+
+button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+button:disabled { opacity: .4; }
+button:active:not(:disabled) { transform: scale(.98); }
+
+button.active {
+  background: #dbeafe;
+  border-color: #0f4c81;
+  color: #0f4c81;
+}
+
+.primary {
+  background: #0f4c81;
+  color: #fff;
+  border-color: #0f4c81;
+}
+
+.topbar {
+  min-height: 76px;
+  padding: 14px 20px;
+  background: #0f172a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 11px;
+  opacity: .7;
+}
+
+h1 { font-size: 24px; margin: 2px 0 0; }
+h2 { font-size: 17px; margin: 0 0 12px; }
+h3 { font-size: 15px; margin: 16px 0 10px; }
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  padding: 18px;
+}
+
+.workspace, .panel-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+}
+
+.workspace { padding: 16px; }
+
+.toolbar, .size-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.size-row label, .grid-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+input {
+  width: 90px;
+  padding: 9px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+}
+
+.canvas-wrap {
+  width: 100%;
+  min-height: 470px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 18px;
+  background:
+    linear-gradient(#e2e8f0 1px, transparent 1px),
+    linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+  background-size: 24px 24px;
+  border-radius: 14px;
+}
+
+.window-svg {
+  width: 100%;
+  max-width: 1000px;
+  touch-action: none;
+  user-select: none;
+}
+
+.glass-background { fill: #dbeafe; }
+
+.outer-frame {
+  fill: none;
+  stroke: #1e293b;
+  stroke-width: 20;
+  pointer-events: none;
+}
+
+.panel-outline {
+  fill: rgba(255, 255, 255, .18);
+  stroke: transparent;
+  stroke-width: 8;
+  pointer-events: none;
+}
+
+.panel-outline.selected { stroke: #f59e0b; }
+
+.panel-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.split-line {
+  stroke: #334155;
+  stroke-width: 12;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.split-hit {
+  stroke: transparent;
+  stroke-width: 36;
+  cursor: grab;
+  touch-action: none;
+}
+
+.opening-symbol {
+  fill: none;
+  stroke: #0f172a;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.grid-line {
+  stroke: #64748b;
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.preview-line {
+  stroke: #0f4c81;
+  stroke-width: 8;
+  stroke-dasharray: 16 12;
+  pointer-events: none;
+}
+
+.panel-dimension {
+  fill: #334155;
+  font-size: 22px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.properties {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-card { padding: 16px; }
+
+.selected-info {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.grid-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+pre {
+  margin: 0;
+  background: #0f172a;
+  color: #dbeafe;
+  padding: 12px;
+  border-radius: 12px;
+  overflow: auto;
+  font-size: 12px;
+  min-height: 180px;
+}
+
+.hint {
+  color: #64748b;
+  text-align: center;
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+@media (max-width: 850px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .properties { display: grid; grid-template-columns: 1fr 1fr; }
+  .canvas-wrap { min-height: 380px; }
+}
+
+@media (max-width: 620px) {
+  .app-shell { padding: 10px; gap: 10px; }
+  .workspace { padding: 10px; }
+  .properties { grid-template-columns: 1fr; }
+  .canvas-wrap { min-height: 310px; padding: 8px; }
+  .toolbar button { flex: 1 1 44%; }
+  .topbar h1 { font-size: 20px; }
+  .panel-dimension { font-size: 28px; }
+}
