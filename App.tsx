@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import WindowCanvas from "./components/WindowCanvas";
+import WindowCanvas from "./WindowCanvas";
 import type { ConfiguratorState, PanelType } from "./types";
 
 type Mode = "draw-vertical" | "draw-horizontal" | "select";
