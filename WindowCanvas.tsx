@@ -1,5 +1,5 @@
 import React, { PointerEvent, useMemo, useRef, useState } from "react";
-import type { PanelType, Split } from "../types";
+import type { PanelType, Split } from "./types";
 
 type Mode = "draw-vertical" | "draw-horizontal" | "select";
 
