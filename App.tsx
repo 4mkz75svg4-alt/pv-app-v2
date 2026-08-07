@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import WindowCanvas from "./WindowCanvas";
 import type { ConfiguratorState, PanelType } from "./types";
 
