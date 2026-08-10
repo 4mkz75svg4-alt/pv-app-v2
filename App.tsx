@@ -175,34 +175,47 @@ export default function App() {
             <button onClick={clear}>Clear</button>
           </div>
 
-          <div className="size-row">
-            <label>
-              Width
-              <input
-                type="number"
-                min="12"
-                max="300"
-                step="0.25"
-                value={state.overallWidth}
-                onChange={(event) =>
-                  setState({ ...state, overallWidth: Math.max(12, Number(event.target.value) || 12) })
-                }
-              />
-            </label>
-            <label>
-              Height
-              <input
-                type="number"
-                min="12"
-                max="180"
-                step="0.25"
-                value={state.overallHeight}
-                onChange={(event) =>
-                  setState({ ...state, overallHeight: Math.max(12, Number(event.target.value) || 12) })
-                }
-              />
-            </label>
-          </div>
+         <div className="size-row">
+  <label>
+    Width
+    <input
+      type="number"
+      min="12"
+      max="300"
+      step="0.25"
+      value={state.overallWidth}
+      onChange={(event) => {
+        const value = event.target.value;
+        if (value === "") return;
+
+        setState({
+          ...state,
+          overallWidth: Number(value)
+        });
+      }}
+    />
+  </label>
+
+  <label>
+    Height
+    <input
+      type="number"
+      min="12"
+      max="180"
+      step="0.25"
+      value={state.overallHeight}
+      onChange={(event) => {
+        const value = event.target.value;
+        if (value === "") return;
+
+        setState({
+          ...state,
+          overallHeight: Number(value)
+        });
+      }}
+    />
+  </label>
+</div>
 
           <div className="canvas-wrap">
             <WindowCanvas
