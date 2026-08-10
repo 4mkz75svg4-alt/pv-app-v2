@@ -20,7 +20,28 @@ type Props = {
   onSelectPanel: (id: string) => void;
 };
 
-const FRAME = { x: 20, y: 20, width: 960, height: 585 };
+const MAX_FRAME_WIDTH = 960;
+const MAX_FRAME_HEIGHT = 585;
+
+function getFrame(widthInches: number, heightInches: number) {
+  const safeWidth = Math.max(widthInches, 1);
+  const safeHeight = Math.max(heightInches, 1);
+
+  const scale = Math.min(
+    MAX_FRAME_WIDTH / safeWidth,
+    MAX_FRAME_HEIGHT / safeHeight
+  );
+
+  const width = safeWidth * scale;
+  const height = safeHeight * scale;
+
+  return {
+    x: 20 + (MAX_FRAME_WIDTH - width) / 2,
+    y: 20 + (MAX_FRAME_HEIGHT - height) / 2,
+    width,
+    height
+  };
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -28,6 +49,12 @@ function clamp(value: number, min: number, max: number) {
 
 export default function WindowCanvas(props: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  
+  const FRAME = useMemo(
+  () => getFrame(props.widthInches, props.heightInches),
+  [props.widthInches, props.heightInches]
+);
+  
   const [preview, setPreview] = useState<{ axis: "x" | "y"; value: number } | null>(null);
   const [dragging, setDragging] = useState<{ axis: "x" | "y"; id: string } | null>(null);
 
@@ -58,7 +85,7 @@ export default function WindowCanvas(props: Props) {
       }
     }
     return list;
-  }, [sortedVertical, sortedHorizontal]);
+  }, [sortedVertical, sortedHorizontal, FRAME]);
 
   function pointFromEvent(event: PointerEvent<SVGSVGElement | SVGLineElement>) {
     const svg = svgRef.current;
