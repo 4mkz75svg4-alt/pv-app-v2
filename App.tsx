@@ -36,7 +36,8 @@ export default function App() {
       return initialState;
     }
   });
-
+const [widthInput, setWidthInput] = useState(String(state.overallWidth));
+const [heightInput, setHeightInput] = useState(String(state.overallHeight));
   const [mode, setMode] = useState<Mode>("draw-vertical");
   const [selectedPanel, setSelectedPanel] = useState<string | null>(null);
   const [history, setHistory] = useState<ConfiguratorState[]>([]);
@@ -177,8 +178,22 @@ export default function App() {
 
          <div className="size-row">
   <label>
-    Width
-    <input
+  Width
+  <input
+    type="text"
+    inputMode="decimal"
+    value={widthInput}
+    onChange={(event) => {
+      const value = event.target.value;
+      setWidthInput(value);
+
+      const number = Number(value);
+      if (value !== "" && !Number.isNaN(number)) {
+        setState({ ...state, overallWidth: number });
+      }
+    }}
+  />
+</label>
       type="number"
       min="12"
       max="300"
@@ -197,8 +212,22 @@ export default function App() {
   </label>
 
   <label>
-    Height
-    <input
+  Height
+  <input
+    type="text"
+    inputMode="decimal"
+    value={heightInput}
+    onChange={(event) => {
+      const value = event.target.value;
+      setHeightInput(value);
+
+      const number = Number(value);
+      if (value !== "" && !Number.isNaN(number)) {
+        setState({ ...state, overallHeight: number });
+      }
+    }}
+  />
+</label>
       type="number"
       min="12"
       max="180"
