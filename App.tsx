@@ -36,8 +36,9 @@ export default function App() {
       return initialState;
     }
   });
-const [widthInput, setWidthInput] = useState(String(state.overallWidth));
-const [heightInput, setHeightInput] = useState(String(state.overallHeight));
+
+  const [widthInput, setWidthInput] = useState(String(state.overallWidth));
+  const [heightInput, setHeightInput] = useState(String(state.overallHeight));
   const [mode, setMode] = useState<Mode>("draw-vertical");
   const [selectedPanel, setSelectedPanel] = useState<string | null>(null);
   const [history, setHistory] = useState<ConfiguratorState[]>([]);
@@ -71,20 +72,42 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
   }
 
   function addVertical(position: number) {
-    if (state.verticalSplits.some((split) => Math.abs(split.position - position) < 0.025)) return;
+    if (
+      state.verticalSplits.some(
+        (split) => Math.abs(split.position - position) < 0.025
+      )
+    ) {
+      return;
+    }
+
     commit({
       ...state,
-      verticalSplits: [...state.verticalSplits, { id: newId("v"), position }]
+      verticalSplits: [
+        ...state.verticalSplits,
+        { id: newId("v"), position }
+      ]
     });
+
     setSelectedPanel(null);
   }
 
   function addHorizontal(position: number) {
-    if (state.horizontalSplits.some((split) => Math.abs(split.position - position) < 0.025)) return;
+    if (
+      state.horizontalSplits.some(
+        (split) => Math.abs(split.position - position) < 0.025
+      )
+    ) {
+      return;
+    }
+
     commit({
       ...state,
-      horizontalSplits: [...state.horizontalSplits, { id: newId("h"), position }]
+      horizontalSplits: [
+        ...state.horizontalSplits,
+        { id: newId("h"), position }
+      ]
     });
+
     setSelectedPanel(null);
   }
 
@@ -108,6 +131,7 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
 
   function setPanelType(type: PanelType) {
     if (!selectedPanel) return;
+
     setState((current) => ({
       ...current,
       panelConfigs: {
@@ -120,21 +144,29 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
   function undo() {
     const previous = history.at(-1);
     if (!previous) return;
+
     setState(previous);
+    setWidthInput(String(previous.overallWidth));
+    setHeightInput(String(previous.overallHeight));
     setHistory((items) => items.slice(0, -1));
     setSelectedPanel(null);
   }
 
   function clear() {
     commit(initialState);
+    setWidthInput(String(initialState.overallWidth));
+    setHeightInput(String(initialState.overallHeight));
     setSelectedPanel(null);
   }
 
   function save() {
     localStorage.setItem("pv-app-react-v02", JSON.stringify(state));
+
     const button = document.getElementById("save-button");
+
     if (button) {
       button.textContent = "Saved";
+
       setTimeout(() => {
         button.textContent = "Save";
       }, 900);
@@ -145,10 +177,13 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
     <>
       <header className="topbar">
         <div>
-          <div className="eyebrow">Pacific View</div>
-          <h1>Window Configurator</h1>
+          <div className="brand">Pacific View</div>
+          <div className="title">Window Configurator</div>
         </div>
-        <button id="save-button" className="primary" onClick={save}>Save</button>
+
+        <button id="save-button" onClick={save}>
+          Save
+        </button>
       </header>
 
       <main className="app-shell">
@@ -160,91 +195,75 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
             >
               Draw Vertical
             </button>
+
             <button
               className={mode === "draw-horizontal" ? "active" : ""}
               onClick={() => setMode("draw-horizontal")}
             >
               Draw Horizontal
             </button>
+
             <button
               className={mode === "select" ? "active" : ""}
               onClick={() => setMode("select")}
             >
               Select
             </button>
-            <button onClick={undo} disabled={!history.length}>Undo</button>
-            <button onClick={clear}>Clear</button>
+
+            <button onClick={undo} disabled={!history.length}>
+              Undo
+            </button>
+
+            <button onClick={clear}>
+              Clear
+            </button>
           </div>
 
-         <div className="size-row">
-  <label>
-  Width
-  <input
-    type="text"
-    inputMode="decimal"
-    value={widthInput}
-    onChange={(event) => {
-      const value = event.target.value;
-      setWidthInput(value);
+          <div className="size-row">
+            <label>
+              Width
+              <input
+                type="text"
+                inputMode="decimal"
+                value={widthInput}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setWidthInput(value);
 
-      const number = Number(value);
-      if (value !== "" && !Number.isNaN(number)) {
-        setState({ ...state, overallWidth: number });
-      }
-    }}
-  />
-</label>
-      type="number"
-      min="12"
-      max="300"
-      step="0.25"
-      value={state.overallWidth}
-      onChange={(event) => {
-        const value = event.target.value;
-        if (value === "") return;
+                  const number = Number(value);
 
-        setState({
-          ...state,
-          overallWidth: Number(value)
-        });
-      }}
-    />
-  </label>
+                  if (value !== "" && !Number.isNaN(number) && number > 0) {
+                    setState((current) => ({
+                      ...current,
+                      overallWidth: number
+                    }));
+                  }
+                }}
+              />
+            </label>
 
-  <label>
-  Height
-  <input
-    type="text"
-    inputMode="decimal"
-    value={heightInput}
-    onChange={(event) => {
-      const value = event.target.value;
-      setHeightInput(value);
+            <label>
+              Height
+              <input
+                type="text"
+                inputMode="decimal"
+                value={heightInput}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setHeightInput(value);
 
-      const number = Number(value);
-      if (value !== "" && !Number.isNaN(number)) {
-        setState({ ...state, overallHeight: number });
-      }
-    }}
-  />
-</label>
-      type="number"
-      min="12"
-      max="180"
-      step="0.25"
-      value={state.overallHeight}
-      onChange={(event) => {
-        const value = event.target.value;
-        if (value === "") return;
+                  const number = Number(value);
 
-        setState({
-          ...state,
-          overallHeight: Number(value)
-        });
-      }}
-    />
-  </label>
-</div>
+                  if (value !== "" && !Number.isNaN(number) && number > 0) {
+                    setState((current) => ({
+                      ...current,
+                      overallHeight: number
+                    }));
+                  }
+                }}
+              />
+            </label>
+          </div>
 
           <div className="canvas-wrap">
             <WindowCanvas
@@ -254,7 +273,10 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
               horizontalSplits={state.horizontalSplits}
               selectedPanel={selectedPanel}
               panelTypes={Object.fromEntries(
-                Object.entries(state.panelConfigs).map(([key, value]) => [key, value.type])
+                Object.entries(state.panelConfigs).map(([key, value]) => [
+                  key,
+                  value.type
+                ])
               )}
               gridColumns={state.gridColumns}
               gridRows={state.gridRows}
@@ -268,15 +290,19 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
           </div>
 
           <p className="hint">
-            Draw a line across the frame with your finger. Switch to Select to tap panels or drag mullions.
+            Draw a line across the frame with your finger. Switch to Select to
+            tap panels or drag mullions.
           </p>
         </section>
 
         <aside className="properties">
           <section className="panel-card">
             <h2>Selected panel</h2>
+
             <div className="selected-info">
-              {selectedPanel ? `${selectedPanel}: ${selectedType}` : "No panel selected"}
+              {selectedPanel
+                ? `${selectedPanel}: ${selectedType}`
+                : "No panel selected"}
             </div>
 
             <div className="type-grid">
@@ -293,6 +319,7 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
             </div>
 
             <h3>Grids</h3>
+
             <div className="grid-controls">
               <label>
                 Columns
@@ -302,10 +329,17 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
                   max="8"
                   value={state.gridColumns}
                   onChange={(event) =>
-                    setState({ ...state, gridColumns: Math.max(0, Number(event.target.value) || 0) })
+                    setState((current) => ({
+                      ...current,
+                      gridColumns: Math.max(
+                        0,
+                        Number(event.target.value) || 0
+                      )
+                    }))
                   }
                 />
               </label>
+
               <label>
                 Rows
                 <input
@@ -314,7 +348,13 @@ const [heightInput, setHeightInput] = useState(String(state.overallHeight));
                   max="8"
                   value={state.gridRows}
                   onChange={(event) =>
-                    setState({ ...state, gridRows: Math.max(0, Number(event.target.value) || 0) })
+                    setState((current) => ({
+                      ...current,
+                      gridRows: Math.max(
+                        0,
+                        Number(event.target.value) || 0
+                      )
+                    }))
                   }
                 />
               </label>
