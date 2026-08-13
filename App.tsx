@@ -1,84 +1,114 @@
 import React, { useState } from "react";
 import WindowCanvas from "./WindowCanvas";
-import type { ConfiguratorState, PanelType, Split } from "./types";
+import type { ConfiguratorState, Split } from "./types";
 
 type Mode = "draw-vertical" | "draw-horizontal" | "select";
-type ProductType = "Casement / Awning" | "Slider" | "Patio Door";
-type SliderOrientation = "Horizontal" | "Vertical";
 
-const panelTypes: PanelType[] = [
-  "Picture",
-  "Casement Left",
-  "Casement Right",
-  "Awning",
-  "Slider Left",
-  "Slider Right"
-];
+type ProductType =
+  | "Casement / Awning"
+  | "Slider"
+  | "Patio Door";
+
+type SliderOrientation =
+  | "Horizontal"
+  | "Vertical";
 
 const initialState: ConfiguratorState = {
   overallWidth: 96,
   overallHeight: 60,
   verticalSplits: [],
   horizontalSplits: [],
-  panelConfigs: { "0-0": { type: "Picture" } },
+  panelConfigs: {
+    "0-0": { type: "Picture" }
+  },
   gridColumns: 0,
   gridRows: 0
 };
 
 function newId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${Date.now()}-${Math.random()
+    .toString(16)
+    .slice(2)}`;
 }
 
-function createEqualSplits(count: number, prefix: string): Split[] {
+function createEqualSplits(
+  count: number,
+  prefix: string
+): Split[] {
   if (count <= 1) return [];
 
-  return Array.from({ length: count - 1 }, (_, index) => ({
-    id: newId(`${prefix}-${index}`),
-    position: (index + 1) / count
-  }));
+  return Array.from(
+    { length: count - 1 },
+    (_, index) => ({
+      id: newId(`${prefix}-${index}`),
+      position: (index + 1) / count
+    })
+  );
 }
 
 export default function App() {
-  const [state, setState] = useState<ConfiguratorState>(initialState);
+  const [state, setState] =
+    useState<ConfiguratorState>(initialState);
 
-  const [widthInput, setWidthInput] = useState("96");
-  const [heightInput, setHeightInput] = useState("60");
+  const [widthInput, setWidthInput] =
+    useState("96");
+
+  const [heightInput, setHeightInput] =
+    useState("60");
 
   const [productType, setProductType] =
     useState<ProductType>("Casement / Awning");
 
-  const [sliderOrientation, setSliderOrientation] =
-    useState<SliderOrientation>("Horizontal");
+  const [
+    sliderOrientation,
+    setSliderOrientation
+  ] = useState<SliderOrientation>("Horizontal");
 
-  const [wide, setWide] = useState(1);
-  const [tall, setTall] = useState(1);
+  const [unitsWide, setUnitsWide] =
+    useState(1);
 
-  const [mode, setMode] = useState<Mode>("select");
+  const [unitsTall, setUnitsTall] =
+    useState(1);
 
-  const [selectedPanel, setSelectedPanel] =
+  const [selectedUnit, setSelectedUnit] =
     useState<string | null>(null);
 
   const [history, setHistory] =
     useState<ConfiguratorState[]>([]);
 
-  const selectedType = selectedPanel
-    ? state.panelConfigs[selectedPanel]?.type ?? "Picture"
-    : null;
+  const mode: Mode = "select";
 
   function commit(next: ConfiguratorState) {
-    setHistory((items) => [...items.slice(-19), state]);
+    setHistory((items) => [
+      ...items.slice(-19),
+      state
+    ]);
+
     setState(next);
   }
 
-  function buildLayout(nextWide: number, nextTall: number) {
-    const verticalSplits = createEqualSplits(nextWide, "v");
-    const horizontalSplits = createEqualSplits(nextTall, "h");
+  function buildUnitLayout(
+    wide: number,
+    tall: number
+  ) {
+    const verticalSplits =
+      createEqualSplits(wide, "unit-v");
 
-    const panelConfigs: ConfiguratorState["panelConfigs"] = {};
+    const horizontalSplits =
+      createEqualSplits(tall, "unit-h");
 
-    for (let row = 0; row < nextTall; row++) {
-      for (let column = 0; column < nextWide; column++) {
-        panelConfigs[`${row}-${column}`] = {
+    const panelConfigs:
+      ConfiguratorState["panelConfigs"] = {};
+
+    for (let row = 0; row < tall; row++) {
+      for (
+        let column = 0;
+        column < wide;
+        column++
+      ) {
+        panelConfigs[
+          `${row}-${column}`
+        ] = {
           type: "Picture"
         };
       }
@@ -91,146 +121,142 @@ export default function App() {
       panelConfigs
     });
 
-    setSelectedPanel(null);
+    setSelectedUnit(null);
   }
 
-  function changeWide(value: number) {
-    const next = Math.max(1, Math.min(6, value));
+  function changeUnitsWide(value: number) {
+    const next = Math.max(
+      1,
+      Math.min(6, value)
+    );
 
-    setWide(next);
-    buildLayout(next, tall);
+    setUnitsWide(next);
+
+    buildUnitLayout(
+      next,
+      unitsTall
+    );
   }
 
-  function changeTall(value: number) {
-    const next = Math.max(1, Math.min(4, value));
+  function changeUnitsTall(value: number) {
+    const next = Math.max(
+      1,
+      Math.min(4, value)
+    );
 
-    setTall(next);
-    buildLayout(wide, next);
+    setUnitsTall(next);
+
+    buildUnitLayout(
+      unitsWide,
+      next
+    );
   }
 
-  function addVertical(position: number) {
-    if (
-      state.verticalSplits.some(
-        (split) => Math.abs(split.position - position) < 0.025
-      )
-    ) {
-      return;
-    }
-
-    commit({
-      ...state,
-      verticalSplits: [
-        ...state.verticalSplits,
-        {
-          id: newId("v"),
-          position
-        }
-      ]
-    });
-
-    setSelectedPanel(null);
+  function makeUnitsEqual() {
+    buildUnitLayout(
+      unitsWide,
+      unitsTall
+    );
   }
 
-  function addHorizontal(position: number) {
-    if (
-      state.horizontalSplits.some(
-        (split) => Math.abs(split.position - position) < 0.025
-      )
-    ) {
-      return;
-    }
-
-    commit({
-      ...state,
-      horizontalSplits: [
-        ...state.horizontalSplits,
-        {
-          id: newId("h"),
-          position
-        }
-      ]
-    });
-
-    setSelectedPanel(null);
-  }
-
-  function moveVertical(id: string, position: number) {
+  function moveVertical(
+    id: string,
+    position: number
+  ) {
     setState((current) => ({
       ...current,
-      verticalSplits: current.verticalSplits.map((split) =>
-        split.id === id
-          ? { ...split, position }
-          : split
-      )
+      verticalSplits:
+        current.verticalSplits.map(
+          (split) =>
+            split.id === id
+              ? {
+                  ...split,
+                  position
+                }
+              : split
+        )
     }));
   }
 
-  function moveHorizontal(id: string, position: number) {
+  function moveHorizontal(
+    id: string,
+    position: number
+  ) {
     setState((current) => ({
       ...current,
-      horizontalSplits: current.horizontalSplits.map((split) =>
-        split.id === id
-          ? { ...split, position }
-          : split
-      )
+      horizontalSplits:
+        current.horizontalSplits.map(
+          (split) =>
+            split.id === id
+              ? {
+                  ...split,
+                  position
+                }
+              : split
+        )
     }));
-  }
-
-  function setPanelType(type: PanelType) {
-    if (!selectedPanel) return;
-
-    setState((current) => ({
-      ...current,
-      panelConfigs: {
-        ...current.panelConfigs,
-        [selectedPanel]: { type }
-      }
-    }));
-  }
-
-  function makeEqual() {
-    buildLayout(wide, tall);
   }
 
   function undo() {
-    const previous = history.at(-1);
+    const previous =
+      history.at(-1);
 
     if (!previous) return;
 
     setState(previous);
-    setWidthInput(String(previous.overallWidth));
-    setHeightInput(String(previous.overallHeight));
 
-    setHistory((items) => items.slice(0, -1));
-    setSelectedPanel(null);
+    setWidthInput(
+      String(previous.overallWidth)
+    );
+
+    setHeightInput(
+      String(previous.overallHeight)
+    );
+
+    setHistory((items) =>
+      items.slice(0, -1)
+    );
+
+    setSelectedUnit(null);
   }
 
-  function clear() {
-    setWide(1);
-    setTall(1);
-
+  function reset() {
     setState(initialState);
 
     setWidthInput("96");
     setHeightInput("60");
 
-    setSelectedPanel(null);
+    setProductType(
+      "Casement / Awning"
+    );
+
+    setSliderOrientation(
+      "Horizontal"
+    );
+
+    setUnitsWide(1);
+    setUnitsTall(1);
+
+    setSelectedUnit(null);
     setHistory([]);
   }
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v03",
+      "pv-app-react-v04",
       JSON.stringify({
         state,
         productType,
         sliderOrientation,
-        wide,
-        tall
+        unitsWide,
+        unitsTall
       })
     );
 
-    const button = document.getElementById("save-button");
+    const button =
+      document.getElementById(
+        "save-button"
+      );
 
     if (button) {
       button.textContent = "Saved";
@@ -245,11 +271,19 @@ export default function App() {
     <>
       <header className="topbar">
         <div>
-          <div className="brand">Pacific View</div>
-          <div className="title">Window Configurator</div>
+          <div className="brand">
+            Pacific View
+          </div>
+
+          <div className="title">
+            Window Configurator
+          </div>
         </div>
 
-        <button id="save-button" onClick={save}>
+        <button
+          id="save-button"
+          onClick={save}
+        >
           Save
         </button>
       </header>
@@ -258,142 +292,224 @@ export default function App() {
 
         <aside className="config-panel">
 
+          {/* PRODUCT */}
+
           <section className="config-section">
             <div className="step-title">
               1. Product
             </div>
 
             <div className="option-buttons">
-              {[
-                "Casement / Awning",
-                "Slider",
-                "Patio Door"
-              ].map((product) => (
-                <button
-                  key={product}
-                  className={
-                    productType === product
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setProductType(product as ProductType)
-                  }
-                >
-                  {product}
-                </button>
-              ))}
+              <button
+                className={
+                  productType ===
+                  "Casement / Awning"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setProductType(
+                    "Casement / Awning"
+                  )
+                }
+              >
+                Casement / Awning
+              </button>
+
+              <button
+                className={
+                  productType ===
+                  "Slider"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setProductType(
+                    "Slider"
+                  )
+                }
+              >
+                Slider
+              </button>
+
+              <button
+                className={
+                  productType ===
+                  "Patio Door"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setProductType(
+                    "Patio Door"
+                  )
+                }
+              >
+                Patio Door
+              </button>
             </div>
           </section>
 
-          {productType === "Slider" && (
+          {/* SLIDER ORIENTATION */}
+
+          {productType ===
+            "Slider" && (
             <section className="config-section">
               <div className="step-title">
-                2. Slider Orientation
+                2. Slider Type
               </div>
 
               <div className="option-buttons">
                 <button
                   className={
-                    sliderOrientation === "Horizontal"
+                    sliderOrientation ===
+                    "Horizontal"
                       ? "active"
                       : ""
                   }
                   onClick={() =>
-                    setSliderOrientation("Horizontal")
+                    setSliderOrientation(
+                      "Horizontal"
+                    )
                   }
                 >
-                  Horizontal
+                  Horizontal Slider
                 </button>
 
                 <button
                   className={
-                    sliderOrientation === "Vertical"
+                    sliderOrientation ===
+                    "Vertical"
                       ? "active"
                       : ""
                   }
                   onClick={() =>
-                    setSliderOrientation("Vertical")
+                    setSliderOrientation(
+                      "Vertical"
+                    )
                   }
                 >
-                  Vertical
+                  Vertical Slider
                 </button>
               </div>
             </section>
           )}
 
+          {/* WINDOW UNITS */}
+
           <section className="config-section">
             <div className="step-title">
               {productType === "Slider"
-                ? "3. Configuration"
-                : "2. Configuration"}
+                ? "3. Window Units"
+                : "2. Window Units"}
             </div>
 
             <div className="number-row">
+
               <label>
                 How many wide?
+
                 <select
-                  value={wide}
+                  value={unitsWide}
                   onChange={(event) =>
-                    changeWide(Number(event.target.value))
+                    changeUnitsWide(
+                      Number(
+                        event.target
+                          .value
+                      )
+                    )
                   }
                 >
-                  {[1, 2, 3, 4, 5, 6].map((number) => (
-                    <option key={number} value={number}>
-                      {number}
-                    </option>
-                  ))}
+                  {[1, 2, 3, 4, 5, 6].map(
+                    (number) => (
+                      <option
+                        key={number}
+                        value={number}
+                      >
+                        {number}
+                      </option>
+                    )
+                  )}
                 </select>
               </label>
 
               <label>
                 How many tall?
+
                 <select
-                  value={tall}
+                  value={unitsTall}
                   onChange={(event) =>
-                    changeTall(Number(event.target.value))
+                    changeUnitsTall(
+                      Number(
+                        event.target
+                          .value
+                      )
+                    )
                   }
                 >
-                  {[1, 2, 3, 4].map((number) => (
-                    <option key={number} value={number}>
-                      {number}
-                    </option>
-                  ))}
+                  {[1, 2, 3, 4].map(
+                    (number) => (
+                      <option
+                        key={number}
+                        value={number}
+                      >
+                        {number}
+                      </option>
+                    )
+                  )}
                 </select>
               </label>
+
+            </div>
+
+            <div className="split-note">
+              These are separate window
+              units, not individual lites
+              within a window.
             </div>
           </section>
+
+          {/* OPENING SIZE */}
 
           <section className="config-section">
             <div className="step-title">
               {productType === "Slider"
-                ? "4. Overall Size"
-                : "3. Overall Size"}
+                ? "4. Overall Opening Size"
+                : "3. Overall Opening Size"}
             </div>
 
             <div className="number-row">
+
               <label>
                 Width
+
                 <input
                   type="text"
                   inputMode="decimal"
                   value={widthInput}
                   onChange={(event) => {
-                    const value = event.target.value;
+                    const value =
+                      event.target.value;
 
                     setWidthInput(value);
 
-                    const number = Number(value);
+                    const number =
+                      Number(value);
 
                     if (
                       value !== "" &&
-                      !Number.isNaN(number) &&
+                      !Number.isNaN(
+                        number
+                      ) &&
                       number > 0
                     ) {
-                      setState((current) => ({
-                        ...current,
-                        overallWidth: number
-                      }));
+                      setState(
+                        (current) => ({
+                          ...current,
+                          overallWidth:
+                            number
+                        })
+                      );
                     }
                   }}
                 />
@@ -401,166 +517,192 @@ export default function App() {
 
               <label>
                 Height
+
                 <input
                   type="text"
                   inputMode="decimal"
                   value={heightInput}
                   onChange={(event) => {
-                    const value = event.target.value;
+                    const value =
+                      event.target.value;
 
-                    setHeightInput(value);
+                    setHeightInput(
+                      value
+                    );
 
-                    const number = Number(value);
+                    const number =
+                      Number(value);
 
                     if (
                       value !== "" &&
-                      !Number.isNaN(number) &&
+                      !Number.isNaN(
+                        number
+                      ) &&
                       number > 0
                     ) {
-                      setState((current) => ({
-                        ...current,
-                        overallHeight: number
-                      }));
+                      setState(
+                        (current) => ({
+                          ...current,
+                          overallHeight:
+                            number
+                        })
+                      );
                     }
                   }}
                 />
               </label>
+
             </div>
           </section>
+
+          {/* UNIT SIZING */}
 
           <section className="config-section">
             <div className="step-title">
               {productType === "Slider"
-                ? "5. Split"
-                : "4. Split"}
+                ? "5. Window Sizes"
+                : "4. Window Sizes"}
             </div>
 
             <button
               className="equal-button"
-              onClick={makeEqual}
+              onClick={makeUnitsEqual}
             >
-              Equal Split
+              Make Window Units Equal
             </button>
 
             <div className="split-note">
-              Mullions can be dragged on the drawing
-              to fine-tune the split.
+              Or drag the dividing
+              mullions in the drawing
+              to create custom window
+              widths and heights.
             </div>
           </section>
+
+          {/* SELECTED WINDOW */}
 
           <section className="config-section">
             <div className="step-title">
               {productType === "Slider"
-                ? "6. Panel Operation"
-                : "5. Panel Operation"}
+                ? "6. Configure Window"
+                : "5. Configure Window"}
             </div>
 
             <div className="selected-info">
-              {selectedPanel
-                ? `Selected: ${selectedPanel}`
-                : "Tap a panel in the drawing"}
+              {selectedUnit
+                ? `Window ${selectedUnit} selected`
+                : "Tap a window in the drawing"}
             </div>
 
-            <div className="operation-buttons">
-              {panelTypes.map((type) => (
-                <button
-                  key={type}
-                  className={
-                    selectedType === type
-                      ? "active"
-                      : ""
-                  }
-                  disabled={!selectedPanel}
-                  onClick={() => setPanelType(type)}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
+            {selectedUnit && (
+              <div className="split-note">
+                Next we will add the
+                internal configuration
+                for this window:
+                single lite, two lite,
+                three lite, custom
+                splits and operations.
+              </div>
+            )}
           </section>
 
         </aside>
 
+        {/* DRAWING */}
+
         <section className="drawing-area">
 
           <div className="drawing-header">
+
             <div>
               <strong>
-                {state.overallWidth}" ×{" "}
+                {state.overallWidth}"
+                {" × "}
                 {state.overallHeight}"
               </strong>
 
               <span>
-                {wide} wide × {tall} tall
+                {unitsWide} window
+                {unitsWide !== 1
+                  ? "s"
+                  : ""}{" "}
+                wide ×{" "}
+                {unitsTall} window
+                {unitsTall !== 1
+                  ? "s"
+                  : ""}{" "}
+                tall
               </span>
             </div>
 
             <div className="drawing-actions">
-              <button onClick={undo} disabled={!history.length}>
+              <button
+                onClick={undo}
+                disabled={
+                  !history.length
+                }
+              >
                 Undo
               </button>
 
-              <button onClick={clear}>
+              <button onClick={reset}>
                 Reset
               </button>
             </div>
+
           </div>
 
           <div className="canvas-wrap">
+
             <WindowCanvas
-              widthInches={state.overallWidth}
-              heightInches={state.overallHeight}
-              verticalSplits={state.verticalSplits}
-              horizontalSplits={state.horizontalSplits}
-              selectedPanel={selectedPanel}
+              widthInches={
+                state.overallWidth
+              }
+              heightInches={
+                state.overallHeight
+              }
+              verticalSplits={
+                state.verticalSplits
+              }
+              horizontalSplits={
+                state.horizontalSplits
+              }
+              selectedPanel={
+                selectedUnit
+              }
               panelTypes={Object.fromEntries(
-                Object.entries(state.panelConfigs).map(
+                Object.entries(
+                  state.panelConfigs
+                ).map(
                   ([key, value]) => [
                     key,
                     value.type
                   ]
                 )
               )}
-              gridColumns={state.gridColumns}
-              gridRows={state.gridRows}
+              gridColumns={0}
+              gridRows={0}
               mode={mode}
-              onAddVertical={addVertical}
-              onAddHorizontal={addHorizontal}
-              onMoveVertical={moveVertical}
-              onMoveHorizontal={moveHorizontal}
-              onSelectPanel={setSelectedPanel}
+              onAddVertical={() => {}}
+              onAddHorizontal={() => {}}
+              onMoveVertical={
+                moveVertical
+              }
+              onMoveHorizontal={
+                moveHorizontal
+              }
+              onSelectPanel={
+                setSelectedUnit
+              }
             />
-          </div>
 
-          <div className="drawing-tools">
-            <button
-              className={mode === "select" ? "active" : ""}
-              onClick={() => setMode("select")}
-            >
-              Select Panels
-            </button>
-
-            <button
-              className={
-                mode === "draw-vertical" ? "active" : ""
-              }
-              onClick={() => setMode("draw-vertical")}
-            >
-              Add Vertical
-            </button>
-
-            <button
-              className={
-                mode === "draw-horizontal" ? "active" : ""
-              }
-              onClick={() => setMode("draw-horizontal")}
-            >
-              Add Horizontal
-            </button>
           </div>
 
           <p className="hint">
-            Drag any mullion to adjust the layout.
+            Tap a window to select it.
+            Drag the mullions between
+            windows to adjust the unit
+            sizes.
           </p>
 
         </section>
