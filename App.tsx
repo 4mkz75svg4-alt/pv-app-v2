@@ -160,16 +160,19 @@ export default function App() {
   ) {
     commit({
       ...state,
+
       verticalSplits:
         createEqualSplits(
           wide,
           "unit-v"
         ),
+
       horizontalSplits:
         createEqualSplits(
           tall,
           "unit-h"
         ),
+
       panelConfigs:
         createPanelConfigs(
           wide,
@@ -223,6 +226,7 @@ export default function App() {
 
     setState((current) => ({
       ...current,
+
       verticalSplits:
         createEqualSplits(
           unitsWide,
@@ -242,6 +246,7 @@ export default function App() {
 
     setState((current) => ({
       ...current,
+
       verticalSplits: [
         {
           id: newId("unit-v-1"),
@@ -258,37 +263,52 @@ export default function App() {
   }
 
   function startCustomWidths() {
-    setHorizontalSizingMode(
-      "custom"
-    );
+    setHorizontalSizingMode("custom");
 
-    const equal =
-      getEqualSizes(
-        state.overallWidth,
-        unitsWide
+    const sorted =
+      [...state.verticalSplits].sort(
+        (a, b) =>
+          a.position - b.position
       );
 
-    const editable =
-      equal
-        .slice(0, unitsWide - 1)
-        .map((size) =>
-          size.toFixed(2)
-        );
+    const positions = [
+      0,
+      ...sorted.map(
+        (split) => split.position
+      ),
+      1
+    ];
+
+    const sizes = positions
+      .slice(0, -1)
+      .map(
+        (position, index) =>
+          (
+            (
+              positions[index + 1] -
+              position
+            ) *
+            state.overallWidth
+          )
+      );
+
+    const editable = sizes
+      .slice(0, unitsWide - 1)
+      .map((size) =>
+        size.toFixed(2)
+      );
 
     setCustomWidths(editable);
-
-    applyCustomWidths(editable);
   }
 
   function applyCustomWidths(
-    values: string[]
+    values: string[],
+    overallWidth = state.overallWidth
   ) {
     if (unitsWide <= 1) return;
 
     const entered =
-      values.map((value) =>
-        Number(value)
-      );
+      values.map(Number);
 
     if (
       entered.some(
@@ -308,7 +328,7 @@ export default function App() {
       );
 
     const remaining =
-      state.overallWidth - used;
+      overallWidth - used;
 
     if (remaining <= 0) {
       return;
@@ -336,14 +356,16 @@ export default function App() {
         id: newId(
           `unit-v-${index}`
         ),
+
         position:
           running /
-          state.overallWidth
+          overallWidth
       });
     }
 
     setState((current) => ({
       ...current,
+      overallWidth,
       verticalSplits: splits
     }));
   }
@@ -383,6 +405,7 @@ export default function App() {
 
     setState((current) => ({
       ...current,
+
       horizontalSplits:
         createEqualSplits(
           unitsTall,
@@ -394,37 +417,52 @@ export default function App() {
   }
 
   function startCustomHeights() {
-    setVerticalSizingMode(
-      "custom"
-    );
+    setVerticalSizingMode("custom");
 
-    const equal =
-      getEqualSizes(
-        state.overallHeight,
-        unitsTall
+    const sorted =
+      [...state.horizontalSplits].sort(
+        (a, b) =>
+          a.position - b.position
       );
 
-    const editable =
-      equal
-        .slice(0, unitsTall - 1)
-        .map((size) =>
-          size.toFixed(2)
-        );
+    const positions = [
+      0,
+      ...sorted.map(
+        (split) => split.position
+      ),
+      1
+    ];
+
+    const sizes = positions
+      .slice(0, -1)
+      .map(
+        (position, index) =>
+          (
+            (
+              positions[index + 1] -
+              position
+            ) *
+            state.overallHeight
+          )
+      );
+
+    const editable = sizes
+      .slice(0, unitsTall - 1)
+      .map((size) =>
+        size.toFixed(2)
+      );
 
     setCustomHeights(editable);
-
-    applyCustomHeights(editable);
   }
 
   function applyCustomHeights(
-    values: string[]
+    values: string[],
+    overallHeight = state.overallHeight
   ) {
     if (unitsTall <= 1) return;
 
     const entered =
-      values.map((value) =>
-        Number(value)
-      );
+      values.map(Number);
 
     if (
       entered.some(
@@ -444,7 +482,7 @@ export default function App() {
       );
 
     const remaining =
-      state.overallHeight - used;
+      overallHeight - used;
 
     if (remaining <= 0) {
       return;
@@ -472,16 +510,17 @@ export default function App() {
         id: newId(
           `unit-h-${index}`
         ),
+
         position:
           running /
-          state.overallHeight
+          overallHeight
       });
     }
 
     setState((current) => ({
       ...current,
-      horizontalSplits:
-        splits
+      overallHeight,
+      horizontalSplits: splits
     }));
   }
 
@@ -531,67 +570,23 @@ export default function App() {
       return;
     }
 
-    setState((current) => {
-      const next = {
-        ...current,
-        overallWidth: number
-      };
+    if (
+      horizontalSizingMode ===
+        "custom" &&
+      customWidths.length
+    ) {
+      applyCustomWidths(
+        customWidths,
+        number
+      );
 
-      if (
-        horizontalSizingMode ===
-          "custom" &&
-        customWidths.length
-      ) {
-        const entered =
-          customWidths.map(Number);
+      return;
+    }
 
-        const used =
-          entered.reduce(
-            (sum, item) =>
-              sum + item,
-            0
-          );
-
-        const remaining =
-          number - used;
-
-        if (remaining > 0) {
-          const allWidths = [
-            ...entered,
-            remaining
-          ];
-
-          let running = 0;
-
-          const splits: Split[] =
-            [];
-
-          for (
-            let index = 0;
-            index <
-            allWidths.length - 1;
-            index++
-          ) {
-            running +=
-              allWidths[index];
-
-            splits.push({
-              id: newId(
-                `unit-v-${index}`
-              ),
-              position:
-                running /
-                number
-            });
-          }
-
-          next.verticalSplits =
-            splits;
-        }
-      }
-
-      return next;
-    });
+    setState((current) => ({
+      ...current,
+      overallWidth: number
+    }));
   }
 
   function updateOverallHeight(
@@ -610,67 +605,75 @@ export default function App() {
       return;
     }
 
-    setState((current) => {
-      const next = {
-        ...current,
-        overallHeight: number
-      };
+    if (
+      verticalSizingMode ===
+        "custom" &&
+      customHeights.length
+    ) {
+      applyCustomHeights(
+        customHeights,
+        number
+      );
 
-      if (
-        verticalSizingMode ===
-          "custom" &&
-        customHeights.length
-      ) {
-        const entered =
-          customHeights.map(Number);
+      return;
+    }
 
-        const used =
-          entered.reduce(
-            (sum, item) =>
-              sum + item,
-            0
-          );
+    setState((current) => ({
+      ...current,
+      overallHeight: number
+    }));
+  }
 
-        const remaining =
-          number - used;
+  function handleFrameWidthChange(
+    width: number
+  ) {
+    setWidthInput(
+      width.toFixed(2)
+    );
 
-        if (remaining > 0) {
-          const allHeights = [
-            ...entered,
-            remaining
-          ];
+    if (
+      horizontalSizingMode ===
+        "custom" &&
+      customWidths.length
+    ) {
+      applyCustomWidths(
+        customWidths,
+        width
+      );
 
-          let running = 0;
+      return;
+    }
 
-          const splits: Split[] =
-            [];
+    setState((current) => ({
+      ...current,
+      overallWidth: width
+    }));
+  }
 
-          for (
-            let index = 0;
-            index <
-            allHeights.length - 1;
-            index++
-          ) {
-            running +=
-              allHeights[index];
+  function handleFrameHeightChange(
+    height: number
+  ) {
+    setHeightInput(
+      height.toFixed(2)
+    );
 
-            splits.push({
-              id: newId(
-                `unit-h-${index}`
-              ),
-              position:
-                running /
-                number
-            });
-          }
+    if (
+      verticalSizingMode ===
+        "custom" &&
+      customHeights.length
+    ) {
+      applyCustomHeights(
+        customHeights,
+        height
+      );
 
-          next.horizontalSplits =
-            splits;
-        }
-      }
+      return;
+    }
 
-      return next;
-    });
+    setState((current) => ({
+      ...current,
+      overallHeight: height
+    }));
   }
 
   function moveVertical(
@@ -679,6 +682,7 @@ export default function App() {
   ) {
     setState((current) => ({
       ...current,
+
       verticalSplits:
         current.verticalSplits.map(
           (split) =>
@@ -702,6 +706,7 @@ export default function App() {
   ) {
     setState((current) => ({
       ...current,
+
       horizontalSplits:
         current.horizontalSplits.map(
           (split) =>
@@ -780,7 +785,7 @@ export default function App() {
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v06",
+      "pv-app-react-v07",
       JSON.stringify({
         state,
         productType,
@@ -854,6 +859,7 @@ export default function App() {
                     ? "active"
                     : ""
                 }
+
                 onClick={() =>
                   setProductType(
                     "Casement / Awning"
@@ -870,6 +876,7 @@ export default function App() {
                     ? "active"
                     : ""
                 }
+
                 onClick={() =>
                   setProductType(
                     "Slider"
@@ -886,6 +893,7 @@ export default function App() {
                     ? "active"
                     : ""
                 }
+
                 onClick={() =>
                   setProductType(
                     "Patio Door"
@@ -917,6 +925,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={() =>
                     setSliderOrientation(
                       "Horizontal"
@@ -933,6 +942,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={() =>
                     setSliderOrientation(
                       "Vertical"
@@ -951,9 +961,7 @@ export default function App() {
           <section className="config-section">
 
             <div className="step-title">
-              {productType === "Slider"
-                ? "3. Window Units"
-                : "2. Window Units"}
+              Window Units
             </div>
 
             <div className="number-row">
@@ -963,11 +971,11 @@ export default function App() {
 
                 <select
                   value={unitsWide}
+
                   onChange={(event) =>
                     changeUnitsWide(
                       Number(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     )
                   }
@@ -990,11 +998,11 @@ export default function App() {
 
                 <select
                   value={unitsTall}
+
                   onChange={(event) =>
                     changeUnitsTall(
                       Number(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     )
                   }
@@ -1031,6 +1039,7 @@ export default function App() {
                   type="text"
                   inputMode="decimal"
                   value={widthInput}
+
                   onChange={(event) =>
                     updateOverallWidth(
                       event.target.value
@@ -1046,6 +1055,7 @@ export default function App() {
                   type="text"
                   inputMode="decimal"
                   value={heightInput}
+
                   onChange={(event) =>
                     updateOverallHeight(
                       event.target.value
@@ -1075,6 +1085,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     applyEqualWidths
                   }
@@ -1087,6 +1098,7 @@ export default function App() {
                 </button>
 
                 {unitsWide === 3 && (
+
                   <button
                     className={
                       horizontalSizingMode ===
@@ -1094,12 +1106,14 @@ export default function App() {
                         ? "active"
                         : ""
                     }
+
                     onClick={
                       applyCenterFeature
                     }
                   >
                     1/4 + 1/2 + 1/4
                   </button>
+
                 )}
 
                 <button
@@ -1109,6 +1123,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     startCustomWidths
                   }
@@ -1145,13 +1160,13 @@ export default function App() {
                             type="text"
                             inputMode="decimal"
                             value={value}
+
                             onChange={(
                               event
                             ) =>
                               updateCustomWidth(
                                 index,
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                           />
@@ -1166,11 +1181,13 @@ export default function App() {
 
                       <input
                         type="text"
+
                         value={
                           remainingWidth.toFixed(
                             2
                           )
                         }
+
                         readOnly
                       />
 
@@ -1179,7 +1196,7 @@ export default function App() {
                   </div>
 
                   <div className="split-note">
-                    Last window is calculated automatically from the overall width.
+                    The last window is calculated automatically from the overall width.
                   </div>
 
                 </div>
@@ -1207,6 +1224,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     applyEqualHeights
                   }
@@ -1221,6 +1239,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     startCustomHeights
                   }
@@ -1257,13 +1276,13 @@ export default function App() {
                             type="text"
                             inputMode="decimal"
                             value={value}
+
                             onChange={(
                               event
                             ) =>
                               updateCustomHeight(
                                 index,
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                           />
@@ -1278,11 +1297,13 @@ export default function App() {
 
                       <input
                         type="text"
+
                         value={
                           remainingHeight.toFixed(
                             2
                           )
                         }
+
                         readOnly
                       />
 
@@ -1305,15 +1326,19 @@ export default function App() {
             </div>
 
             <div className="selected-info">
+
               {selectedUnit
                 ? `Window ${selectedUnit} selected`
                 : "Tap a window in the drawing"}
+
             </div>
 
             {selectedUnit && (
+
               <div className="split-note">
                 Internal window configuration comes next.
               </div>
+
             )}
 
           </section>
@@ -1327,9 +1352,14 @@ export default function App() {
             <div>
 
               <strong>
-                {state.overallWidth}"
-                {" × "}
-                {state.overallHeight}"
+                {state.overallWidth.toFixed(
+                  2
+                )}
+                " ×{" "}
+                {state.overallHeight.toFixed(
+                  2
+                )}
+                "
               </strong>
 
               <span>
@@ -1351,6 +1381,7 @@ export default function App() {
 
               <button
                 onClick={undo}
+
                 disabled={
                   !history.length
                 }
@@ -1374,18 +1405,23 @@ export default function App() {
               widthInches={
                 state.overallWidth
               }
+
               heightInches={
                 state.overallHeight
               }
+
               verticalSplits={
                 state.verticalSplits
               }
+
               horizontalSplits={
                 state.horizontalSplits
               }
+
               selectedPanel={
                 selectedUnit
               }
+
               panelTypes={Object.fromEntries(
                 Object.entries(
                   state.panelConfigs
@@ -1396,26 +1432,40 @@ export default function App() {
                   ]
                 )
               )}
+
               gridColumns={0}
               gridRows={0}
+
               mode={mode}
+
               onAddVertical={() => {}}
               onAddHorizontal={() => {}}
+
               onMoveVertical={
                 moveVertical
               }
+
               onMoveHorizontal={
                 moveHorizontal
               }
+
               onSelectPanel={
                 setSelectedUnit
+              }
+
+              onOverallWidthChange={
+                handleFrameWidthChange
+              }
+
+              onOverallHeightChange={
+                handleFrameHeightChange
               }
             />
 
           </div>
 
           <p className="hint">
-            Tap a window to select it. Drag the mullions between windows to fine-tune the sizes.
+            Drag the outside frame to change the overall opening size. Drag the mullions between windows to adjust the individual unit sizes.
           </p>
 
         </section>
