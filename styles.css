@@ -404,3 +404,20 @@ button:disabled {
     grid-template-columns: 1fr 1fr;
   }
 }
+/* OUTSIDE FRAME RESIZE HANDLES */
+
+.frame-resize-hit {
+  stroke: transparent;
+  stroke-width: 30;
+  pointer-events: stroke;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.frame-resize-hit-horizontal {
+  stroke: transparent;
+  stroke-width: 30;
+  pointer-events: stroke;
+  cursor: ns-resize;
+  touch-action: none;
+}
