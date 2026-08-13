@@ -55,17 +55,15 @@ function createEqualSplits(
   );
 }
 
-function equalSizes(
+function getEqualSizes(
   total: number,
   count: number
 ) {
   if (count <= 0) return [];
 
-  const each = total / count;
-
   return Array.from(
     { length: count },
-    () => each.toFixed(2)
+    () => total / count
   );
 }
 
@@ -108,12 +106,12 @@ export default function App() {
   const [
     customWidths,
     setCustomWidths
-  ] = useState<string[]>(["96"]);
+  ] = useState<string[]>([]);
 
   const [
     customHeights,
     setCustomHeights
-  ] = useState<string[]>(["60"]);
+  ] = useState<string[]>([]);
 
   const [selectedUnit, setSelectedUnit] =
     useState<string | null>(null);
@@ -182,19 +180,8 @@ export default function App() {
     setHorizontalSizingMode("equal");
     setVerticalSizingMode("equal");
 
-    setCustomWidths(
-      equalSizes(
-        state.overallWidth,
-        wide
-      )
-    );
-
-    setCustomHeights(
-      equalSizes(
-        state.overallHeight,
-        tall
-      )
-    );
+    setCustomWidths([]);
+    setCustomHeights([]);
 
     setSelectedUnit(null);
   }
@@ -243,12 +230,7 @@ export default function App() {
         )
     }));
 
-    setCustomWidths(
-      equalSizes(
-        state.overallWidth,
-        unitsWide
-      )
-    );
+    setCustomWidths([]);
   }
 
   function applyCenterFeature() {
@@ -272,17 +254,7 @@ export default function App() {
       ]
     }));
 
-    setCustomWidths([
-      (
-        state.overallWidth * 0.25
-      ).toFixed(2),
-      (
-        state.overallWidth * 0.5
-      ).toFixed(2),
-      (
-        state.overallWidth * 0.25
-      ).toFixed(2)
-    ]);
+    setCustomWidths([]);
   }
 
   function startCustomWidths() {
@@ -290,67 +262,62 @@ export default function App() {
       "custom"
     );
 
-    const sorted =
-      [...state.verticalSplits].sort(
-        (a, b) =>
-          a.position - b.position
+    const equal =
+      getEqualSizes(
+        state.overallWidth,
+        unitsWide
       );
 
-    const positions = [
-      0,
-      ...sorted.map(
-        (split) => split.position
-      ),
-      1
-    ];
+    const editable =
+      equal
+        .slice(0, unitsWide - 1)
+        .map((size) =>
+          size.toFixed(2)
+        );
 
-    const sizes = positions
-      .slice(0, -1)
-      .map(
-        (position, index) =>
-          (
-            (
-              positions[index + 1] -
-              position
-            ) *
-            state.overallWidth
-          ).toFixed(2)
-      );
+    setCustomWidths(editable);
 
-    setCustomWidths(sizes);
+    applyCustomWidths(editable);
   }
 
   function applyCustomWidths(
     values: string[]
   ) {
-    const numbers =
-      values.map(Number);
+    if (unitsWide <= 1) return;
 
-    const valid =
-      numbers.length === unitsWide &&
-      numbers.every(
-        (number) =>
-          Number.isFinite(number) &&
-          number > 0
-      );
-
-    if (!valid) return;
-
-    const total =
-      numbers.reduce(
-        (sum, number) =>
-          sum + number,
-        0
+    const entered =
+      values.map((value) =>
+        Number(value)
       );
 
     if (
-      Math.abs(
-        total -
-          state.overallWidth
-      ) > 0.05
+      entered.some(
+        (value) =>
+          !Number.isFinite(value) ||
+          value <= 0
+      )
     ) {
       return;
     }
+
+    const used =
+      entered.reduce(
+        (sum, value) =>
+          sum + value,
+        0
+      );
+
+    const remaining =
+      state.overallWidth - used;
+
+    if (remaining <= 0) {
+      return;
+    }
+
+    const allWidths = [
+      ...entered,
+      remaining
+    ];
 
     let running = 0;
 
@@ -358,10 +325,12 @@ export default function App() {
 
     for (
       let index = 0;
-      index < numbers.length - 1;
+      index <
+      allWidths.length - 1;
       index++
     ) {
-      running += numbers[index];
+      running +=
+        allWidths[index];
 
       splits.push({
         id: newId(
@@ -394,6 +363,21 @@ export default function App() {
     applyCustomWidths(next);
   }
 
+  function getRemainingWidth() {
+    const used =
+      customWidths.reduce(
+        (sum, value) =>
+          sum +
+          (Number(value) || 0),
+        0
+      );
+
+    return Math.max(
+      0,
+      state.overallWidth - used
+    );
+  }
+
   function applyEqualHeights() {
     setVerticalSizingMode("equal");
 
@@ -406,12 +390,7 @@ export default function App() {
         )
     }));
 
-    setCustomHeights(
-      equalSizes(
-        state.overallHeight,
-        unitsTall
-      )
-    );
+    setCustomHeights([]);
   }
 
   function startCustomHeights() {
@@ -419,67 +398,62 @@ export default function App() {
       "custom"
     );
 
-    const sorted =
-      [...state.horizontalSplits].sort(
-        (a, b) =>
-          a.position - b.position
+    const equal =
+      getEqualSizes(
+        state.overallHeight,
+        unitsTall
       );
 
-    const positions = [
-      0,
-      ...sorted.map(
-        (split) => split.position
-      ),
-      1
-    ];
+    const editable =
+      equal
+        .slice(0, unitsTall - 1)
+        .map((size) =>
+          size.toFixed(2)
+        );
 
-    const sizes = positions
-      .slice(0, -1)
-      .map(
-        (position, index) =>
-          (
-            (
-              positions[index + 1] -
-              position
-            ) *
-            state.overallHeight
-          ).toFixed(2)
-      );
+    setCustomHeights(editable);
 
-    setCustomHeights(sizes);
+    applyCustomHeights(editable);
   }
 
   function applyCustomHeights(
     values: string[]
   ) {
-    const numbers =
-      values.map(Number);
+    if (unitsTall <= 1) return;
 
-    const valid =
-      numbers.length === unitsTall &&
-      numbers.every(
-        (number) =>
-          Number.isFinite(number) &&
-          number > 0
-      );
-
-    if (!valid) return;
-
-    const total =
-      numbers.reduce(
-        (sum, number) =>
-          sum + number,
-        0
+    const entered =
+      values.map((value) =>
+        Number(value)
       );
 
     if (
-      Math.abs(
-        total -
-          state.overallHeight
-      ) > 0.05
+      entered.some(
+        (value) =>
+          !Number.isFinite(value) ||
+          value <= 0
+      )
     ) {
       return;
     }
+
+    const used =
+      entered.reduce(
+        (sum, value) =>
+          sum + value,
+        0
+      );
+
+    const remaining =
+      state.overallHeight - used;
+
+    if (remaining <= 0) {
+      return;
+    }
+
+    const allHeights = [
+      ...entered,
+      remaining
+    ];
 
     let running = 0;
 
@@ -487,10 +461,12 @@ export default function App() {
 
     for (
       let index = 0;
-      index < numbers.length - 1;
+      index <
+      allHeights.length - 1;
       index++
     ) {
-      running += numbers[index];
+      running +=
+        allHeights[index];
 
       splits.push({
         id: newId(
@@ -522,6 +498,179 @@ export default function App() {
     setCustomHeights(next);
 
     applyCustomHeights(next);
+  }
+
+  function getRemainingHeight() {
+    const used =
+      customHeights.reduce(
+        (sum, value) =>
+          sum +
+          (Number(value) || 0),
+        0
+      );
+
+    return Math.max(
+      0,
+      state.overallHeight - used
+    );
+  }
+
+  function updateOverallWidth(
+    value: string
+  ) {
+    setWidthInput(value);
+
+    const number =
+      Number(value);
+
+    if (
+      value === "" ||
+      Number.isNaN(number) ||
+      number <= 0
+    ) {
+      return;
+    }
+
+    setState((current) => {
+      const next = {
+        ...current,
+        overallWidth: number
+      };
+
+      if (
+        horizontalSizingMode ===
+          "custom" &&
+        customWidths.length
+      ) {
+        const entered =
+          customWidths.map(Number);
+
+        const used =
+          entered.reduce(
+            (sum, item) =>
+              sum + item,
+            0
+          );
+
+        const remaining =
+          number - used;
+
+        if (remaining > 0) {
+          const allWidths = [
+            ...entered,
+            remaining
+          ];
+
+          let running = 0;
+
+          const splits: Split[] =
+            [];
+
+          for (
+            let index = 0;
+            index <
+            allWidths.length - 1;
+            index++
+          ) {
+            running +=
+              allWidths[index];
+
+            splits.push({
+              id: newId(
+                `unit-v-${index}`
+              ),
+              position:
+                running /
+                number
+            });
+          }
+
+          next.verticalSplits =
+            splits;
+        }
+      }
+
+      return next;
+    });
+  }
+
+  function updateOverallHeight(
+    value: string
+  ) {
+    setHeightInput(value);
+
+    const number =
+      Number(value);
+
+    if (
+      value === "" ||
+      Number.isNaN(number) ||
+      number <= 0
+    ) {
+      return;
+    }
+
+    setState((current) => {
+      const next = {
+        ...current,
+        overallHeight: number
+      };
+
+      if (
+        verticalSizingMode ===
+          "custom" &&
+        customHeights.length
+      ) {
+        const entered =
+          customHeights.map(Number);
+
+        const used =
+          entered.reduce(
+            (sum, item) =>
+              sum + item,
+            0
+          );
+
+        const remaining =
+          number - used;
+
+        if (remaining > 0) {
+          const allHeights = [
+            ...entered,
+            remaining
+          ];
+
+          let running = 0;
+
+          const splits: Split[] =
+            [];
+
+          for (
+            let index = 0;
+            index <
+            allHeights.length - 1;
+            index++
+          ) {
+            running +=
+              allHeights[index];
+
+            splits.push({
+              id: newId(
+                `unit-h-${index}`
+              ),
+              position:
+                running /
+                number
+            });
+          }
+
+          next.horizontalSplits =
+            splits;
+        }
+      }
+
+      return next;
+    });
   }
 
   function moveVertical(
@@ -622,8 +771,8 @@ export default function App() {
       "equal"
     );
 
-    setCustomWidths(["96"]);
-    setCustomHeights(["60"]);
+    setCustomWidths([]);
+    setCustomHeights([]);
 
     setSelectedUnit(null);
     setHistory([]);
@@ -631,7 +780,7 @@ export default function App() {
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v05",
+      "pv-app-react-v06",
       JSON.stringify({
         state,
         productType,
@@ -657,25 +806,16 @@ export default function App() {
     }
   }
 
-  const customWidthTotal =
-    customWidths.reduce(
-      (sum, value) =>
-        sum +
-        (Number(value) || 0),
-      0
-    );
+  const remainingWidth =
+    getRemainingWidth();
 
-  const customHeightTotal =
-    customHeights.reduce(
-      (sum, value) =>
-        sum +
-        (Number(value) || 0),
-      0
-    );
+  const remainingHeight =
+    getRemainingHeight();
 
   return (
     <>
       <header className="topbar">
+
         <div>
           <div className="brand">
             Pacific View
@@ -692,6 +832,7 @@ export default function App() {
         >
           Save
         </button>
+
       </header>
 
       <main className="configurator-layout">
@@ -755,10 +896,12 @@ export default function App() {
               </button>
 
             </div>
+
           </section>
 
           {productType ===
             "Slider" && (
+
             <section className="config-section">
 
               <div className="step-title">
@@ -800,7 +943,9 @@ export default function App() {
                 </button>
 
               </div>
+
             </section>
+
           )}
 
           <section className="config-section">
@@ -869,18 +1014,12 @@ export default function App() {
 
             </div>
 
-            <div className="split-note">
-              These are separate window units.
-            </div>
-
           </section>
 
           <section className="config-section">
 
             <div className="step-title">
-              {productType === "Slider"
-                ? "4. Overall Opening Size"
-                : "3. Overall Opening Size"}
+              Overall Opening Size
             </div>
 
             <div className="number-row">
@@ -892,33 +1031,11 @@ export default function App() {
                   type="text"
                   inputMode="decimal"
                   value={widthInput}
-                  onChange={(event) => {
-                    const value =
-                      event.target.value;
-
-                    setWidthInput(
-                      value
-                    );
-
-                    const number =
-                      Number(value);
-
-                    if (
-                      value !== "" &&
-                      !Number.isNaN(
-                        number
-                      ) &&
-                      number > 0
-                    ) {
-                      setState(
-                        (current) => ({
-                          ...current,
-                          overallWidth:
-                            number
-                        })
-                      );
-                    }
-                  }}
+                  onChange={(event) =>
+                    updateOverallWidth(
+                      event.target.value
+                    )
+                  }
                 />
               </label>
 
@@ -929,33 +1046,11 @@ export default function App() {
                   type="text"
                   inputMode="decimal"
                   value={heightInput}
-                  onChange={(event) => {
-                    const value =
-                      event.target.value;
-
-                    setHeightInput(
-                      value
-                    );
-
-                    const number =
-                      Number(value);
-
-                    if (
-                      value !== "" &&
-                      !Number.isNaN(
-                        number
-                      ) &&
-                      number > 0
-                    ) {
-                      setState(
-                        (current) => ({
-                          ...current,
-                          overallHeight:
-                            number
-                        })
-                      );
-                    }
-                  }}
+                  onChange={(event) =>
+                    updateOverallHeight(
+                      event.target.value
+                    )
+                  }
                 />
               </label>
 
@@ -964,12 +1059,11 @@ export default function App() {
           </section>
 
           {unitsWide > 1 && (
+
             <section className="config-section">
 
               <div className="step-title">
-                {productType === "Slider"
-                  ? "5. Window Widths"
-                  : "4. Window Widths"}
+                Window Widths
               </div>
 
               <div className="option-buttons">
@@ -1026,11 +1120,13 @@ export default function App() {
 
               {horizontalSizingMode ===
                 "custom" && (
+
                 <div
                   style={{
                     marginTop: 12
                   }}
                 >
+
                   <div className="number-row">
 
                     {customWidths.map(
@@ -1038,6 +1134,7 @@ export default function App() {
                         value,
                         index
                       ) => (
+
                         <label
                           key={index}
                         >
@@ -1053,47 +1150,48 @@ export default function App() {
                             ) =>
                               updateCustomWidth(
                                 index,
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
                           />
+
                         </label>
+
                       )
                     )}
+
+                    <label>
+                      Window {unitsWide}
+
+                      <input
+                        type="text"
+                        value={
+                          remainingWidth.toFixed(
+                            2
+                          )
+                        }
+                        readOnly
+                      />
+
+                    </label>
 
                   </div>
 
                   <div className="split-note">
-                    Total:{" "}
-                    {customWidthTotal.toFixed(
-                      2
-                    )}
-                    " /{" "}
-                    {state.overallWidth}
-                    "
+                    Last window is calculated automatically from the overall width.
                   </div>
 
-                  {Math.abs(
-                    customWidthTotal -
-                      state.overallWidth
-                  ) > 0.05 && (
-                    <div className="split-note">
-                      Custom widths must
-                      add up to the
-                      overall opening
-                      width.
-                    </div>
-                  )}
-
                 </div>
+
               )}
 
             </section>
+
           )}
 
           {unitsTall > 1 && (
+
             <section className="config-section">
 
               <div className="step-title">
@@ -1134,11 +1232,13 @@ export default function App() {
 
               {verticalSizingMode ===
                 "custom" && (
+
                 <div
                   style={{
                     marginTop: 12
                   }}
                 >
+
                   <div className="number-row">
 
                     {customHeights.map(
@@ -1146,6 +1246,7 @@ export default function App() {
                         value,
                         index
                       ) => (
+
                         <label
                           key={index}
                         >
@@ -1161,32 +1262,40 @@ export default function App() {
                             ) =>
                               updateCustomHeight(
                                 index,
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
                           />
+
                         </label>
+
                       )
                     )}
 
-                  </div>
+                    <label>
+                      Row {unitsTall}
 
-                  <div className="split-note">
-                    Total:{" "}
-                    {customHeightTotal.toFixed(
-                      2
-                    )}
-                    " /{" "}
-                    {state.overallHeight}
-                    "
+                      <input
+                        type="text"
+                        value={
+                          remainingHeight.toFixed(
+                            2
+                          )
+                        }
+                        readOnly
+                      />
+
+                    </label>
+
                   </div>
 
                 </div>
+
               )}
 
             </section>
+
           )}
 
           <section className="config-section">
@@ -1216,6 +1325,7 @@ export default function App() {
           <div className="drawing-header">
 
             <div>
+
               <strong>
                 {state.overallWidth}"
                 {" × "}
@@ -1234,6 +1344,7 @@ export default function App() {
                   : ""}{" "}
                 tall
               </span>
+
             </div>
 
             <div className="drawing-actions">
