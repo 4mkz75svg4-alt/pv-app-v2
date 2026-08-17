@@ -7,7 +7,8 @@ import React, {
 
 import type {
   PanelType,
-  Split
+  Split,
+  WindowUnitConfig
 } from "./types";
 
 type Mode =
@@ -27,6 +28,11 @@ type Props = {
   panelTypes: Record<
     string,
     PanelType
+  >;
+
+  windowUnits?: Record<
+    string,
+    WindowUnitConfig
   >;
 
   gridColumns: number;
@@ -228,7 +234,7 @@ export default function WindowCanvas(
       [props.horizontalSplits]
     );
 
-  const panels =
+  const units =
     useMemo(() => {
       const xs = [
         0,
@@ -658,25 +664,11 @@ export default function WindowCanvas(
         null
       );
 
-      try {
-        event.currentTarget
-          .releasePointerCapture(
-            event.pointerId
-          );
-      } catch {}
-
       return;
     }
 
     if (dragging) {
       setDragging(null);
-
-      try {
-        event.currentTarget
-          .releasePointerCapture(
-            event.pointerId
-          );
-      } catch {}
 
       return;
     }
@@ -698,193 +690,88 @@ export default function WindowCanvas(
     }
 
     setPreview(null);
-
-    try {
-      event.currentTarget
-        .releasePointerCapture(
-          event.pointerId
-        );
-    } catch {}
   }
 
-  function renderSymbol(
-    type: PanelType,
-    x: number,
-    y: number,
-    w: number,
-    h: number
+  function renderLiteGrid(
+    unit: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
   ) {
-    const pad =
-      Math.min(
-        w,
-        h
-      ) * 0.16;
+    const config =
+      props.windowUnits?.[
+        unit.id
+      ];
 
-    const x1 =
-      x + pad;
-
-    const x2 =
-      x +
-      w -
-      pad;
-
-    const y1 =
-      y + pad;
-
-    const y2 =
-      y +
-      h -
-      pad;
-
-    const midX =
-      (x1 + x2) / 2;
-
-    const midY =
-      (y1 + y2) / 2;
-
-    if (
-      type === "Picture"
-    ) {
+    if (!config) {
       return null;
     }
 
-    if (
-      type ===
-      "Casement Left"
-    ) {
-      return (
-        <g className="opening-symbol">
-          <line
-            x1={x1}
-            y1={y1}
-            x2={x1}
-            y2={y2}
-          />
-
-          <line
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={midY}
-          />
-
-          <line
-            x1={x1}
-            y1={y2}
-            x2={x2}
-            y2={midY}
-          />
-        </g>
+    const vertical =
+      [...config.verticalSplits].sort(
+        (a, b) =>
+          a.position -
+          b.position
       );
-    }
 
-    if (
-      type ===
-      "Casement Right"
-    ) {
-      return (
-        <g className="opening-symbol">
-          <line
-            x1={x2}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-          />
-
-          <line
-            x1={x2}
-            y1={y1}
-            x2={x1}
-            y2={midY}
-          />
-
-          <line
-            x1={x2}
-            y1={y2}
-            x2={x1}
-            y2={midY}
-          />
-        </g>
+    const horizontal =
+      [...config.horizontalSplits].sort(
+        (a, b) =>
+          a.position -
+          b.position
       );
-    }
-
-    if (
-      type === "Awning"
-    ) {
-      return (
-        <g className="opening-symbol">
-          <line
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y1}
-          />
-
-          <line
-            x1={x1}
-            y1={y1}
-            x2={midX}
-            y2={y2}
-          />
-
-          <line
-            x1={x2}
-            y1={y1}
-            x2={midX}
-            y2={y2}
-          />
-        </g>
-      );
-    }
-
-    const left =
-      type ===
-      "Slider Left";
-
-    const startX =
-      left
-        ? x2
-        : x1;
-
-    const endX =
-      left
-        ? x1
-        : x2;
-
-    const direction =
-      left
-        ? -1
-        : 1;
 
     return (
-      <g className="opening-symbol">
+      <>
+        {vertical.map(
+          (split) => {
+            const x =
+              unit.x +
+              split.position *
+                unit.w;
 
-        <line
-          x1={startX}
-          y1={midY}
-          x2={endX}
-          y2={midY}
-        />
-
-        <polyline
-          points={
-            `${
-              endX -
-              direction * 18
-            },${
-              midY - 16
-            } ` +
-            `${endX},${midY} ` +
-            `${
-              endX -
-              direction * 18
-            },${
-              midY + 16
-            }`
+            return (
+              <line
+                key={split.id}
+                className="lite-split-line"
+                x1={x}
+                y1={unit.y}
+                x2={x}
+                y2={
+                  unit.y +
+                  unit.h
+                }
+              />
+            );
           }
-        />
+        )}
 
-      </g>
+        {horizontal.map(
+          (split) => {
+            const y =
+              unit.y +
+              split.position *
+                unit.h;
+
+            return (
+              <line
+                key={split.id}
+                className="lite-split-line"
+                x1={unit.x}
+                y1={y}
+                x2={
+                  unit.x +
+                  unit.w
+                }
+                y2={y}
+              />
+            );
+          }
+        )}
+      </>
     );
   }
 
@@ -932,20 +819,14 @@ export default function WindowCanvas(
         rx="4"
       />
 
-      {panels.map(
-        (panel) => {
-          const type =
-            props.panelTypes[
-              panel.id
-            ] ??
-            "Picture";
-
+      {units.map(
+        (unit) => {
           const selected =
-            panel.id ===
+            unit.id ===
             props.selectedPanel;
 
           return (
-            <g key={panel.id}>
+            <g key={unit.id}>
 
               <rect
                 className={
@@ -957,137 +838,43 @@ export default function WindowCanvas(
                 }
 
                 x={
-                  panel.x + 3
+                  unit.x + 3
                 }
 
                 y={
-                  panel.y + 3
+                  unit.y + 3
                 }
 
                 width={
                   Math.max(
                     0,
-                    panel.w - 6
+                    unit.w - 6
                   )
                 }
 
                 height={
                   Math.max(
                     0,
-                    panel.h - 6
+                    unit.h - 6
                   )
                 }
               />
 
-              {Array.from({
-                length:
-                  props.gridColumns
-              }).map(
-                (_, index) => {
-                  const gx =
-                    panel.x +
-                    (
-                      panel.w *
-                      (
-                        index +
-                        1
-                      )
-                    ) /
-                      (
-                        props.gridColumns +
-                        1
-                      );
-
-                  return (
-                    <line
-                      key={
-                        `gc-${index}`
-                      }
-
-                      className="grid-line"
-
-                      x1={gx}
-
-                      y1={
-                        panel.y
-                      }
-
-                      x2={gx}
-
-                      y2={
-                        panel.y +
-                        panel.h
-                      }
-                    />
-                  );
-                }
-              )}
-
-              {Array.from({
-                length:
-                  props.gridRows
-              }).map(
-                (_, index) => {
-                  const gy =
-                    panel.y +
-                    (
-                      panel.h *
-                      (
-                        index +
-                        1
-                      )
-                    ) /
-                      (
-                        props.gridRows +
-                        1
-                      );
-
-                  return (
-                    <line
-                      key={
-                        `gr-${index}`
-                      }
-
-                      className="grid-line"
-
-                      x1={
-                        panel.x
-                      }
-
-                      y1={gy}
-
-                      x2={
-                        panel.x +
-                        panel.w
-                      }
-
-                      y2={gy}
-                    />
-                  );
-                }
-              )}
-
-              {renderSymbol(
-                type,
-
-                panel.x,
-                panel.y,
-                panel.w,
-                panel.h
+              {renderLiteGrid(
+                unit
               )}
 
               <text
                 className="panel-dimension"
 
                 x={
-                  panel.x +
-                  panel.w /
-                    2
+                  unit.x +
+                  unit.w / 2
                 }
 
                 y={
-                  panel.y +
-                  panel.h -
+                  unit.y +
+                  unit.h -
                   18
                 }
 
@@ -1095,7 +882,7 @@ export default function WindowCanvas(
               >
                 {(
                   (
-                    panel.w /
+                    unit.w /
                     FRAME.width
                   ) *
                   props.widthInches
@@ -1103,7 +890,7 @@ export default function WindowCanvas(
                 " ×{" "}
                 {(
                   (
-                    panel.h /
+                    unit.h /
                     FRAME.height
                   ) *
                   props.heightInches
@@ -1114,16 +901,11 @@ export default function WindowCanvas(
               <rect
                 className="panel-hit"
 
-                x={panel.x}
-                y={panel.y}
+                x={unit.x}
+                y={unit.y}
 
-                width={
-                  panel.w
-                }
-
-                height={
-                  panel.h
-                }
+                width={unit.w}
+                height={unit.h}
 
                 onPointerDown={(
                   event
@@ -1138,7 +920,7 @@ export default function WindowCanvas(
                   event.stopPropagation();
 
                   props.onSelectPanel(
-                    panel.id
+                    unit.id
                   );
                 }}
               />
@@ -1266,62 +1048,6 @@ export default function WindowCanvas(
         }
       )}
 
-      {preview?.axis ===
-        "x" && (
-
-        <line
-          className="preview-line"
-
-          x1={
-            FRAME.x +
-            preview.value *
-              FRAME.width
-          }
-
-          y1={FRAME.y}
-
-          x2={
-            FRAME.x +
-            preview.value *
-              FRAME.width
-          }
-
-          y2={
-            FRAME.y +
-            FRAME.height
-          }
-        />
-
-      )}
-
-      {preview?.axis ===
-        "y" && (
-
-        <line
-          className="preview-line"
-
-          x1={FRAME.x}
-
-          y1={
-            FRAME.y +
-            preview.value *
-              FRAME.height
-          }
-
-          x2={
-            FRAME.x +
-            FRAME.width
-          }
-
-          y2={
-            FRAME.y +
-            preview.value *
-              FRAME.height
-          }
-        />
-
-      )}
-
       <rect
         className="outer-frame"
 
@@ -1338,8 +1064,6 @@ export default function WindowCanvas(
 
         rx="4"
       />
-
-      {/* LEFT FRAME EDGE */}
 
       <line
         className="frame-resize-hit"
@@ -1362,8 +1086,6 @@ export default function WindowCanvas(
           )
         }
       />
-
-      {/* RIGHT FRAME EDGE */}
 
       <line
         className="frame-resize-hit"
@@ -1395,8 +1117,6 @@ export default function WindowCanvas(
         }
       />
 
-      {/* TOP FRAME EDGE */}
-
       <line
         className="frame-resize-hit-horizontal"
 
@@ -1419,8 +1139,6 @@ export default function WindowCanvas(
           )
         }
       />
-
-      {/* BOTTOM FRAME EDGE */}
 
       <line
         className="frame-resize-hit-horizontal"
