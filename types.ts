@@ -11,16 +11,44 @@ export type Split = {
   position: number;
 };
 
-export type PanelConfig = {
+export type LiteConfig = {
   type: PanelType;
+};
+
+export type WindowUnitConfig = {
+  id: string;
+
+  litesWide: number;
+  litesTall: number;
+
+  verticalSplits: Split[];
+  horizontalSplits: Split[];
+
+  liteConfigs: Record<
+    string,
+    LiteConfig
+  >;
 };
 
 export type ConfiguratorState = {
   overallWidth: number;
   overallHeight: number;
+
   verticalSplits: Split[];
   horizontalSplits: Split[];
-  panelConfigs: Record<string, PanelConfig>;
+
+  panelConfigs: Record<
+    string,
+    {
+      type: PanelType;
+    }
+  >;
+
+  windowUnits?: Record<
+    string,
+    WindowUnitConfig
+  >;
+
   gridColumns: number;
   gridRows: number;
 };
