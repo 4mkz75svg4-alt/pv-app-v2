@@ -421,3 +421,10 @@ button:disabled {
   cursor: ns-resize;
   touch-action: none;
 }
+/* INTERNAL LITES */
+
+.lite-split-line {
+  stroke: #667085;
+  stroke-width: 4;
+  pointer-events: none;
+}
