@@ -51,8 +51,7 @@ function createLiteConfigs(
   wide: number,
   tall: number
 ) {
-  const configs: WindowUnitConfig["liteConfigs"] =
-    {};
+  const configs: WindowUnitConfig["liteConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
     for (
@@ -349,7 +348,7 @@ export default function App() {
 
   const mode: Mode = "select";
 
-  const selectedWindow =
+  const selectedUnitConfig =
     selectedUnit
       ? state.windowUnits?.[
           selectedUnit
@@ -794,10 +793,6 @@ export default function App() {
   function handleFrameWidthChange(
     width: number
   ) {
-    setWidthInput(
-      width.toFixed(2)
-    );
-
     updateOverallWidth(
       width.toFixed(2)
     );
@@ -806,10 +801,6 @@ export default function App() {
   function handleFrameHeightChange(
     height: number
   ) {
-    setHeightInput(
-      height.toFixed(2)
-    );
-
     updateOverallHeight(
       height.toFixed(2)
     );
@@ -1020,7 +1011,7 @@ export default function App() {
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v09",
+      "pv-app-react-v10",
       JSON.stringify({
         state,
         productType,
@@ -1049,6 +1040,7 @@ export default function App() {
   return (
     <>
       <header className="topbar">
+
         <div>
           <div className="brand">
             Pacific View
@@ -1065,6 +1057,7 @@ export default function App() {
         >
           Save
         </button>
+
       </header>
 
       <main className="configurator-layout">
@@ -1131,6 +1124,7 @@ export default function App() {
               </button>
 
             </div>
+
           </section>
 
           {productType ===
@@ -1179,13 +1173,15 @@ export default function App() {
                 </button>
 
               </div>
+
             </section>
+
           )}
 
           <section className="config-section">
 
             <div className="step-title">
-              Window Units
+              Units
             </div>
 
             <div className="number-row">
@@ -1245,12 +1241,13 @@ export default function App() {
               </label>
 
             </div>
+
           </section>
 
           <section className="config-section">
 
             <div className="step-title">
-              Overall Opening Size
+              Overall Window Size
             </div>
 
             <div className="number-row">
@@ -1288,6 +1285,7 @@ export default function App() {
               </label>
 
             </div>
+
           </section>
 
           {unitsWide > 1 && (
@@ -1295,7 +1293,7 @@ export default function App() {
             <section className="config-section">
 
               <div className="step-title">
-                Window Widths
+                Unit Widths
               </div>
 
               <div className="option-buttons">
@@ -1320,6 +1318,7 @@ export default function App() {
                 </button>
 
                 {unitsWide === 3 && (
+
                   <button
                     className={
                       horizontalSizingMode ===
@@ -1334,6 +1333,7 @@ export default function App() {
                   >
                     1/4 + 1/2 + 1/4
                   </button>
+
                 )}
 
                 <button
@@ -1373,7 +1373,7 @@ export default function App() {
                         <label
                           key={index}
                         >
-                          Window{" "}
+                          Unit{" "}
                           {index + 1}
                           {index ===
                             widthAutoIndex
@@ -1401,9 +1401,13 @@ export default function App() {
                     )}
 
                   </div>
+
                 </div>
+
               )}
+
             </section>
+
           )}
 
           {unitsTall > 1 && (
@@ -1411,7 +1415,7 @@ export default function App() {
             <section className="config-section">
 
               <div className="step-title">
-                Window Heights
+                Unit Heights
               </div>
 
               <div className="option-buttons">
@@ -1468,7 +1472,7 @@ export default function App() {
                         <label
                           key={index}
                         >
-                          Row{" "}
+                          Unit Row{" "}
                           {index + 1}
                           {index ===
                             heightAutoIndex
@@ -1496,24 +1500,29 @@ export default function App() {
                     )}
 
                   </div>
+
                 </div>
+
               )}
+
             </section>
+
           )}
 
           <section className="config-section">
 
             <div className="step-title">
-              Configure Window
+              Configure Unit
             </div>
 
             <div className="selected-info">
               {selectedUnit
-                ? `Window ${selectedUnit} selected`
-                : "Tap a window in the drawing"}
+                ? `Unit ${selectedUnit} selected`
+                : "Tap a unit in the drawing"}
             </div>
 
-            {selectedWindow && (
+            {selectedUnitConfig && (
+
               <>
                 <div className="number-row">
 
@@ -1522,7 +1531,7 @@ export default function App() {
 
                     <select
                       value={
-                        selectedWindow.litesWide
+                        selectedUnitConfig.litesWide
                       }
 
                       onChange={(event) =>
@@ -1551,7 +1560,7 @@ export default function App() {
 
                     <select
                       value={
-                        selectedWindow.litesTall
+                        selectedUnitConfig.litesTall
                       }
 
                       onChange={(event) =>
@@ -1583,20 +1592,20 @@ export default function App() {
                     marginTop: 10
                   }}
                 >
-                  This window is currently{" "}
+                  Unit layout:{" "}
                   <strong>
                     {
-                      selectedWindow.litesWide
+                      selectedUnitConfig.litesWide
                     }{" "}
                     wide ×{" "}
                     {
-                      selectedWindow.litesTall
+                      selectedUnitConfig.litesTall
                     }{" "}
                     tall
                   </strong>
-                  .
                 </div>
               </>
+
             )}
 
           </section>
@@ -1608,6 +1617,7 @@ export default function App() {
           <div className="drawing-header">
 
             <div>
+
               <strong>
                 {state.overallWidth.toFixed(
                   2
@@ -1620,17 +1630,18 @@ export default function App() {
               </strong>
 
               <span>
-                {unitsWide} window
+                {unitsWide} unit
                 {unitsWide !== 1
                   ? "s"
                   : ""}{" "}
                 wide ×{" "}
-                {unitsTall} window
+                {unitsTall} unit
                 {unitsTall !== 1
                   ? "s"
                   : ""}{" "}
                 tall
               </span>
+
             </div>
 
             <div className="drawing-actions">
@@ -1677,6 +1688,10 @@ export default function App() {
                 )
               )}
 
+              windowUnits={
+                state.windowUnits
+              }
+
               gridColumns={0}
               gridRows={0}
 
@@ -1709,7 +1724,7 @@ export default function App() {
           </div>
 
           <p className="hint">
-            Tap a window to configure it. Each window can have its own internal lite layout.
+            Tap a unit to configure it. Each unit can have its own internal lite layout.
           </p>
 
         </section>
