@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import WindowCanvas from "./WindowCanvas";
-import type { ConfiguratorState, Split } from "./types";
 
-type Mode = "draw-vertical" | "draw-horizontal" | "select";
+import type {
+  ConfiguratorState,
+  Split,
+  WindowUnitConfig
+} from "./types";
+
+type Mode =
+  | "draw-vertical"
+  | "draw-horizontal"
+  | "select";
 
 type ProductType =
   | "Casement / Awning"
@@ -17,18 +25,6 @@ type SizingMode =
   | "equal"
   | "center-feature"
   | "custom";
-
-const initialState: ConfiguratorState = {
-  overallWidth: 96,
-  overallHeight: 60,
-  verticalSplits: [],
-  horizontalSplits: [],
-  panelConfigs: {
-    "0-0": { type: "Picture" }
-  },
-  gridColumns: 0,
-  gridRows: 0
-};
 
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
@@ -51,11 +47,92 @@ function createEqualSplits(
   );
 }
 
+function createLiteConfigs(
+  wide: number,
+  tall: number
+) {
+  const configs: WindowUnitConfig["liteConfigs"] =
+    {};
+
+  for (let row = 0; row < tall; row++) {
+    for (
+      let column = 0;
+      column < wide;
+      column++
+    ) {
+      configs[
+        `${row}-${column}`
+      ] = {
+        type: "Picture"
+      };
+    }
+  }
+
+  return configs;
+}
+
+function createWindowUnit(
+  id: string,
+  litesWide = 1,
+  litesTall = 1
+): WindowUnitConfig {
+  return {
+    id,
+
+    litesWide,
+    litesTall,
+
+    verticalSplits:
+      createEqualSplits(
+        litesWide,
+        `lite-v-${id}`
+      ),
+
+    horizontalSplits:
+      createEqualSplits(
+        litesTall,
+        `lite-h-${id}`
+      ),
+
+    liteConfigs:
+      createLiteConfigs(
+        litesWide,
+        litesTall
+      )
+  };
+}
+
+function createWindowUnits(
+  wide: number,
+  tall: number
+) {
+  const units: Record<
+    string,
+    WindowUnitConfig
+  > = {};
+
+  for (let row = 0; row < tall; row++) {
+    for (
+      let column = 0;
+      column < wide;
+      column++
+    ) {
+      const id =
+        `${row}-${column}`;
+
+      units[id] =
+        createWindowUnit(id);
+    }
+  }
+
+  return units;
+}
+
 function createPanelConfigs(
   wide: number,
   tall: number
 ) {
-  const panelConfigs:
+  const configs:
     ConfiguratorState["panelConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
@@ -64,7 +141,7 @@ function createPanelConfigs(
       column < wide;
       column++
     ) {
-      panelConfigs[
+      configs[
         `${row}-${column}`
       ] = {
         type: "Picture"
@@ -72,7 +149,7 @@ function createPanelConfigs(
     }
   }
 
-  return panelConfigs;
+  return configs;
 }
 
 function sizesFromSplits(
@@ -126,6 +203,7 @@ function splitsFromSizes(
       id: newId(
         `${prefix}-${index}`
       ),
+
       position:
         running / total
     });
@@ -139,14 +217,6 @@ function rebalanceSizes(
   total: number,
   autoIndex: number
 ) {
-  if (
-    values.length < 2 ||
-    autoIndex < 0 ||
-    autoIndex >= values.length
-  ) {
-    return values;
-  }
-
   const next = [...values];
 
   let fixedTotal = 0;
@@ -185,6 +255,28 @@ function rebalanceSizes(
 
   return next;
 }
+
+const initialState: ConfiguratorState = {
+  overallWidth: 96,
+  overallHeight: 60,
+
+  verticalSplits: [],
+  horizontalSplits: [],
+
+  panelConfigs: {
+    "0-0": {
+      type: "Picture"
+    }
+  },
+
+  windowUnits: {
+    "0-0":
+      createWindowUnit("0-0")
+  },
+
+  gridColumns: 0,
+  gridRows: 0
+};
 
 export default function App() {
   const [state, setState] =
@@ -255,28 +347,21 @@ export default function App() {
   ] =
     useState<string | null>(null);
 
-  const [history, setHistory] =
-    useState<ConfiguratorState[]>([]);
-
   const mode: Mode = "select";
 
-  function commit(
-    next: ConfiguratorState
-  ) {
-    setHistory((items) => [
-      ...items.slice(-19),
-      state
-    ]);
-
-    setState(next);
-  }
+  const selectedWindow =
+    selectedUnit
+      ? state.windowUnits?.[
+          selectedUnit
+        ] ?? null
+      : null;
 
   function buildUnitLayout(
     wide: number,
     tall: number
   ) {
-    commit({
-      ...state,
+    setState((current) => ({
+      ...current,
 
       verticalSplits:
         createEqualSplits(
@@ -294,8 +379,14 @@ export default function App() {
         createPanelConfigs(
           wide,
           tall
+        ),
+
+      windowUnits:
+        createWindowUnits(
+          wide,
+          tall
         )
-    });
+    }));
 
     setHorizontalSizingMode(
       "equal"
@@ -344,12 +435,6 @@ export default function App() {
   }
 
   function applyEqualWidths() {
-    const splits =
-      createEqualSplits(
-        unitsWide,
-        "unit-v"
-      );
-
     setHorizontalSizingMode(
       "equal"
     );
@@ -358,7 +443,12 @@ export default function App() {
 
     setState((current) => ({
       ...current,
-      verticalSplits: splits
+
+      verticalSplits:
+        createEqualSplits(
+          unitsWide,
+          "unit-v"
+        )
     }));
   }
 
@@ -450,9 +540,7 @@ export default function App() {
         );
     }
 
-    setWidthAutoIndex(
-      autoIndex
-    );
+    setWidthAutoIndex(autoIndex);
 
     next = rebalanceSizes(
       next,
@@ -564,9 +652,7 @@ export default function App() {
         );
     }
 
-    setHeightAutoIndex(
-      autoIndex
-    );
+    setHeightAutoIndex(autoIndex);
 
     next = rebalanceSizes(
       next,
@@ -630,18 +716,14 @@ export default function App() {
 
       setCustomWidths(next);
 
-      const numbers =
-        next.map(Number);
-
       setState((current) => ({
         ...current,
 
-        overallWidth:
-          number,
+        overallWidth: number,
 
         verticalSplits:
           splitsFromSizes(
-            numbers,
+            next.map(Number),
             number,
             "unit-v"
           )
@@ -687,18 +769,14 @@ export default function App() {
 
       setCustomHeights(next);
 
-      const numbers =
-        next.map(Number);
-
       setState((current) => ({
         ...current,
 
-        overallHeight:
-          number,
+        overallHeight: number,
 
         horizontalSplits:
           splitsFromSizes(
-            numbers,
+            next.map(Number),
             number,
             "unit-h"
           )
@@ -720,45 +798,9 @@ export default function App() {
       width.toFixed(2)
     );
 
-    if (
-      horizontalSizingMode ===
-        "custom" &&
-      customWidths.length ===
-        unitsWide
-    ) {
-      const next =
-        rebalanceSizes(
-          customWidths,
-          width,
-          widthAutoIndex
-        );
-
-      setCustomWidths(next);
-
-      const numbers =
-        next.map(Number);
-
-      setState((current) => ({
-        ...current,
-
-        overallWidth:
-          width,
-
-        verticalSplits:
-          splitsFromSizes(
-            numbers,
-            width,
-            "unit-v"
-          )
-      }));
-
-      return;
-    }
-
-    setState((current) => ({
-      ...current,
-      overallWidth: width
-    }));
+    updateOverallWidth(
+      width.toFixed(2)
+    );
   }
 
   function handleFrameHeightChange(
@@ -768,45 +810,9 @@ export default function App() {
       height.toFixed(2)
     );
 
-    if (
-      verticalSizingMode ===
-        "custom" &&
-      customHeights.length ===
-        unitsTall
-    ) {
-      const next =
-        rebalanceSizes(
-          customHeights,
-          height,
-          heightAutoIndex
-        );
-
-      setCustomHeights(next);
-
-      const numbers =
-        next.map(Number);
-
-      setState((current) => ({
-        ...current,
-
-        overallHeight:
-          height,
-
-        horizontalSplits:
-          splitsFromSizes(
-            numbers,
-            height,
-            "unit-h"
-          )
-      }));
-
-      return;
-    }
-
-    setState((current) => ({
-      ...current,
-      overallHeight: height
-    }));
+    updateOverallHeight(
+      height.toFixed(2)
+    );
   }
 
   function moveVertical(
@@ -825,17 +831,16 @@ export default function App() {
               : split
         );
 
-      const sizes =
-        sizesFromSplits(
-          splits,
-          current.overallWidth
-        );
-
       setHorizontalSizingMode(
         "custom"
       );
 
-      setCustomWidths(sizes);
+      setCustomWidths(
+        sizesFromSplits(
+          splits,
+          current.overallWidth
+        )
+      );
 
       return {
         ...current,
@@ -860,21 +865,124 @@ export default function App() {
               : split
         );
 
-      const sizes =
-        sizesFromSplits(
-          splits,
-          current.overallHeight
-        );
-
       setVerticalSizingMode(
         "custom"
       );
 
-      setCustomHeights(sizes);
+      setCustomHeights(
+        sizesFromSplits(
+          splits,
+          current.overallHeight
+        )
+      );
 
       return {
         ...current,
         horizontalSplits: splits
+      };
+    });
+  }
+
+  function changeSelectedLitesWide(
+    value: number
+  ) {
+    if (!selectedUnit) return;
+
+    const wide = Math.max(
+      1,
+      Math.min(4, value)
+    );
+
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          selectedUnit
+        ] ??
+        createWindowUnit(
+          selectedUnit
+        );
+
+      const updated:
+        WindowUnitConfig = {
+        ...existing,
+
+        litesWide: wide,
+
+        verticalSplits:
+          createEqualSplits(
+            wide,
+            `lite-v-${selectedUnit}`
+          ),
+
+        liteConfigs:
+          createLiteConfigs(
+            wide,
+            existing.litesTall
+          )
+      };
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [selectedUnit]:
+            updated
+        }
+      };
+    });
+  }
+
+  function changeSelectedLitesTall(
+    value: number
+  ) {
+    if (!selectedUnit) return;
+
+    const tall = Math.max(
+      1,
+      Math.min(4, value)
+    );
+
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          selectedUnit
+        ] ??
+        createWindowUnit(
+          selectedUnit
+        );
+
+      const updated:
+        WindowUnitConfig = {
+        ...existing,
+
+        litesTall: tall,
+
+        horizontalSplits:
+          createEqualSplits(
+            tall,
+            `lite-h-${selectedUnit}`
+          ),
+
+        liteConfigs:
+          createLiteConfigs(
+            existing.litesWide,
+            tall
+          )
+      };
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [selectedUnit]:
+            updated
+        }
       };
     });
   }
@@ -908,12 +1016,11 @@ export default function App() {
     setCustomHeights([]);
 
     setSelectedUnit(null);
-    setHistory([]);
   }
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v08",
+      "pv-app-react-v09",
       JSON.stringify({
         state,
         productType,
@@ -979,6 +1086,7 @@ export default function App() {
                     ? "active"
                     : ""
                 }
+
                 onClick={() =>
                   setProductType(
                     "Casement / Awning"
@@ -995,6 +1103,7 @@ export default function App() {
                     ? "active"
                     : ""
                 }
+
                 onClick={() =>
                   setProductType(
                     "Slider"
@@ -1011,6 +1120,7 @@ export default function App() {
                     ? "active"
                     : ""
                 }
+
                 onClick={() =>
                   setProductType(
                     "Patio Door"
@@ -1021,7 +1131,6 @@ export default function App() {
               </button>
 
             </div>
-
           </section>
 
           {productType ===
@@ -1042,6 +1151,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={() =>
                     setSliderOrientation(
                       "Horizontal"
@@ -1058,6 +1168,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={() =>
                     setSliderOrientation(
                       "Vertical"
@@ -1068,9 +1179,7 @@ export default function App() {
                 </button>
 
               </div>
-
             </section>
-
           )}
 
           <section className="config-section">
@@ -1086,6 +1195,7 @@ export default function App() {
 
                 <select
                   value={unitsWide}
+
                   onChange={(event) =>
                     changeUnitsWide(
                       Number(
@@ -1112,6 +1222,7 @@ export default function App() {
 
                 <select
                   value={unitsTall}
+
                   onChange={(event) =>
                     changeUnitsTall(
                       Number(
@@ -1134,7 +1245,6 @@ export default function App() {
               </label>
 
             </div>
-
           </section>
 
           <section className="config-section">
@@ -1152,6 +1262,7 @@ export default function App() {
                   type="text"
                   inputMode="decimal"
                   value={widthInput}
+
                   onChange={(event) =>
                     updateOverallWidth(
                       event.target.value
@@ -1167,6 +1278,7 @@ export default function App() {
                   type="text"
                   inputMode="decimal"
                   value={heightInput}
+
                   onChange={(event) =>
                     updateOverallHeight(
                       event.target.value
@@ -1176,7 +1288,6 @@ export default function App() {
               </label>
 
             </div>
-
           </section>
 
           {unitsWide > 1 && (
@@ -1196,6 +1307,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     applyEqualWidths
                   }
@@ -1215,6 +1327,7 @@ export default function App() {
                         ? "active"
                         : ""
                     }
+
                     onClick={
                       applyCenterFeature
                     }
@@ -1230,6 +1343,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     startCustomWidths
                   }
@@ -1270,6 +1384,7 @@ export default function App() {
                             type="text"
                             inputMode="decimal"
                             value={value}
+
                             onChange={(
                               event
                             ) =>
@@ -1286,17 +1401,9 @@ export default function App() {
                     )}
 
                   </div>
-
-                  <div className="split-note">
-                    Change any window size. Another window adjusts automatically so the overall width stays the same.
-                  </div>
-
                 </div>
-
               )}
-
             </section>
-
           )}
 
           {unitsTall > 1 && (
@@ -1316,6 +1423,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     applyEqualHeights
                   }
@@ -1330,6 +1438,7 @@ export default function App() {
                       ? "active"
                       : ""
                   }
+
                   onClick={
                     startCustomHeights
                   }
@@ -1370,6 +1479,7 @@ export default function App() {
                             type="text"
                             inputMode="decimal"
                             value={value}
+
                             onChange={(
                               event
                             ) =>
@@ -1386,13 +1496,9 @@ export default function App() {
                     )}
 
                   </div>
-
                 </div>
-
               )}
-
             </section>
-
           )}
 
           <section className="config-section">
@@ -1407,10 +1513,90 @@ export default function App() {
                 : "Tap a window in the drawing"}
             </div>
 
-            {selectedUnit && (
-              <div className="split-note">
-                Internal window configuration comes next.
-              </div>
+            {selectedWindow && (
+              <>
+                <div className="number-row">
+
+                  <label>
+                    Lites Wide
+
+                    <select
+                      value={
+                        selectedWindow.litesWide
+                      }
+
+                      onChange={(event) =>
+                        changeSelectedLitesWide(
+                          Number(
+                            event.target.value
+                          )
+                        )
+                      }
+                    >
+                      {[1, 2, 3, 4].map(
+                        (number) => (
+                          <option
+                            key={number}
+                            value={number}
+                          >
+                            {number}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </label>
+
+                  <label>
+                    Lites Tall
+
+                    <select
+                      value={
+                        selectedWindow.litesTall
+                      }
+
+                      onChange={(event) =>
+                        changeSelectedLitesTall(
+                          Number(
+                            event.target.value
+                          )
+                        )
+                      }
+                    >
+                      {[1, 2, 3, 4].map(
+                        (number) => (
+                          <option
+                            key={number}
+                            value={number}
+                          >
+                            {number}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </label>
+
+                </div>
+
+                <div
+                  className="split-note"
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  This window is currently{" "}
+                  <strong>
+                    {
+                      selectedWindow.litesWide
+                    }{" "}
+                    wide ×{" "}
+                    {
+                      selectedWindow.litesTall
+                    }{" "}
+                    tall
+                  </strong>
+                  .
+                </div>
+              </>
             )}
 
           </section>
@@ -1448,13 +1634,11 @@ export default function App() {
             </div>
 
             <div className="drawing-actions">
-
               <button
                 onClick={reset}
               >
                 Reset
               </button>
-
             </div>
 
           </div>
@@ -1465,18 +1649,23 @@ export default function App() {
               widthInches={
                 state.overallWidth
               }
+
               heightInches={
                 state.overallHeight
               }
+
               verticalSplits={
                 state.verticalSplits
               }
+
               horizontalSplits={
                 state.horizontalSplits
               }
+
               selectedPanel={
                 selectedUnit
               }
+
               panelTypes={Object.fromEntries(
                 Object.entries(
                   state.panelConfigs
@@ -1487,23 +1676,31 @@ export default function App() {
                   ]
                 )
               )}
+
               gridColumns={0}
               gridRows={0}
+
               mode={mode}
+
               onAddVertical={() => {}}
               onAddHorizontal={() => {}}
+
               onMoveVertical={
                 moveVertical
               }
+
               onMoveHorizontal={
                 moveHorizontal
               }
+
               onSelectPanel={
                 setSelectedUnit
               }
+
               onOverallWidthChange={
                 handleFrameWidthChange
               }
+
               onOverallHeightChange={
                 handleFrameHeightChange
               }
@@ -1512,7 +1709,7 @@ export default function App() {
           </div>
 
           <p className="hint">
-            Drag the outside frame to change the overall opening. Drag the mullions to adjust individual window sizes.
+            Tap a window to configure it. Each window can have its own internal lite layout.
           </p>
 
         </section>
