@@ -31,9 +31,11 @@ type VerticalSliderType =
   | "Single Hung"
   | "Double Hung";
 
-type SingleVentHanding =
-  | "Left Vent"
-  | "Right Vent";
+type SliderPattern =
+  | "XO"
+  | "OX"
+  | "XX"
+  | "XOX";
 
 type SliderSplitMode =
   | "equal"
@@ -145,11 +147,8 @@ function createWindowUnits(
 
   for (let row = 0; row < tall; row++) {
     for (let column = 0; column < wide; column++) {
-      const id =
-        `${row}-${column}`;
-
-      units[id] =
-        createWindowUnit(id);
+      const id = `${row}-${column}`;
+      units[id] = createWindowUnit(id);
     }
   }
 
@@ -165,9 +164,7 @@ function createPanelConfigs(
 
   for (let row = 0; row < tall; row++) {
     for (let column = 0; column < wide; column++) {
-      configs[
-        `${row}-${column}`
-      ] = {
+      configs[`${row}-${column}`] = {
         type: "Picture"
       };
     }
@@ -180,18 +177,15 @@ function sizesFromSplits(
   splits: Split[],
   total: number
 ) {
-  const sorted =
-    [...splits].sort(
-      (a, b) =>
-        a.position -
-        b.position
-    );
+  const sorted = [...splits].sort(
+    (a, b) =>
+      a.position - b.position
+  );
 
   const positions = [
     0,
     ...sorted.map(
-      (split) =>
-        split.position
+      (split) => split.position
     ),
     1
   ];
@@ -224,8 +218,7 @@ function splitsFromSizes(
     index < sizes.length - 1;
     index++
   ) {
-    running +=
-      sizes[index];
+    running += sizes[index];
 
     splits.push({
       id: newId(
@@ -244,8 +237,7 @@ function rebalanceSizes(
   total: number,
   autoIndex: number
 ) {
-  const next =
-    [...values];
+  const next = [...values];
 
   let fixedTotal = 0;
 
@@ -254,38 +246,27 @@ function rebalanceSizes(
     index < next.length;
     index++
   ) {
-    if (
-      index ===
-      autoIndex
-    ) {
+    if (index === autoIndex) {
       continue;
     }
 
     const number =
-      Number(
-        next[index]
-      );
+      Number(next[index]);
 
     if (
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
       return next;
     }
 
-    fixedTotal +=
-      number;
+    fixedTotal += number;
   }
 
   const remainder =
-    total -
-    fixedTotal;
+    total - fixedTotal;
 
-  if (
-    remainder <= 0
-  ) {
+  if (remainder <= 0) {
     return next;
   }
 
@@ -310,9 +291,7 @@ const initialState: ConfiguratorState = {
 
   windowUnits: {
     "0-0":
-      createWindowUnit(
-        "0-0"
-      )
+      createWindowUnit("0-0")
   },
 
   gridColumns: 0,
@@ -364,11 +343,11 @@ export default function App() {
     );
 
   const [
-    singleVentHanding,
-    setSingleVentHanding
+    sliderPattern,
+    setSliderPattern
   ] =
-    useState<SingleVentHanding>(
-      "Left Vent"
+    useState<SliderPattern>(
+      "XO"
     );
 
   const [
@@ -385,16 +364,10 @@ export default function App() {
   ] =
     useState<string[]>([]);
 
-  const [
-    unitsWide,
-    setUnitsWide
-  ] =
+  const [unitsWide, setUnitsWide] =
     useState(1);
 
-  const [
-    unitsTall,
-    setUnitsTall
-  ] =
+  const [unitsTall, setUnitsTall] =
     useState(1);
 
   const [
@@ -417,17 +390,13 @@ export default function App() {
     customWidths,
     setCustomWidths
   ] =
-    useState<string[]>(
-      []
-    );
+    useState<string[]>([]);
 
   const [
     customHeights,
     setCustomHeights
   ] =
-    useState<string[]>(
-      []
-    );
+    useState<string[]>([]);
 
   const [
     widthAutoIndex,
@@ -445,42 +414,36 @@ export default function App() {
     selectedUnit,
     setSelectedUnit
   ] =
-    useState<
-      string | null
-    >(null);
+    useState<string | null>(
+      null
+    );
 
   const [
     unitSplitModes,
     setUnitSplitModes
   ] =
-    useState<
-      Record<
-        string,
-        UnitSplitMode
-      >
-    >({});
+    useState<Record<
+      string,
+      UnitSplitMode
+    >>({});
 
   const [
     unitCustomHeights,
     setUnitCustomHeights
   ] =
-    useState<
-      Record<
-        string,
-        string[]
-      >
-    >({});
+    useState<Record<
+      string,
+      string[]
+    >>({});
 
   const [
     pictureStyles,
     setPictureStyles
   ] =
-    useState<
-      Record<
-        string,
-        PictureStyle
-      >
-    >({});
+    useState<Record<
+      string,
+      PictureStyle
+    >>({});
 
   const mode: Mode =
     "select";
@@ -499,14 +462,10 @@ export default function App() {
       unitId.split("-");
 
     const row =
-      Number(
-        rowText
-      );
+      Number(rowText);
 
     const sorted =
-      [
-        ...state.horizontalSplits
-      ].sort(
+      [...state.horizontalSplits].sort(
         (a, b) =>
           a.position -
           b.position
@@ -522,13 +481,10 @@ export default function App() {
     ];
 
     const start =
-      positions[row] ??
-      0;
+      positions[row] ?? 0;
 
     const end =
-      positions[
-        row + 1
-      ] ?? 1;
+      positions[row + 1] ?? 1;
 
     return (
       (end - start) *
@@ -539,21 +495,14 @@ export default function App() {
   function getUnitWidth(
     unitId: string
   ) {
-    const [
-      ,
-      columnText
-    ] =
+    const [, columnText] =
       unitId.split("-");
 
     const column =
-      Number(
-        columnText
-      );
+      Number(columnText);
 
     const sorted =
-      [
-        ...state.verticalSplits
-      ].sort(
+      [...state.verticalSplits].sort(
         (a, b) =>
           a.position -
           b.position
@@ -569,13 +518,10 @@ export default function App() {
     ];
 
     const start =
-      positions[column] ??
-      0;
+      positions[column] ?? 0;
 
     const end =
-      positions[
-        column + 1
-      ] ?? 1;
+      positions[column + 1] ?? 1;
 
     return (
       (end - start) *
@@ -584,9 +530,7 @@ export default function App() {
   }
 
   function getSelectedUnitHeight() {
-    if (
-      !selectedUnit
-    ) {
+    if (!selectedUnit) {
       return 0;
     }
 
@@ -599,35 +543,33 @@ export default function App() {
     wide: number,
     tall: number
   ) {
-    setState(
-      (current) => ({
-        ...current,
+    setState((current) => ({
+      ...current,
 
-        verticalSplits:
-          createEqualSplits(
-            wide,
-            "unit-v"
-          ),
+      verticalSplits:
+        createEqualSplits(
+          wide,
+          "unit-v"
+        ),
 
-        horizontalSplits:
-          createEqualSplits(
-            tall,
-            "unit-h"
-          ),
+      horizontalSplits:
+        createEqualSplits(
+          tall,
+          "unit-h"
+        ),
 
-        panelConfigs:
-          createPanelConfigs(
-            wide,
-            tall
-          ),
+      panelConfigs:
+        createPanelConfigs(
+          wide,
+          tall
+        ),
 
-        windowUnits:
-          createWindowUnits(
-            wide,
-            tall
-          )
-      })
-    );
+      windowUnits:
+        createWindowUnits(
+          wide,
+          tall
+        )
+    }));
 
     setHorizontalSizingMode(
       "equal"
@@ -637,46 +579,28 @@ export default function App() {
       "equal"
     );
 
-    setCustomWidths(
-      []
-    );
+    setCustomWidths([]);
+    setCustomHeights([]);
 
-    setCustomHeights(
-      []
-    );
+    setUnitSplitModes({});
+    setUnitCustomHeights({});
+    setPictureStyles({});
 
-    setUnitSplitModes(
-      {}
-    );
-
-    setUnitCustomHeights(
-      {}
-    );
-
-    setPictureStyles(
-      {}
-    );
-
-    setSelectedUnit(
-      null
-    );
+    setSelectedUnit(null);
   }
 
   function changeUnitsWide(
     value: number
   ) {
-    const next =
-      Math.max(
-        1,
-        Math.min(
-          6,
-          value
-        )
-      );
-
-    setUnitsWide(
-      next
+    const next = Math.max(
+      1,
+      Math.min(
+        6,
+        value
+      )
     );
+
+    setUnitsWide(next);
 
     buildUnitLayout(
       next,
@@ -687,18 +611,15 @@ export default function App() {
   function changeUnitsTall(
     value: number
   ) {
-    const next =
-      Math.max(
-        1,
-        Math.min(
-          4,
-          value
-        )
-      );
-
-    setUnitsTall(
-      next
+    const next = Math.max(
+      1,
+      Math.min(
+        4,
+        value
+      )
     );
+
+    setUnitsTall(next);
 
     buildUnitLayout(
       unitsWide,
@@ -711,27 +632,21 @@ export default function App() {
       "equal"
     );
 
-    setCustomWidths(
-      []
-    );
+    setCustomWidths([]);
 
-    setState(
-      (current) => ({
-        ...current,
+    setState((current) => ({
+      ...current,
 
-        verticalSplits:
-          createEqualSplits(
-            unitsWide,
-            "unit-v"
-          )
-      })
-    );
+      verticalSplits:
+        createEqualSplits(
+          unitsWide,
+          "unit-v"
+        )
+    }));
   }
 
   function applyCenterFeature() {
-    if (
-      unitsWide !== 3
-    ) {
+    if (unitsWide !== 3) {
       return;
     }
 
@@ -739,30 +654,26 @@ export default function App() {
       "center-feature"
     );
 
-    setCustomWidths(
-      []
-    );
+    setCustomWidths([]);
 
-    setState(
-      (current) => ({
-        ...current,
+    setState((current) => ({
+      ...current,
 
-        verticalSplits: [
-          {
-            id: newId(
-              "unit-v-1"
-            ),
-            position: 0.25
-          },
-          {
-            id: newId(
-              "unit-v-2"
-            ),
-            position: 0.75
-          }
-        ]
-      })
-    );
+      verticalSplits: [
+        {
+          id: newId(
+            "unit-v-1"
+          ),
+          position: 0.25
+        },
+        {
+          id: newId(
+            "unit-v-2"
+          ),
+          position: 0.75
+        }
+      ]
+    }));
   }
 
   function startCustomWidths() {
@@ -776,15 +687,12 @@ export default function App() {
       "custom"
     );
 
-    setCustomWidths(
-      sizes
-    );
+    setCustomWidths(sizes);
 
     setWidthAutoIndex(
       Math.max(
         0,
-        sizes.length -
-          1
+        sizes.length - 1
       )
     );
   }
@@ -796,49 +704,36 @@ export default function App() {
     let next =
       customWidths.length ===
       unitsWide
-        ? [
-            ...customWidths
-          ]
+        ? [...customWidths]
         : sizesFromSplits(
             state.verticalSplits,
             state.overallWidth
           );
 
-    next[index] =
-      value;
+    next[index] = value;
 
     const number =
-      Number(
-        value
-      );
+      Number(value);
 
     if (
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
-      setCustomWidths(
-        next
-      );
-
+      setCustomWidths(next);
       return;
     }
 
     let autoIndex =
-      unitsWide -
-      1;
+      unitsWide - 1;
 
     if (
       index ===
-      unitsWide -
-        1
+      unitsWide - 1
     ) {
       autoIndex =
         Math.max(
           0,
-          unitsWide -
-            2
+          unitsWide - 2
         );
     }
 
@@ -846,43 +741,34 @@ export default function App() {
       autoIndex
     );
 
-    next =
-      rebalanceSizes(
-        next,
-        state.overallWidth,
-        autoIndex
-      );
-
-    setCustomWidths(
-      next
+    next = rebalanceSizes(
+      next,
+      state.overallWidth,
+      autoIndex
     );
 
+    setCustomWidths(next);
+
     const numbers =
-      next.map(
-        Number
-      );
+      next.map(Number);
 
     if (
       numbers.every(
         (item) =>
-          Number.isFinite(
-            item
-          ) &&
+          Number.isFinite(item) &&
           item > 0
       )
     ) {
-      setState(
-        (current) => ({
-          ...current,
+      setState((current) => ({
+        ...current,
 
-          verticalSplits:
-            splitsFromSizes(
-              numbers,
-              current.overallWidth,
-              "unit-v"
-            )
-        })
-      );
+        verticalSplits:
+          splitsFromSizes(
+            numbers,
+            current.overallWidth,
+            "unit-v"
+          )
+      }));
     }
   }
 
@@ -891,21 +777,17 @@ export default function App() {
       "equal"
     );
 
-    setCustomHeights(
-      []
-    );
+    setCustomHeights([]);
 
-    setState(
-      (current) => ({
-        ...current,
+    setState((current) => ({
+      ...current,
 
-        horizontalSplits:
-          createEqualSplits(
-            unitsTall,
-            "unit-h"
-          )
-      })
-    );
+      horizontalSplits:
+        createEqualSplits(
+          unitsTall,
+          "unit-h"
+        )
+    }));
   }
 
   function startCustomHeights() {
@@ -919,15 +801,12 @@ export default function App() {
       "custom"
     );
 
-    setCustomHeights(
-      sizes
-    );
+    setCustomHeights(sizes);
 
     setHeightAutoIndex(
       Math.max(
         0,
-        sizes.length -
-          1
+        sizes.length - 1
       )
     );
   }
@@ -939,49 +818,36 @@ export default function App() {
     let next =
       customHeights.length ===
       unitsTall
-        ? [
-            ...customHeights
-          ]
+        ? [...customHeights]
         : sizesFromSplits(
             state.horizontalSplits,
             state.overallHeight
           );
 
-    next[index] =
-      value;
+    next[index] = value;
 
     const number =
-      Number(
-        value
-      );
+      Number(value);
 
     if (
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
-      setCustomHeights(
-        next
-      );
-
+      setCustomHeights(next);
       return;
     }
 
     let autoIndex =
-      unitsTall -
-      1;
+      unitsTall - 1;
 
     if (
       index ===
-      unitsTall -
-        1
+      unitsTall - 1
     ) {
       autoIndex =
         Math.max(
           0,
-          unitsTall -
-            2
+          unitsTall - 2
         );
     }
 
@@ -989,63 +855,48 @@ export default function App() {
       autoIndex
     );
 
-    next =
-      rebalanceSizes(
-        next,
-        state.overallHeight,
-        autoIndex
-      );
-
-    setCustomHeights(
-      next
+    next = rebalanceSizes(
+      next,
+      state.overallHeight,
+      autoIndex
     );
 
+    setCustomHeights(next);
+
     const numbers =
-      next.map(
-        Number
-      );
+      next.map(Number);
 
     if (
       numbers.every(
         (item) =>
-          Number.isFinite(
-            item
-          ) &&
+          Number.isFinite(item) &&
           item > 0
       )
     ) {
-      setState(
-        (current) => ({
-          ...current,
+      setState((current) => ({
+        ...current,
 
-          horizontalSplits:
-            splitsFromSizes(
-              numbers,
-              current.overallHeight,
-              "unit-h"
-            )
-        })
-      );
+        horizontalSplits:
+          splitsFromSizes(
+            numbers,
+            current.overallHeight,
+            "unit-h"
+          )
+      }));
     }
   }
 
   function updateOverallWidth(
     value: string
   ) {
-    setWidthInput(
-      value
-    );
+    setWidthInput(value);
 
     const number =
-      Number(
-        value
-      );
+      Number(value);
 
     if (
       value === "" ||
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
       return;
@@ -1064,57 +915,43 @@ export default function App() {
           widthAutoIndex
         );
 
-      setCustomWidths(
-        next
-      );
+      setCustomWidths(next);
 
-      setState(
-        (current) => ({
-          ...current,
+      setState((current) => ({
+        ...current,
 
-          overallWidth:
+        overallWidth:
+          number,
+
+        verticalSplits:
+          splitsFromSizes(
+            next.map(Number),
             number,
-
-          verticalSplits:
-            splitsFromSizes(
-              next.map(
-                Number
-              ),
-              number,
-              "unit-v"
-            )
-        })
-      );
+            "unit-v"
+          )
+      }));
 
       return;
     }
 
-    setState(
-      (current) => ({
-        ...current,
-        overallWidth:
-          number
-      })
-    );
+    setState((current) => ({
+      ...current,
+      overallWidth:
+        number
+    }));
   }
 
   function updateOverallHeight(
     value: string
   ) {
-    setHeightInput(
-      value
-    );
+    setHeightInput(value);
 
     const number =
-      Number(
-        value
-      );
+      Number(value);
 
     if (
       value === "" ||
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
       return;
@@ -1133,47 +970,37 @@ export default function App() {
           heightAutoIndex
         );
 
-      setCustomHeights(
-        next
-      );
+      setCustomHeights(next);
 
-      setState(
-        (current) => ({
-          ...current,
+      setState((current) => ({
+        ...current,
 
-          overallHeight:
+        overallHeight:
+          number,
+
+        horizontalSplits:
+          splitsFromSizes(
+            next.map(Number),
             number,
-
-          horizontalSplits:
-            splitsFromSizes(
-              next.map(
-                Number
-              ),
-              number,
-              "unit-h"
-            )
-        })
-      );
+            "unit-h"
+          )
+      }));
 
       return;
     }
 
-    setState(
-      (current) => ({
-        ...current,
-        overallHeight:
-          number
-      })
-    );
+    setState((current) => ({
+      ...current,
+      overallHeight:
+        number
+    }));
   }
 
   function handleFrameWidthChange(
     width: number
   ) {
     updateOverallWidth(
-      width.toFixed(
-        2
-      )
+      width.toFixed(2)
     );
   }
 
@@ -1181,9 +1008,7 @@ export default function App() {
     height: number
   ) {
     updateOverallHeight(
-      height.toFixed(
-        2
-      )
+      height.toFixed(2)
     );
   }
 
@@ -1191,84 +1016,76 @@ export default function App() {
     id: string,
     position: number
   ) {
-    setState(
-      (current) => {
-        const splits =
-          current.verticalSplits.map(
-            (split) =>
-              split.id ===
-              id
-                ? {
-                    ...split,
-                    position
-                  }
-                : split
-          );
-
-        setHorizontalSizingMode(
-          "custom"
+    setState((current) => {
+      const splits =
+        current.verticalSplits.map(
+          (split) =>
+            split.id === id
+              ? {
+                  ...split,
+                  position
+                }
+              : split
         );
 
-        setCustomWidths(
-          sizesFromSplits(
-            splits,
-            current.overallWidth
-          )
-        );
+      setHorizontalSizingMode(
+        "custom"
+      );
 
-        return {
-          ...current,
-          verticalSplits:
-            splits
-        };
-      }
-    );
+      setCustomWidths(
+        sizesFromSplits(
+          splits,
+          current.overallWidth
+        )
+      );
+
+      return {
+        ...current,
+        verticalSplits:
+          splits
+      };
+    });
   }
 
   function moveHorizontal(
     id: string,
     position: number
   ) {
-    setState(
-      (current) => {
-        const splits =
-          current.horizontalSplits.map(
-            (split) =>
-              split.id ===
-              id
-                ? {
-                    ...split,
-                    position
-                  }
-                : split
-          );
-
-        setVerticalSizingMode(
-          "custom"
+    setState((current) => {
+      const splits =
+        current.horizontalSplits.map(
+          (split) =>
+            split.id === id
+              ? {
+                  ...split,
+                  position
+                }
+              : split
         );
 
-        setCustomHeights(
-          sizesFromSplits(
-            splits,
-            current.overallHeight
-          )
-        );
+      setVerticalSizingMode(
+        "custom"
+      );
 
-        return {
-          ...current,
-          horizontalSplits:
-            splits
-        };
-      }
-    );
+      setCustomHeights(
+        sizesFromSplits(
+          splits,
+          current.overallHeight
+        )
+      );
+
+      return {
+        ...current,
+        horizontalSplits:
+          splits
+      };
+    });
   }
 
   function changeSelectedNumberHigh(
     value: number
   ) {
-    if (
-      !selectedUnit
-    ) {
+    if (!selectedUnit) {
       return;
     }
 
@@ -1281,58 +1098,49 @@ export default function App() {
         )
       );
 
-    setState(
-      (current) => {
-        const existing =
-          current.windowUnits?.[
-            selectedUnit
-          ] ??
-          createWindowUnit(
-            selectedUnit
-          );
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          selectedUnit
+        ] ??
+        createWindowUnit(
+          selectedUnit
+        );
 
-        const updated:
-          WindowUnitConfig = {
-          ...existing,
+      return {
+        ...current,
 
-          litesWide: 1,
-          litesTall:
-            tall,
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
 
-          verticalSplits:
-            [],
+          [selectedUnit]: {
+            ...existing,
 
-          horizontalSplits:
-            createEqualSplits(
-              tall,
-              `lite-h-${selectedUnit}`
-            ),
+            litesWide: 1,
+            litesTall: tall,
 
-          liteConfigs:
-            createLiteConfigs(
-              1,
-              tall
-            )
-        };
+            verticalSplits: [],
 
-        return {
-          ...current,
+            horizontalSplits:
+              createEqualSplits(
+                tall,
+                `lite-h-${selectedUnit}`
+              ),
 
-          windowUnits: {
-            ...(current.windowUnits ??
-              {}),
-
-            [selectedUnit]:
-              updated
+            liteConfigs:
+              createLiteConfigs(
+                1,
+                tall
+              )
           }
-        };
-      }
-    );
+        }
+      };
+    });
 
     setUnitSplitModes(
       (current) => ({
         ...current,
-
         [selectedUnit]:
           "equal"
       })
@@ -1341,7 +1149,6 @@ export default function App() {
     setUnitCustomHeights(
       (current) => ({
         ...current,
-
         [selectedUnit]:
           []
       })
@@ -1364,16 +1171,12 @@ export default function App() {
     let positions:
       number[] = [];
 
-    if (
-      count === 2
-    ) {
+    if (count === 2) {
       if (
         splitMode ===
         "equal"
       ) {
-        positions = [
-          0.5
-        ];
+        positions = [0.5];
       }
 
       if (
@@ -1395,9 +1198,7 @@ export default function App() {
       }
     }
 
-    if (
-      count === 3
-    ) {
+    if (count === 3) {
       if (
         splitMode ===
         "equal"
@@ -1467,7 +1268,6 @@ export default function App() {
       setUnitCustomHeights(
         (current) => ({
           ...current,
-
           [selectedUnit]:
             currentSizes
         })
@@ -1476,7 +1276,6 @@ export default function App() {
       setUnitSplitModes(
         (current) => ({
           ...current,
-
           [selectedUnit]:
             "custom"
         })
@@ -1498,28 +1297,24 @@ export default function App() {
         })
       );
 
-    setState(
-      (current) => ({
-        ...current,
+    setState((current) => ({
+      ...current,
 
-        windowUnits: {
-          ...(current.windowUnits ??
-            {}),
+      windowUnits: {
+        ...(current.windowUnits ??
+          {}),
 
-          [selectedUnit]: {
-            ...selectedUnitConfig,
-
-            horizontalSplits:
-              splits
-          }
+        [selectedUnit]: {
+          ...selectedUnitConfig,
+          horizontalSplits:
+            splits
         }
-      })
-    );
+      }
+    }));
 
     setUnitSplitModes(
       (current) => ({
         ...current,
-
         [selectedUnit]:
           splitMode
       })
@@ -1528,7 +1323,6 @@ export default function App() {
     setUnitCustomHeights(
       (current) => ({
         ...current,
-
         [selectedUnit]:
           []
       })
@@ -1558,27 +1352,20 @@ export default function App() {
         unitHeight
       );
 
-    let next =
-      [...current];
+    let next = [...current];
 
-    next[index] =
-      value;
+    next[index] = value;
 
     const number =
-      Number(
-        value
-      );
+      Number(value);
 
     if (
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
       setUnitCustomHeights(
         (all) => ({
           ...all,
-
           [selectedUnit]:
             next
         })
@@ -1588,73 +1375,62 @@ export default function App() {
     }
 
     let autoIndex =
-      next.length -
-      1;
+      next.length - 1;
 
     if (
       index ===
-      next.length -
-        1
+      next.length - 1
     ) {
       autoIndex =
         Math.max(
           0,
-          next.length -
-            2
+          next.length - 2
         );
     }
 
-    next =
-      rebalanceSizes(
-        next,
-        unitHeight,
-        autoIndex
-      );
+    next = rebalanceSizes(
+      next,
+      unitHeight,
+      autoIndex
+    );
 
     setUnitCustomHeights(
       (all) => ({
         ...all,
-
         [selectedUnit]:
           next
       })
     );
 
     const numbers =
-      next.map(
-        Number
-      );
+      next.map(Number);
 
     if (
       numbers.every(
         (item) =>
-          Number.isFinite(
-            item
-          ) &&
+          Number.isFinite(item) &&
           item > 0
       )
     ) {
-      setState(
-        (currentState) => ({
-          ...currentState,
+      setState((currentState) => ({
+        ...currentState,
 
-          windowUnits: {
-            ...(currentState.windowUnits ??
-              {}),
+        windowUnits: {
+          ...(currentState.windowUnits ??
+            {}),
 
-            [selectedUnit]: {
-              ...selectedUnitConfig,
+          [selectedUnit]: {
+            ...selectedUnitConfig,
 
-              horizontalSplits:
-                splitsFromSizes(
-                  numbers,
-                  unitHeight,
-                  `lite-h-${selectedUnit}`
-                )
-            }
+            horizontalSplits:
+              splitsFromSizes(
+                numbers,
+                unitHeight,
+                `lite-h-${selectedUnit}`
+              )
           }
-        })
-      );
+        }
+      }));
     }
   }
 
@@ -1668,78 +1444,71 @@ export default function App() {
         unitId
       );
 
-    setState(
-      (current) => {
-        const unit =
-          current.windowUnits?.[
-            unitId
-          ];
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
 
-        if (
-          !unit
-        ) {
-          return current;
-        }
+      if (!unit) {
+        return current;
+      }
 
-        const nextSplits =
-          unit.horizontalSplits
-            .map(
-              (split) =>
-                split.id ===
-                splitId
-                  ? {
-                      ...split,
-                      position
-                    }
-                  : split
-            )
-            .sort(
-              (a, b) =>
-                a.position -
-                b.position
-            );
-
-        const updatedSizes =
-          sizesFromSplits(
-            nextSplits,
-            unitHeight
+      const nextSplits =
+        unit.horizontalSplits
+          .map(
+            (split) =>
+              split.id ===
+              splitId
+                ? {
+                    ...split,
+                    position
+                  }
+                : split
+          )
+          .sort(
+            (a, b) =>
+              a.position -
+              b.position
           );
 
-        setUnitSplitModes(
-          (modes) => ({
-            ...modes,
-
-            [unitId]:
-              "custom"
-          })
+      const updatedSizes =
+        sizesFromSplits(
+          nextSplits,
+          unitHeight
         );
 
-        setUnitCustomHeights(
-          (heights) => ({
-            ...heights,
+      setUnitSplitModes(
+        (modes) => ({
+          ...modes,
+          [unitId]:
+            "custom"
+        })
+      );
 
-            [unitId]:
-              updatedSizes
-          })
-        );
+      setUnitCustomHeights(
+        (heights) => ({
+          ...heights,
+          [unitId]:
+            updatedSizes
+        })
+      );
 
-        return {
-          ...current,
+      return {
+        ...current,
 
-          windowUnits: {
-            ...(current.windowUnits ??
-              {}),
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
 
-            [unitId]: {
-              ...unit,
-
-              horizontalSplits:
-                nextSplits
-            }
+          [unitId]: {
+            ...unit,
+            horizontalSplits:
+              nextSplits
           }
-        };
-      }
-    );
+        }
+      };
+    });
   }
 
   function setLiteOperation(
@@ -1748,55 +1517,49 @@ export default function App() {
     operation: LiteOperation,
     pictureStyle?: PictureStyle
   ) {
-    setState(
-      (current) => {
-        const unit =
-          current.windowUnits?.[
-            unitId
-          ];
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
 
-        if (
-          !unit
-        ) {
-          return current;
-        }
+      if (!unit) {
+        return current;
+      }
 
-        return {
-          ...current,
+      return {
+        ...current,
 
-          windowUnits: {
-            ...(current.windowUnits ??
-              {}),
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
 
-            [unitId]: {
-              ...unit,
+          [unitId]: {
+            ...unit,
 
-              liteConfigs: {
-                ...unit.liteConfigs,
+            liteConfigs: {
+              ...unit.liteConfigs,
 
-                [liteId]: {
-                  type:
-                    operation as PanelType
-                }
+              [liteId]: {
+                type:
+                  operation as PanelType
               }
             }
           }
-        };
-      }
-    );
+        }
+      };
+    });
 
     const key =
       `${unitId}:${liteId}`;
 
     if (
-      operation ===
-        "Picture" &&
+      operation === "Picture" &&
       pictureStyle
     ) {
       setPictureStyles(
         (current) => ({
           ...current,
-
           [key]:
             pictureStyle
         })
@@ -1816,19 +1579,61 @@ export default function App() {
     }
   }
 
-  function applyHorizontalSlider(
+  function horizontalPositions(
     type: HorizontalSliderType,
     splitMode: SliderSplitMode
   ) {
     if (
-      !selectedUnit
+      type ===
+      "Double Vent + Centre Picture"
     ) {
-      return;
+      if (
+        splitMode ===
+        "center-feature"
+      ) {
+        return [
+          0.25,
+          0.75
+        ];
+      }
+
+      return [
+        1 / 3,
+        2 / 3
+      ];
     }
 
+    if (
+      splitMode ===
+      "one-third"
+    ) {
+      return [
+        1 / 3
+      ];
+    }
+
+    if (
+      splitMode ===
+      "two-thirds"
+    ) {
+      return [
+        2 / 3
+      ];
+    }
+
+    return [
+      0.5
+    ];
+  }
+
+  function applyHorizontalSliderToUnit(
+    unitId: string,
+    type: HorizontalSliderType,
+    splitMode: SliderSplitMode
+  ) {
     const unitWidth =
       getUnitWidth(
-        selectedUnit
+        unitId
       );
 
     if (
@@ -1837,12 +1642,10 @@ export default function App() {
     ) {
       const unit =
         state.windowUnits?.[
-          selectedUnit
+          unitId
         ];
 
-      if (
-        !unit
-      ) {
+      if (!unit) {
         return;
       }
 
@@ -1853,62 +1656,20 @@ export default function App() {
         )
       );
 
-      setSliderSplitMode(
-        "custom"
-      );
-
       return;
     }
 
-    let positions:
-      number[] = [];
+    const positions =
+      horizontalPositions(
+        type,
+        splitMode
+      );
 
-    let litesWide =
-      2;
-
-    if (
-      type ===
-      "Single Vent"
-    ) {
-      litesWide = 2;
-
-      positions = [
-        0.5
-      ];
-    }
-
-    if (
-      type ===
-      "Double Slider"
-    ) {
-      litesWide = 2;
-
-      positions = [
-        0.5
-      ];
-    }
-
-    if (
+    const litesWide =
       type ===
       "Double Vent + Centre Picture"
-    ) {
-      litesWide = 3;
-
-      if (
-        splitMode ===
-        "center-feature"
-      ) {
-        positions = [
-          0.25,
-          0.75
-        ];
-      } else {
-        positions = [
-          1 / 3,
-          2 / 3
-        ];
-      }
-    }
+        ? 3
+        : 2;
 
     const splits =
       positions.map(
@@ -1917,70 +1678,62 @@ export default function App() {
           index
         ) => ({
           id: newId(
-            `slider-v-${selectedUnit}-${index}`
+            `slider-v-${unitId}-${index}`
           ),
           position
         })
       );
 
-    setState(
-      (current) => {
-        const existing =
-          current.windowUnits?.[
-            selectedUnit
-          ] ??
-          createWindowUnit(
-            selectedUnit
-          );
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          unitId
+        ] ??
+        createWindowUnit(
+          unitId
+        );
 
-        return {
-          ...current,
+      return {
+        ...current,
 
-          windowUnits: {
-            ...(current.windowUnits ??
-              {}),
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
 
-            [selectedUnit]: {
-              ...existing,
+          [unitId]: {
+            ...existing,
 
-              litesWide,
-              litesTall: 1,
+            litesWide,
+            litesTall: 1,
 
-              verticalSplits:
-                splits,
+            verticalSplits:
+              splits,
 
-              horizontalSplits:
-                [],
+            horizontalSplits:
+              [],
 
-              liteConfigs:
-                createLiteConfigs(
-                  litesWide,
-                  1
-                )
-            }
+            liteConfigs:
+              createLiteConfigs(
+                litesWide,
+                1
+              )
           }
-        };
-      }
-    );
+        }
+      };
+    });
 
     setSliderCustomSizes(
       []
     );
   }
 
-  function applyVerticalSlider(
-    type: VerticalSliderType,
+  function applyVerticalSliderToUnit(
+    unitId: string,
     splitMode: SliderSplitMode
   ) {
-    if (
-      !selectedUnit
-    ) {
-      return;
-    }
-
     const unitHeight =
       getUnitHeight(
-        selectedUnit
+        unitId
       );
 
     if (
@@ -1989,12 +1742,10 @@ export default function App() {
     ) {
       const unit =
         state.windowUnits?.[
-          selectedUnit
+          unitId
         ];
 
-      if (
-        !unit
-      ) {
+      if (!unit) {
         return;
       }
 
@@ -2003,10 +1754,6 @@ export default function App() {
           unit.horizontalSplits,
           unitHeight
         )
-      );
-
-      setSliderSplitMode(
-        "custom"
       );
 
       return;
@@ -2031,68 +1778,91 @@ export default function App() {
         2 / 3;
     }
 
-    const splits:
-      Split[] = [
-      {
-        id: newId(
-          `slider-h-${selectedUnit}`
-        ),
-        position
-      }
-    ];
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          unitId
+        ] ??
+        createWindowUnit(
+          unitId
+        );
 
-    setState(
-      (current) => {
-        const existing =
-          current.windowUnits?.[
-            selectedUnit
-          ] ??
-          createWindowUnit(
-            selectedUnit
-          );
+      return {
+        ...current,
 
-        return {
-          ...current,
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
 
-          windowUnits: {
-            ...(current.windowUnits ??
-              {}),
+          [unitId]: {
+            ...existing,
 
-            [selectedUnit]: {
-              ...existing,
+            litesWide: 1,
+            litesTall: 2,
 
-              litesWide: 1,
-              litesTall: 2,
+            verticalSplits:
+              [],
 
-              verticalSplits:
-                [],
+            horizontalSplits: [
+              {
+                id: newId(
+                  `slider-h-${unitId}`
+                ),
+                position
+              }
+            ],
 
-              horizontalSplits:
-                splits,
-
-              liteConfigs:
-                createLiteConfigs(
-                  1,
-                  2
-                )
-            }
+            liteConfigs:
+              createLiteConfigs(
+                1,
+                2
+              )
           }
-        };
-      }
-    );
+        }
+      };
+    });
 
     setSliderCustomSizes(
       []
     );
   }
 
+  function handleSelectUnit(
+    unitId: string
+  ) {
+    setSelectedUnit(
+      unitId
+    );
+
+    if (
+      productType !==
+      "Slider"
+    ) {
+      return;
+    }
+
+    if (
+      sliderOrientation ===
+      "Horizontal"
+    ) {
+      applyHorizontalSliderToUnit(
+        unitId,
+        horizontalSliderType,
+        sliderSplitMode
+      );
+    } else {
+      applyVerticalSliderToUnit(
+        unitId,
+        sliderSplitMode
+      );
+    }
+  }
+
   function updateSliderCustomSize(
     index: number,
     value: string
   ) {
-    if (
-      !selectedUnit
-    ) {
+    if (!selectedUnit) {
       return;
     }
 
@@ -2101,9 +1871,7 @@ export default function App() {
         selectedUnit
       ];
 
-    if (
-      !unit
-    ) {
+    if (!unit) {
       return;
     }
 
@@ -2139,14 +1907,10 @@ export default function App() {
       value;
 
     const number =
-      Number(
-        value
-      );
+      Number(value);
 
     if (
-      !Number.isFinite(
-        number
-      ) ||
+      !Number.isFinite(number) ||
       number <= 0
     ) {
       setSliderCustomSizes(
@@ -2157,109 +1921,90 @@ export default function App() {
     }
 
     let autoIndex =
-      next.length -
-      1;
+      next.length - 1;
 
     if (
       index ===
-      next.length -
-        1
+      next.length - 1
     ) {
       autoIndex =
         Math.max(
           0,
-          next.length -
-            2
+          next.length - 2
         );
     }
 
-    next =
-      rebalanceSizes(
-        next,
-        total,
-        autoIndex
-      );
+    next = rebalanceSizes(
+      next,
+      total,
+      autoIndex
+    );
 
     setSliderCustomSizes(
       next
     );
 
     const numbers =
-      next.map(
-        Number
-      );
+      next.map(Number);
 
     if (
       !numbers.every(
         (item) =>
-          Number.isFinite(
-            item
-          ) &&
+          Number.isFinite(item) &&
           item > 0
       )
     ) {
       return;
     }
 
-    setState(
-      (current) => {
-        const currentUnit =
-          current.windowUnits?.[
-            selectedUnit
-          ];
+    setState((current) => {
+      const currentUnit =
+        current.windowUnits?.[
+          selectedUnit
+        ];
 
-        if (
-          !currentUnit
-        ) {
-          return current;
-        }
-
-        return {
-          ...current,
-
-          windowUnits: {
-            ...(current.windowUnits ??
-              {}),
-
-            [selectedUnit]: {
-              ...currentUnit,
-
-              verticalSplits:
-                horizontal
-                  ? splitsFromSizes(
-                      numbers,
-                      total,
-                      `slider-v-${selectedUnit}`
-                    )
-                  : [],
-
-              horizontalSplits:
-                horizontal
-                  ? []
-                  : splitsFromSizes(
-                      numbers,
-                      total,
-                      `slider-h-${selectedUnit}`
-                    )
-            }
-          }
-        };
+      if (!currentUnit) {
+        return current;
       }
-    );
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [selectedUnit]: {
+            ...currentUnit,
+
+            verticalSplits:
+              horizontal
+                ? splitsFromSizes(
+                    numbers,
+                    total,
+                    `slider-v-${selectedUnit}`
+                  )
+                : [],
+
+            horizontalSplits:
+              horizontal
+                ? []
+                : splitsFromSizes(
+                    numbers,
+                    total,
+                    `slider-h-${selectedUnit}`
+                  )
+          }
+        }
+      };
+    });
   }
 
   function reset() {
-    setState(
-      initialState
-    );
+    setState(initialState);
 
-    setWidthInput(
-      "96"
-    );
-
-    setHeightInput(
-      "60"
-    );
+    setWidthInput("96");
+    setHeightInput("60");
 
     setProductType(
       "Casement / Awning"
@@ -2277,8 +2022,8 @@ export default function App() {
       "Single Hung"
     );
 
-    setSingleVentHanding(
-      "Left Vent"
+    setSliderPattern(
+      "XO"
     );
 
     setSliderSplitMode(
@@ -2289,13 +2034,8 @@ export default function App() {
       []
     );
 
-    setUnitsWide(
-      1
-    );
-
-    setUnitsTall(
-      1
-    );
+    setUnitsWide(1);
+    setUnitsTall(1);
 
     setHorizontalSizingMode(
       "equal"
@@ -2305,34 +2045,19 @@ export default function App() {
       "equal"
     );
 
-    setCustomWidths(
-      []
-    );
+    setCustomWidths([]);
+    setCustomHeights([]);
 
-    setCustomHeights(
-      []
-    );
+    setUnitSplitModes({});
+    setUnitCustomHeights({});
+    setPictureStyles({});
 
-    setUnitSplitModes(
-      {}
-    );
-
-    setUnitCustomHeights(
-      {}
-    );
-
-    setPictureStyles(
-      {}
-    );
-
-    setSelectedUnit(
-      null
-    );
+    setSelectedUnit(null);
   }
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v15",
+      "pv-app-react-v16",
 
       JSON.stringify({
         state,
@@ -2340,7 +2065,7 @@ export default function App() {
         sliderOrientation,
         horizontalSliderType,
         verticalSliderType,
-        singleVentHanding,
+        sliderPattern,
         sliderSplitMode,
         unitsWide,
         unitsTall,
@@ -2353,9 +2078,7 @@ export default function App() {
         "save-button"
       );
 
-    if (
-      button
-    ) {
+    if (button) {
       button.textContent =
         "Saved";
 
@@ -2373,17 +2096,20 @@ export default function App() {
     selectedUnit
       ? unitSplitModes[
           selectedUnit
-        ] ??
-        "equal"
+        ] ?? "equal"
       : "equal";
 
   const selectedCustomHeights =
     selectedUnit
       ? unitCustomHeights[
           selectedUnit
-        ] ??
-        []
+        ] ?? []
       : [];
+
+  const singleVentHanding =
+    sliderPattern === "OX"
+      ? "Right Vent"
+      : "Left Vent";
 
   return (
     <>
@@ -2458,6 +2184,10 @@ export default function App() {
                     "Single Vent"
                   );
 
+                  setSliderPattern(
+                    "XO"
+                  );
+
                   setSliderSplitMode(
                     "equal"
                   );
@@ -2522,6 +2252,10 @@ export default function App() {
                         []
                       );
 
+                      setSliderSplitMode(
+                        "equal"
+                      );
+
                       if (
                         next ===
                         "Horizontal"
@@ -2530,14 +2264,15 @@ export default function App() {
                           "Single Vent"
                         );
 
-                        setSliderSplitMode(
-                          "equal"
+                        setSliderPattern(
+                          "XO"
                         );
 
                         if (
                           selectedUnit
                         ) {
-                          applyHorizontalSlider(
+                          applyHorizontalSliderToUnit(
+                            selectedUnit,
                             "Single Vent",
                             "equal"
                           );
@@ -2547,15 +2282,11 @@ export default function App() {
                           "Single Hung"
                         );
 
-                        setSliderSplitMode(
-                          "equal"
-                        );
-
                         if (
                           selectedUnit
                         ) {
-                          applyVerticalSlider(
-                            "Single Hung",
+                          applyVerticalSliderToUnit(
+                            selectedUnit,
                             "equal"
                           );
                         }
@@ -2591,17 +2322,36 @@ export default function App() {
                           next
                         );
 
+                        let pattern:
+                          SliderPattern =
+                          "XO";
+
                         let split:
                           SliderSplitMode =
                           "equal";
 
                         if (
                           next ===
+                          "Double Slider"
+                        ) {
+                          pattern =
+                            "XX";
+                        }
+
+                        if (
+                          next ===
                           "Double Vent + Centre Picture"
                         ) {
+                          pattern =
+                            "XOX";
+
                           split =
                             "center-feature";
                         }
+
+                        setSliderPattern(
+                          pattern
+                        );
 
                         setSliderSplitMode(
                           split
@@ -2614,7 +2364,8 @@ export default function App() {
                         if (
                           selectedUnit
                         ) {
-                          applyHorizontalSlider(
+                          applyHorizontalSliderToUnit(
+                            selectedUnit,
                             next,
                             split
                           );
@@ -2664,8 +2415,8 @@ export default function App() {
                         if (
                           selectedUnit
                         ) {
-                          applyVerticalSlider(
-                            next,
+                          applyVerticalSliderToUnit(
+                            selectedUnit,
                             "equal"
                           );
                         }
@@ -2695,29 +2446,64 @@ export default function App() {
                     marginTop: 10
                   }}
                 >
+
                   <label>
-                    Operating Vent
+                    Configuration
 
                     <select
                       value={
-                        singleVentHanding
+                        sliderPattern
                       }
 
                       onChange={(event) =>
-                        setSingleVentHanding(
-                          event.target.value as SingleVentHanding
+                        setSliderPattern(
+                          event.target.value as SliderPattern
                         )
                       }
                     >
-                      <option value="Left Vent">
-                        Left Vent
+                      <option value="XO">
+                        XO — Vent Left
                       </option>
 
-                      <option value="Right Vent">
-                        Right Vent
+                      <option value="OX">
+                        OX — Vent Right
                       </option>
                     </select>
+
                   </label>
+
+                </div>
+
+              )}
+
+              {sliderOrientation ===
+                "Horizontal" &&
+                horizontalSliderType ===
+                  "Double Slider" && (
+
+                <div
+                  className="split-note"
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  Configuration: <strong>XX</strong> — both sashes operate
+                </div>
+
+              )}
+
+              {sliderOrientation ===
+                "Horizontal" &&
+                horizontalSliderType ===
+                  "Double Vent + Centre Picture" && (
+
+                <div
+                  className="split-note"
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  Configuration: <strong>XOX</strong> — outside vents operate, centre fixed
                 </div>
 
               )}
@@ -2750,13 +2536,14 @@ export default function App() {
                           sliderOrientation ===
                           "Horizontal"
                         ) {
-                          applyHorizontalSlider(
+                          applyHorizontalSliderToUnit(
+                            selectedUnit,
                             horizontalSliderType,
                             next
                           );
                         } else {
-                          applyVerticalSlider(
-                            verticalSliderType,
+                          applyVerticalSliderToUnit(
+                            selectedUnit,
                             next
                           );
                         }
@@ -2765,26 +2552,19 @@ export default function App() {
 
                       {sliderOrientation ===
                         "Horizontal" &&
-                        horizontalSliderType ===
-                          "Single Vent" && (
+                        horizontalSliderType !==
+                          "Double Vent + Centre Picture" && (
                           <>
                             <option value="equal">
                               1/2 - 1/2
                             </option>
 
-                            <option value="custom">
-                              Custom
+                            <option value="one-third">
+                              1/3 - 2/3
                             </option>
-                          </>
-                        )}
 
-                      {sliderOrientation ===
-                        "Horizontal" &&
-                        horizontalSliderType ===
-                          "Double Slider" && (
-                          <>
-                            <option value="equal">
-                              1/2 - 1/2
+                            <option value="two-thirds">
+                              2/3 - 1/3
                             </option>
 
                             <option value="custom">
@@ -2855,10 +2635,7 @@ export default function App() {
                           <label
                             key={index}
                           >
-                            {sliderOrientation ===
-                            "Horizontal"
-                              ? "Panel"
-                              : "Sash"}{" "}
+                            Section{" "}
                             {index + 1}
 
                             <input
@@ -3082,6 +2859,7 @@ export default function App() {
                     marginTop: 12
                   }}
                 >
+
                   <div className="number-row">
 
                     {customWidths.map(
@@ -3114,12 +2892,14 @@ export default function App() {
                               )
                             }
                           />
+
                         </label>
 
                       )
                     )}
 
                   </div>
+
                 </div>
 
               )}
@@ -3178,6 +2958,7 @@ export default function App() {
                     marginTop: 12
                   }}
                 >
+
                   <div className="number-row">
 
                     {customHeights.map(
@@ -3210,12 +2991,14 @@ export default function App() {
                               )
                             }
                           />
+
                         </label>
 
                       )
                     )}
 
                   </div>
+
                 </div>
 
               )}
@@ -3350,6 +3133,7 @@ export default function App() {
                         marginTop: 10
                       }}
                     >
+
                       <div className="number-row">
 
                         {selectedCustomHeights.map(
@@ -3385,6 +3169,7 @@ export default function App() {
                         )}
 
                       </div>
+
                     </div>
 
                   )}
@@ -3430,11 +3215,13 @@ export default function App() {
             </div>
 
             <div className="drawing-actions">
+
               <button
                 onClick={reset}
               >
                 Reset
               </button>
+
             </div>
 
           </div>
@@ -3496,9 +3283,11 @@ export default function App() {
               verticalSliderType={
                 verticalSliderType
               }
+
               singleVentHanding={
-              singleVentHanding
+                singleVentHanding
               }
+
               gridColumns={0}
               gridRows={0}
 
@@ -3516,7 +3305,7 @@ export default function App() {
               }
 
               onSelectPanel={
-                setSelectedUnit
+                handleSelectUnit
               }
 
               onOverallWidthChange={
