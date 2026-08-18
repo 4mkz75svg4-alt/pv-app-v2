@@ -2254,31 +2254,44 @@ export default function App() {
                     : ""
                 }
 
-                onClick={() => {
-                  setProductType(
-                    "Slider"
-                  );
+               onClick={() => {
+  const unitId =
+    selectedUnit ?? "0-0";
 
-                  setSliderOrientation(
-                    "Horizontal"
-                  );
+  setProductType(
+    "Slider"
+  );
 
-                  setHorizontalSliderType(
-                    "Single Vent"
-                  );
+  setSliderOrientation(
+    "Horizontal"
+  );
 
-                  setSliderPattern(
-                    "XO"
-                  );
+  setHorizontalSliderType(
+    "Single Vent"
+  );
 
-                  setSliderSplitMode(
-                    "equal"
-                  );
+  setSliderPattern(
+    "XO"
+  );
 
-                  setSliderCustomSizes(
-                    []
-                  );
-                }}
+  setSliderSplitMode(
+    "equal"
+  );
+
+  setSliderCustomSizes(
+    []
+  );
+
+  setSelectedUnit(
+    unitId
+  );
+
+  applyHorizontalSliderToUnit(
+    unitId,
+    "Single Vent",
+    "equal"
+  );
+}}
               >
                 Slider
               </button>
