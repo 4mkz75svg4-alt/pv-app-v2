@@ -511,3 +511,22 @@ button:disabled {
   stroke-width: 6;
   pointer-events: none;
 }
+/* SLIDER VENT SASH */
+
+.slider-sash-outline {
+  fill: none;
+  stroke: #667085;
+  stroke-width: 6;
+  pointer-events: none;
+}
+
+/* SLIDER MOVEMENT ARROWS */
+
+.slider-arrow {
+  fill: none;
+  stroke: #475467;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
