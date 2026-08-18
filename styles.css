@@ -503,3 +503,11 @@ button:disabled {
   text-align: center;
   color: #667085;
 }
+/* GENERIC CASEMENT / AWNING SASH */
+
+.sash-outline {
+  fill: none;
+  stroke: #667085;
+  stroke-width: 6;
+  pointer-events: none;
+}
