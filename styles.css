@@ -428,3 +428,12 @@ button:disabled {
   stroke-width: 4;
   pointer-events: none;
 }
+/* INTERNAL LITE DRAG HANDLE */
+
+.lite-split-hit {
+  stroke: transparent;
+  stroke-width: 30;
+  pointer-events: stroke;
+  cursor: ns-resize;
+  touch-action: none;
+}
