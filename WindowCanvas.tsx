@@ -45,6 +45,11 @@ type Props = {
     WindowUnitConfig
   >;
 
+  pictureStyles?: Record<
+    string,
+    PictureStyle
+  >;
+
   gridColumns: number;
   gridRows: number;
 
@@ -121,6 +126,7 @@ type OuterSplitDrag = {
 type UnitSplitDrag = {
   unitId: string;
   splitId: string;
+
   unitY: number;
   unitHeight: number;
 };
@@ -140,15 +146,35 @@ type LitePopup = {
 const MAX_FRAME_WIDTH = 960;
 const MAX_FRAME_HEIGHT = 585;
 
+function clamp(
+  value: number,
+  min: number,
+  max: number
+) {
+  return Math.max(
+    min,
+    Math.min(
+      max,
+      value
+    )
+  );
+}
+
 function getFrame(
   widthInches: number,
   heightInches: number
 ) {
   const safeWidth =
-    Math.max(widthInches, 1);
+    Math.max(
+      widthInches,
+      1
+    );
 
   const safeHeight =
-    Math.max(heightInches, 1);
+    Math.max(
+      heightInches,
+      1
+    );
 
   const scale =
     Math.min(
@@ -187,17 +213,6 @@ function getFrame(
   };
 }
 
-function clamp(
-  value: number,
-  min: number,
-  max: number
-) {
-  return Math.max(
-    min,
-    Math.min(max, value)
-  );
-}
-
 export default function WindowCanvas(
   props: Props
 ) {
@@ -213,6 +228,7 @@ export default function WindowCanvas(
           props.widthInches,
           props.heightInches
         ),
+
       [
         props.widthInches,
         props.heightInches
@@ -269,6 +285,7 @@ export default function WindowCanvas(
             a.position -
             b.position
         ),
+
       [props.verticalSplits]
     );
 
@@ -282,6 +299,7 @@ export default function WindowCanvas(
             a.position -
             b.position
         ),
+
       [props.horizontalSplits]
     );
 
@@ -592,7 +610,9 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextWidth.toFixed(2)
+              nextWidth.toFixed(
+                2
+              )
             )
           )
         );
@@ -614,7 +634,9 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextWidth.toFixed(2)
+              nextWidth.toFixed(
+                2
+              )
             )
           )
         );
@@ -636,7 +658,9 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextHeight.toFixed(2)
+              nextHeight.toFixed(
+                2
+              )
             )
           )
         );
@@ -658,7 +682,9 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextHeight.toFixed(2)
+              nextHeight.toFixed(
+                2
+              )
             )
           )
         );
@@ -705,8 +731,6 @@ export default function WindowCanvas(
           0.95
         )
       );
-
-      return;
     }
   }
 
@@ -818,6 +842,55 @@ export default function WindowCanvas(
     setLitePopup(null);
   }
 
+  function renderSash(
+    x: number,
+    y: number,
+    w: number,
+    h: number
+  ) {
+    const inset =
+      clamp(
+        Math.min(
+          w,
+          h
+        ) * 0.075,
+        8,
+        18
+      );
+
+    return (
+      <rect
+        className="sash-outline"
+
+        x={
+          x + inset
+        }
+
+        y={
+          y + inset
+        }
+
+        width={
+          Math.max(
+            0,
+            w -
+              inset * 2
+          )
+        }
+
+        height={
+          Math.max(
+            0,
+            h -
+              inset * 2
+          )
+        }
+
+        rx="2"
+      />
+    );
+  }
+
   function renderOperationSymbol(
     operation: PanelType,
     x: number,
@@ -826,10 +899,14 @@ export default function WindowCanvas(
     h: number
   ) {
     const pad =
-      Math.min(
-        w,
-        h
-      ) * 0.15;
+      clamp(
+        Math.min(
+          w,
+          h
+        ) * 0.18,
+        12,
+        28
+      );
 
     const left =
       x + pad;
@@ -1006,12 +1083,32 @@ export default function WindowCanvas(
                   ]?.type ??
                 "Picture";
 
+              const pictureStyle =
+                props.pictureStyles?.[
+                  `${unit.id}:${liteId}`
+                ];
+
+              const hasSash =
+                operation !==
+                  "Picture" ||
+                pictureStyle ===
+                  "Balanced Sash";
+
               return (
                 <g
                   key={
                     `${unit.id}-${liteId}`
                   }
                 >
+
+                  {hasSash &&
+                    renderSash(
+                      unit.x,
+                      liteY,
+                      unit.w,
+                      liteHeight
+                    )}
+
                   {renderOperationSymbol(
                     operation,
                     unit.x,
@@ -1045,6 +1142,7 @@ export default function WindowCanvas(
                       )
                     }
                   />
+
                 </g>
               );
             }
@@ -1059,6 +1157,7 @@ export default function WindowCanvas(
 
             return (
               <g key={split.id}>
+
                 <line
                   className="lite-split-line"
 
@@ -1098,6 +1197,7 @@ export default function WindowCanvas(
                     )
                   }
                 />
+
               </g>
             );
           }
@@ -1130,7 +1230,9 @@ export default function WindowCanvas(
         setPreview(null);
         setDragging(null);
         setFrameDragging(null);
-        setUnitSplitDragging(null);
+        setUnitSplitDragging(
+          null
+        );
       }}
     >
 
@@ -1488,12 +1590,14 @@ export default function WindowCanvas(
         >
           <div
             className="lite-popup"
+
             onPointerDown={(
               event
             ) =>
               event.stopPropagation()
             }
           >
+
             <div className="lite-popup-title">
               {litePopup.stage ===
               "operation"
@@ -1556,6 +1660,7 @@ export default function WindowCanvas(
                   <strong>
                     Balanced Sash
                   </strong>
+
                   <span>
                     Matches operating sash
                   </span>
@@ -1571,6 +1676,7 @@ export default function WindowCanvas(
                   <strong>
                     Direct Set
                   </strong>
+
                   <span>
                     Glass set directly in frame
                   </span>
@@ -1578,9 +1684,11 @@ export default function WindowCanvas(
 
                 <button
                   className="popup-back"
+
                   onClick={() =>
                     setLitePopup({
                       ...litePopup,
+
                       stage:
                         "operation"
                     })
@@ -1593,12 +1701,14 @@ export default function WindowCanvas(
 
             <button
               className="popup-close"
+
               onClick={() =>
                 setLitePopup(null)
               }
             >
               ×
             </button>
+
           </div>
         </foreignObject>
       )}
