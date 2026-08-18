@@ -761,21 +761,7 @@ export default function WindowCanvas(
     h: number,
     slider = false
   ) {
-    const inset =
-      clamp(
-        Math.min(
-          w,
-          h
-        ) *
-          (
-            slider
-              ? 0.065
-              : 0.075
-          ),
-
-        7,
-        18
-      );
+   const inset = 14;
 
     return (
       <rect
