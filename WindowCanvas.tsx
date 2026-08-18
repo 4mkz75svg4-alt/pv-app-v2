@@ -25,10 +25,7 @@ type Props = {
 
   selectedPanel: string | null;
 
-  panelTypes: Record<
-    string,
-    PanelType
-  >;
+  panelTypes: Record<string, PanelType>;
 
   windowUnits?: Record<
     string,
@@ -104,7 +101,6 @@ type OuterSplitDrag = {
 type UnitSplitDrag = {
   unitId: string;
   splitId: string;
-
   unitY: number;
   unitHeight: number;
 };
@@ -117,16 +113,10 @@ function getFrame(
   heightInches: number
 ) {
   const safeWidth =
-    Math.max(
-      widthInches,
-      1
-    );
+    Math.max(widthInches, 1);
 
   const safeHeight =
-    Math.max(
-      heightInches,
-      1
-    );
+    Math.max(heightInches, 1);
 
   const scale =
     Math.min(
@@ -146,18 +136,14 @@ function getFrame(
   return {
     x:
       20 +
-      (
-        MAX_FRAME_WIDTH -
-        width
-      ) /
+      (MAX_FRAME_WIDTH -
+        width) /
         2,
 
     y:
       20 +
-      (
-        MAX_FRAME_HEIGHT -
-        height
-      ) /
+      (MAX_FRAME_HEIGHT -
+        height) /
         2,
 
     width,
@@ -172,10 +158,7 @@ function clamp(
 ) {
   return Math.max(
     min,
-    Math.min(
-      max,
-      value
-    )
+    Math.min(max, value)
   );
 }
 
@@ -194,7 +177,6 @@ export default function WindowCanvas(
           props.widthInches,
           props.heightInches
         ),
-
       [
         props.widthInches,
         props.heightInches
@@ -243,7 +225,6 @@ export default function WindowCanvas(
             a.position -
             b.position
         ),
-
       [props.verticalSplits]
     );
 
@@ -257,7 +238,6 @@ export default function WindowCanvas(
             a.position -
             b.position
         ),
-
       [props.horizontalSplits]
     );
 
@@ -563,9 +543,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextWidth.toFixed(
-                2
-              )
+              nextWidth.toFixed(2)
             )
           )
         );
@@ -587,9 +565,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextWidth.toFixed(
-                2
-              )
+              nextWidth.toFixed(2)
             )
           )
         );
@@ -611,9 +587,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextHeight.toFixed(
-                2
-              )
+              nextHeight.toFixed(2)
             )
           )
         );
@@ -635,9 +609,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextHeight.toFixed(
-                2
-              )
+              nextHeight.toFixed(2)
             )
           )
         );
@@ -732,7 +704,6 @@ export default function WindowCanvas(
       setUnitSplitDragging(
         null
       );
-
       return;
     }
 
@@ -740,13 +711,11 @@ export default function WindowCanvas(
       setFrameDragging(
         null
       );
-
       return;
     }
 
     if (dragging) {
       setDragging(null);
-
       return;
     }
 
@@ -944,6 +913,37 @@ export default function WindowCanvas(
                 }
               />
 
+              {/* Unit click/tap area is deliberately BELOW the lite drag handles */}
+
+              <rect
+                className="panel-hit"
+
+                x={unit.x}
+                y={unit.y}
+
+                width={unit.w}
+                height={unit.h}
+
+                onPointerDown={(
+                  event
+                ) => {
+                  if (
+                    props.mode !==
+                    "select"
+                  ) {
+                    return;
+                  }
+
+                  event.stopPropagation();
+
+                  props.onSelectPanel(
+                    unit.id
+                  );
+                }}
+              />
+
+              {/* Internal mullions are rendered AFTER panel-hit so they sit on top */}
+
               {renderLiteGrid(
                 unit
               )}
@@ -981,33 +981,6 @@ export default function WindowCanvas(
                 ).toFixed(1)}
                 "
               </text>
-
-              <rect
-                className="panel-hit"
-
-                x={unit.x}
-                y={unit.y}
-
-                width={unit.w}
-                height={unit.h}
-
-                onPointerDown={(
-                  event
-                ) => {
-                  if (
-                    props.mode !==
-                    "select"
-                  ) {
-                    return;
-                  }
-
-                  event.stopPropagation();
-
-                  props.onSelectPanel(
-                    unit.id
-                  );
-                }}
-              />
 
             </g>
           );
