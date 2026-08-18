@@ -16,6 +16,16 @@ type Mode =
   | "draw-horizontal"
   | "select";
 
+type LiteOperation =
+  | "Picture"
+  | "Awning"
+  | "Casement Left"
+  | "Casement Right";
+
+type PictureStyle =
+  | "Balanced Sash"
+  | "Direct Set";
+
 type Props = {
   widthInches: number;
   heightInches: number;
@@ -25,7 +35,10 @@ type Props = {
 
   selectedPanel: string | null;
 
-  panelTypes: Record<string, PanelType>;
+  panelTypes: Record<
+    string,
+    PanelType
+  >;
 
   windowUnits?: Record<
     string,
@@ -72,6 +85,13 @@ type Props = {
     splitId: string,
     position: number
   ) => void;
+
+  onSetLiteOperation?: (
+    unitId: string,
+    liteId: string,
+    operation: LiteOperation,
+    pictureStyle?: PictureStyle
+  ) => void;
 };
 
 type FrameEdge =
@@ -105,6 +125,18 @@ type UnitSplitDrag = {
   unitHeight: number;
 };
 
+type LitePopup = {
+  unitId: string;
+  liteId: string;
+
+  x: number;
+  y: number;
+
+  stage:
+    | "operation"
+    | "picture";
+};
+
 const MAX_FRAME_WIDTH = 960;
 const MAX_FRAME_HEIGHT = 585;
 
@@ -136,14 +168,18 @@ function getFrame(
   return {
     x:
       20 +
-      (MAX_FRAME_WIDTH -
-        width) /
+      (
+        MAX_FRAME_WIDTH -
+        width
+      ) /
         2,
 
     y:
       20 +
-      (MAX_FRAME_HEIGHT -
-        height) /
+      (
+        MAX_FRAME_HEIGHT -
+        height
+      ) /
         2,
 
     width,
@@ -212,6 +248,14 @@ export default function WindowCanvas(
     setFrameDragging
   ] =
     useState<FrameDrag | null>(
+      null
+    );
+
+  const [
+    litePopup,
+    setLitePopup
+  ] =
+    useState<LitePopup | null>(
       null
     );
 
@@ -323,6 +367,7 @@ export default function WindowCanvas(
     event: PointerEvent<
       | SVGSVGElement
       | SVGLineElement
+      | SVGRectElement
     >
   ) {
     const svg =
@@ -434,6 +479,8 @@ export default function WindowCanvas(
   ) {
     event.stopPropagation();
 
+    setLitePopup(null);
+
     const point =
       pointFromEvent(event);
 
@@ -478,6 +525,8 @@ export default function WindowCanvas(
     event: PointerEvent<SVGLineElement>
   ) {
     event.stopPropagation();
+
+    setLitePopup(null);
 
     setUnitSplitDragging({
       unitId,
@@ -659,86 +708,233 @@ export default function WindowCanvas(
 
       return;
     }
-
-    if (!preview) {
-      return;
-    }
-
-    if (
-      preview.axis === "x"
-    ) {
-      setPreview({
-        axis: "x",
-
-        value: clamp(
-          (
-            point.x -
-            FRAME.x
-          ) /
-            FRAME.width,
-
-          0.05,
-          0.95
-        )
-      });
-    } else {
-      setPreview({
-        axis: "y",
-
-        value: clamp(
-          (
-            point.y -
-            FRAME.y
-          ) /
-            FRAME.height,
-
-          0.05,
-          0.95
-        )
-      });
-    }
   }
 
   function pointerUp() {
-    if (unitSplitDragging) {
-      setUnitSplitDragging(
-        null
-      );
-      return;
-    }
+    setUnitSplitDragging(null);
+    setFrameDragging(null);
+    setDragging(null);
+  }
 
-    if (frameDragging) {
-      setFrameDragging(
-        null
-      );
-      return;
-    }
+  function openLitePopup(
+    unitId: string,
+    liteId: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    event: PointerEvent<SVGRectElement>
+  ) {
+    event.stopPropagation();
 
-    if (dragging) {
-      setDragging(null);
-      return;
-    }
+    props.onSelectPanel(
+      unitId
+    );
 
-    if (!preview) {
+    const popupWidth = 180;
+    const popupHeight = 190;
+
+    let popupX =
+      x +
+      w / 2 -
+      popupWidth / 2;
+
+    let popupY =
+      y +
+      h / 2 -
+      popupHeight / 2;
+
+    popupX = clamp(
+      popupX,
+      10,
+      1000 -
+        popupWidth -
+        10
+    );
+
+    popupY = clamp(
+      popupY,
+      10,
+      625 -
+        popupHeight -
+        10
+    );
+
+    setLitePopup({
+      unitId,
+      liteId,
+
+      x: popupX,
+      y: popupY,
+
+      stage:
+        "operation"
+    });
+  }
+
+  function chooseOperation(
+    operation: LiteOperation
+  ) {
+    if (!litePopup) {
       return;
     }
 
     if (
-      preview.axis === "x"
+      operation ===
+      "Picture"
     ) {
-      props.onAddVertical(
-        preview.value
-      );
-    } else {
-      props.onAddHorizontal(
-        preview.value
+      setLitePopup({
+        ...litePopup,
+        stage:
+          "picture"
+      });
+
+      return;
+    }
+
+    props.onSetLiteOperation?.(
+      litePopup.unitId,
+      litePopup.liteId,
+      operation
+    );
+
+    setLitePopup(null);
+  }
+
+  function choosePictureStyle(
+    style: PictureStyle
+  ) {
+    if (!litePopup) {
+      return;
+    }
+
+    props.onSetLiteOperation?.(
+      litePopup.unitId,
+      litePopup.liteId,
+      "Picture",
+      style
+    );
+
+    setLitePopup(null);
+  }
+
+  function renderOperationSymbol(
+    operation: PanelType,
+    x: number,
+    y: number,
+    w: number,
+    h: number
+  ) {
+    const pad =
+      Math.min(
+        w,
+        h
+      ) * 0.15;
+
+    const left =
+      x + pad;
+
+    const right =
+      x +
+      w -
+      pad;
+
+    const top =
+      y + pad;
+
+    const bottom =
+      y +
+      h -
+      pad;
+
+    const middleX =
+      x +
+      w / 2;
+
+    const middleY =
+      y +
+      h / 2;
+
+    if (
+      operation ===
+      "Picture"
+    ) {
+      return null;
+    }
+
+    if (
+      operation ===
+      "Awning"
+    ) {
+      return (
+        <g className="opening-symbol">
+          <line
+            x1={left}
+            y1={bottom}
+            x2={middleX}
+            y2={top}
+          />
+
+          <line
+            x1={right}
+            y1={bottom}
+            x2={middleX}
+            y2={top}
+          />
+        </g>
       );
     }
 
-    setPreview(null);
+    if (
+      operation ===
+      "Casement Left"
+    ) {
+      return (
+        <g className="opening-symbol">
+          <line
+            x1={right}
+            y1={top}
+            x2={left}
+            y2={middleY}
+          />
+
+          <line
+            x1={right}
+            y1={bottom}
+            x2={left}
+            y2={middleY}
+          />
+        </g>
+      );
+    }
+
+    if (
+      operation ===
+      "Casement Right"
+    ) {
+      return (
+        <g className="opening-symbol">
+          <line
+            x1={left}
+            y1={top}
+            x2={right}
+            y2={middleY}
+          />
+
+          <line
+            x1={left}
+            y1={bottom}
+            x2={right}
+            y2={middleY}
+          />
+        </g>
+      );
+    }
+
+    return null;
   }
 
-  function renderLiteGrid(
+  function renderUnit(
     unit: {
       id: string;
       x: number;
@@ -765,8 +961,95 @@ export default function WindowCanvas(
           b.position
       );
 
+    const positions = [
+      0,
+      ...horizontal.map(
+        (split) =>
+          split.position
+      ),
+      1
+    ];
+
     return (
       <>
+        {positions
+          .slice(0, -1)
+          .map(
+            (
+              start,
+              index
+            ) => {
+              const end =
+                positions[
+                  index + 1
+                ];
+
+              const liteY =
+                unit.y +
+                start *
+                  unit.h;
+
+              const liteHeight =
+                (
+                  end -
+                  start
+                ) *
+                unit.h;
+
+              const liteId =
+                `${index}-0`;
+
+              const operation =
+                config
+                  .liteConfigs[
+                    liteId
+                  ]?.type ??
+                "Picture";
+
+              return (
+                <g
+                  key={
+                    `${unit.id}-${liteId}`
+                  }
+                >
+                  {renderOperationSymbol(
+                    operation,
+                    unit.x,
+                    liteY,
+                    unit.w,
+                    liteHeight
+                  )}
+
+                  <rect
+                    className="lite-hit"
+
+                    x={unit.x}
+                    y={liteY}
+
+                    width={unit.w}
+                    height={
+                      liteHeight
+                    }
+
+                    onPointerDown={(
+                      event
+                    ) =>
+                      openLitePopup(
+                        unit.id,
+                        liteId,
+                        unit.x,
+                        liteY,
+                        unit.w,
+                        liteHeight,
+                        event
+                      )
+                    }
+                  />
+                </g>
+              );
+            }
+          )}
+
         {horizontal.map(
           (split) => {
             const y =
@@ -776,7 +1059,6 @@ export default function WindowCanvas(
 
             return (
               <g key={split.id}>
-
                 <line
                   className="lite-split-line"
 
@@ -816,7 +1098,6 @@ export default function WindowCanvas(
                     )
                   }
                 />
-
               </g>
             );
           }
@@ -849,9 +1130,7 @@ export default function WindowCanvas(
         setPreview(null);
         setDragging(null);
         setFrameDragging(null);
-        setUnitSplitDragging(
-          null
-        );
+        setUnitSplitDragging(null);
       }}
     >
 
@@ -913,38 +1192,7 @@ export default function WindowCanvas(
                 }
               />
 
-              {/* Unit click/tap area is deliberately BELOW the lite drag handles */}
-
-              <rect
-                className="panel-hit"
-
-                x={unit.x}
-                y={unit.y}
-
-                width={unit.w}
-                height={unit.h}
-
-                onPointerDown={(
-                  event
-                ) => {
-                  if (
-                    props.mode !==
-                    "select"
-                  ) {
-                    return;
-                  }
-
-                  event.stopPropagation();
-
-                  props.onSelectPanel(
-                    unit.id
-                  );
-                }}
-              />
-
-              {/* Internal mullions are rendered AFTER panel-hit so they sit on top */}
-
-              {renderLiteGrid(
+              {renderUnit(
                 unit
               )}
 
@@ -1029,6 +1277,8 @@ export default function WindowCanvas(
                 ) => {
                   event.stopPropagation();
 
+                  setLitePopup(null);
+
                   setDragging({
                     axis: "x",
                     id: split.id
@@ -1087,6 +1337,8 @@ export default function WindowCanvas(
                   event
                 ) => {
                   event.stopPropagation();
+
+                  setLitePopup(null);
 
                   setDragging({
                     axis: "y",
@@ -1226,6 +1478,130 @@ export default function WindowCanvas(
           )
         }
       />
+
+      {litePopup && (
+        <foreignObject
+          x={litePopup.x}
+          y={litePopup.y}
+          width="180"
+          height="200"
+        >
+          <div
+            className="lite-popup"
+            onPointerDown={(
+              event
+            ) =>
+              event.stopPropagation()
+            }
+          >
+            <div className="lite-popup-title">
+              {litePopup.stage ===
+              "operation"
+                ? "Lite Type"
+                : "Picture Type"}
+            </div>
+
+            {litePopup.stage ===
+              "operation" ? (
+              <>
+                <button
+                  onClick={() =>
+                    chooseOperation(
+                      "Picture"
+                    )
+                  }
+                >
+                  Picture
+                </button>
+
+                <button
+                  onClick={() =>
+                    chooseOperation(
+                      "Awning"
+                    )
+                  }
+                >
+                  Awning
+                </button>
+
+                <button
+                  onClick={() =>
+                    chooseOperation(
+                      "Casement Left"
+                    )
+                  }
+                >
+                  Casement Left
+                </button>
+
+                <button
+                  onClick={() =>
+                    chooseOperation(
+                      "Casement Right"
+                    )
+                  }
+                >
+                  Casement Right
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() =>
+                    choosePictureStyle(
+                      "Balanced Sash"
+                    )
+                  }
+                >
+                  <strong>
+                    Balanced Sash
+                  </strong>
+                  <span>
+                    Matches operating sash
+                  </span>
+                </button>
+
+                <button
+                  onClick={() =>
+                    choosePictureStyle(
+                      "Direct Set"
+                    )
+                  }
+                >
+                  <strong>
+                    Direct Set
+                  </strong>
+                  <span>
+                    Glass set directly in frame
+                  </span>
+                </button>
+
+                <button
+                  className="popup-back"
+                  onClick={() =>
+                    setLitePopup({
+                      ...litePopup,
+                      stage:
+                        "operation"
+                    })
+                  }
+                >
+                  Back
+                </button>
+              </>
+            )}
+
+            <button
+              className="popup-close"
+              onClick={() =>
+                setLitePopup(null)
+              }
+            >
+              ×
+            </button>
+          </div>
+        </foreignObject>
+      )}
 
     </svg>
   );
