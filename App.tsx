@@ -78,9 +78,7 @@ function createEqualSplits(
   count: number,
   prefix: string
 ): Split[] {
-  if (count <= 1) {
-    return [];
-  }
+  if (count <= 1) return [];
 
   return Array.from(
     { length: count - 1 },
@@ -98,11 +96,7 @@ function createLiteConfigs(
   const configs: WindowUnitConfig["liteConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
-    for (
-      let column = 0;
-      column < wide;
-      column++
-    ) {
+    for (let column = 0; column < wide; column++) {
       configs[`${row}-${column}`] = {
         type: "Picture"
       };
@@ -152,15 +146,9 @@ function createWindowUnits(
   > = {};
 
   for (let row = 0; row < tall; row++) {
-    for (
-      let column = 0;
-      column < wide;
-      column++
-    ) {
+    for (let column = 0; column < wide; column++) {
       const id = `${row}-${column}`;
-
-      units[id] =
-        createWindowUnit(id);
+      units[id] = createWindowUnit(id);
     }
   }
 
@@ -175,11 +163,7 @@ function createPanelConfigs(
     ConfiguratorState["panelConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
-    for (
-      let column = 0;
-      column < wide;
-      column++
-    ) {
+    for (let column = 0; column < wide; column++) {
       configs[`${row}-${column}`] = {
         type: "Picture"
       };
@@ -194,8 +178,7 @@ function sizesFromSplits(
   total: number
 ) {
   const sorted = [...splits].sort(
-    (a, b) =>
-      a.position - b.position
+    (a, b) => a.position - b.position
   );
 
   const positions = [
@@ -321,16 +304,10 @@ export default function App() {
       initialState
     );
 
-  const [
-    widthInput,
-    setWidthInput
-  ] =
+  const [widthInput, setWidthInput] =
     useState("96");
 
-  const [
-    heightInput,
-    setHeightInput
-  ] =
+  const [heightInput, setHeightInput] =
     useState("60");
 
   const [
@@ -387,16 +364,10 @@ export default function App() {
   ] =
     useState<string[]>([]);
 
-  const [
-    unitsWide,
-    setUnitsWide
-  ] =
+  const [unitsWide, setUnitsWide] =
     useState(1);
 
-  const [
-    unitsTall,
-    setUnitsTall
-  ] =
+  const [unitsTall, setUnitsTall] =
     useState(1);
 
   const [
@@ -451,34 +422,28 @@ export default function App() {
     unitSplitModes,
     setUnitSplitModes
   ] =
-    useState<
-      Record<
-        string,
-        UnitSplitMode
-      >
-    >({});
+    useState<Record<
+      string,
+      UnitSplitMode
+    >>({});
 
   const [
     unitCustomHeights,
     setUnitCustomHeights
   ] =
-    useState<
-      Record<
-        string,
-        string[]
-      >
-    >({});
+    useState<Record<
+      string,
+      string[]
+    >>({});
 
   const [
     pictureStyles,
     setPictureStyles
   ] =
-    useState<
-      Record<
-        string,
-        PictureStyle
-      >
-    >({});
+    useState<Record<
+      string,
+      PictureStyle
+    >>({});
 
   const mode: Mode =
     "select";
@@ -500,9 +465,7 @@ export default function App() {
       Number(rowText);
 
     const sorted =
-      [
-        ...state.horizontalSplits
-      ].sort(
+      [...state.horizontalSplits].sort(
         (a, b) =>
           a.position -
           b.position
@@ -532,19 +495,14 @@ export default function App() {
   function getUnitWidth(
     unitId: string
   ) {
-    const [
-      ,
-      columnText
-    ] =
+    const [, columnText] =
       unitId.split("-");
 
     const column =
       Number(columnText);
 
     const sorted =
-      [
-        ...state.verticalSplits
-      ].sort(
+      [...state.verticalSplits].sort(
         (a, b) =>
           a.position -
           b.position
@@ -568,6 +526,16 @@ export default function App() {
     return (
       (end - start) *
       state.overallWidth
+    );
+  }
+
+  function getSelectedUnitHeight() {
+    if (!selectedUnit) {
+      return 0;
+    }
+
+    return getUnitHeight(
+      selectedUnit
     );
   }
 
@@ -624,14 +592,13 @@ export default function App() {
   function changeUnitsWide(
     value: number
   ) {
-    const next =
-      Math.max(
-        1,
-        Math.min(
-          6,
-          value
-        )
-      );
+    const next = Math.max(
+      1,
+      Math.min(
+        6,
+        value
+      )
+    );
 
     setUnitsWide(next);
 
@@ -644,14 +611,13 @@ export default function App() {
   function changeUnitsTall(
     value: number
   ) {
-    const next =
-      Math.max(
-        1,
-        Math.min(
-          4,
-          value
-        )
-      );
+    const next = Math.max(
+      1,
+      Math.min(
+        4,
+        value
+      )
+    );
 
     setUnitsTall(next);
 
@@ -680,9 +646,7 @@ export default function App() {
   }
 
   function applyCenterFeature() {
-    if (
-      unitsWide !== 3
-    ) {
+    if (unitsWide !== 3) {
       return;
     }
 
@@ -777,12 +741,11 @@ export default function App() {
       autoIndex
     );
 
-    next =
-      rebalanceSizes(
-        next,
-        state.overallWidth,
-        autoIndex
-      );
+    next = rebalanceSizes(
+      next,
+      state.overallWidth,
+      autoIndex
+    );
 
     setCustomWidths(next);
 
@@ -892,12 +855,11 @@ export default function App() {
       autoIndex
     );
 
-    next =
-      rebalanceSizes(
-        next,
-        state.overallHeight,
-        autoIndex
-      );
+    next = rebalanceSizes(
+      next,
+      state.overallHeight,
+      autoIndex
+    );
 
     setCustomHeights(next);
 
@@ -940,6 +902,38 @@ export default function App() {
       return;
     }
 
+    if (
+      horizontalSizingMode ===
+        "custom" &&
+      customWidths.length ===
+        unitsWide
+    ) {
+      const next =
+        rebalanceSizes(
+          customWidths,
+          number,
+          widthAutoIndex
+        );
+
+      setCustomWidths(next);
+
+      setState((current) => ({
+        ...current,
+
+        overallWidth:
+          number,
+
+        verticalSplits:
+          splitsFromSizes(
+            next.map(Number),
+            number,
+            "unit-v"
+          )
+      }));
+
+      return;
+    }
+
     setState((current) => ({
       ...current,
       overallWidth:
@@ -960,6 +954,38 @@ export default function App() {
       !Number.isFinite(number) ||
       number <= 0
     ) {
+      return;
+    }
+
+    if (
+      verticalSizingMode ===
+        "custom" &&
+      customHeights.length ===
+        unitsTall
+    ) {
+      const next =
+        rebalanceSizes(
+          customHeights,
+          number,
+          heightAutoIndex
+        );
+
+      setCustomHeights(next);
+
+      setState((current) => ({
+        ...current,
+
+        overallHeight:
+          number,
+
+        horizontalSplits:
+          splitsFromSizes(
+            next.map(Number),
+            number,
+            "unit-h"
+          )
+      }));
+
       return;
     }
 
@@ -990,10 +1016,8 @@ export default function App() {
     id: string,
     position: number
   ) {
-    setState((current) => ({
-      ...current,
-
-      verticalSplits:
+    setState((current) => {
+      const splits =
         current.verticalSplits.map(
           (split) =>
             split.id === id
@@ -1002,18 +1026,33 @@ export default function App() {
                   position
                 }
               : split
+        );
+
+      setHorizontalSizingMode(
+        "custom"
+      );
+
+      setCustomWidths(
+        sizesFromSplits(
+          splits,
+          current.overallWidth
         )
-    }));
+      );
+
+      return {
+        ...current,
+        verticalSplits:
+          splits
+      };
+    });
   }
 
   function moveHorizontal(
     id: string,
     position: number
   ) {
-    setState((current) => ({
-      ...current,
-
-      horizontalSplits:
+    setState((current) => {
+      const splits =
         current.horizontalSplits.map(
           (split) =>
             split.id === id
@@ -1022,8 +1061,25 @@ export default function App() {
                   position
                 }
               : split
+        );
+
+      setVerticalSizingMode(
+        "custom"
+      );
+
+      setCustomHeights(
+        sizesFromSplits(
+          splits,
+          current.overallHeight
         )
-    }));
+      );
+
+      return {
+        ...current,
+        horizontalSplits:
+          splits
+      };
+    });
   }
 
   function changeSelectedNumberHigh(
@@ -1087,6 +1143,14 @@ export default function App() {
         ...current,
         [selectedUnit]:
           "equal"
+      })
+    );
+
+    setUnitCustomHeights(
+      (current) => ({
+        ...current,
+        [selectedUnit]:
+          []
       })
     );
   }
@@ -1193,11 +1257,9 @@ export default function App() {
       "custom"
     ) {
       const unitHeight =
-        getUnitHeight(
-          selectedUnit
-        );
+        getSelectedUnitHeight();
 
-      const sizes =
+      const currentSizes =
         sizesFromSplits(
           selectedUnitConfig.horizontalSplits,
           unitHeight
@@ -1207,7 +1269,7 @@ export default function App() {
         (current) => ({
           ...current,
           [selectedUnit]:
-            sizes
+            currentSizes
         })
       );
 
@@ -1244,7 +1306,6 @@ export default function App() {
 
         [selectedUnit]: {
           ...selectedUnitConfig,
-
           horizontalSplits:
             splits
         }
@@ -1256,6 +1317,14 @@ export default function App() {
         ...current,
         [selectedUnit]:
           splitMode
+      })
+    );
+
+    setUnitCustomHeights(
+      (current) => ({
+        ...current,
+        [selectedUnit]:
+          []
       })
     );
   }
@@ -1272,9 +1341,7 @@ export default function App() {
     }
 
     const unitHeight =
-      getUnitHeight(
-        selectedUnit
-      );
+      getSelectedUnitHeight();
 
     const current =
       unitCustomHeights[
@@ -1285,11 +1352,9 @@ export default function App() {
         unitHeight
       );
 
-    let next =
-      [...current];
+    let next = [...current];
 
-    next[index] =
-      value;
+    next[index] = value;
 
     const number =
       Number(value);
@@ -1323,12 +1388,11 @@ export default function App() {
         );
     }
 
-    next =
-      rebalanceSizes(
-        next,
-        unitHeight,
-        autoIndex
-      );
+    next = rebalanceSizes(
+      next,
+      unitHeight,
+      autoIndex
+    );
 
     setUnitCustomHeights(
       (all) => ({
@@ -1348,11 +1412,11 @@ export default function App() {
           item > 0
       )
     ) {
-      setState((current) => ({
-        ...current,
+      setState((currentState) => ({
+        ...currentState,
 
         windowUnits: {
-          ...(current.windowUnits ??
+          ...(currentState.windowUnits ??
             {}),
 
           [selectedUnit]: {
@@ -1368,6 +1432,166 @@ export default function App() {
         }
       }));
     }
+  }
+
+  function moveUnitHorizontalSplit(
+    unitId: string,
+    splitId: string,
+    position: number
+  ) {
+    const unitHeight =
+      getUnitHeight(
+        unitId
+      );
+
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
+
+      if (!unit) {
+        return current;
+      }
+
+      const nextSplits =
+        unit.horizontalSplits
+          .map(
+            (split) =>
+              split.id ===
+              splitId
+                ? {
+                    ...split,
+                    position
+                  }
+                : split
+          )
+          .sort(
+            (a, b) =>
+              a.position -
+              b.position
+          );
+
+      const updatedSizes =
+        sizesFromSplits(
+          nextSplits,
+          unitHeight
+        );
+
+      if (
+        productType ===
+        "Slider"
+      ) {
+        setSliderSplitMode(
+          "custom"
+        );
+
+        setSliderCustomSizes(
+          updatedSizes
+        );
+      } else {
+        setUnitSplitModes(
+          (modes) => ({
+            ...modes,
+            [unitId]:
+              "custom"
+          })
+        );
+
+        setUnitCustomHeights(
+          (heights) => ({
+            ...heights,
+            [unitId]:
+              updatedSizes
+          })
+        );
+      }
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [unitId]: {
+            ...unit,
+            horizontalSplits:
+              nextSplits
+          }
+        }
+      };
+    });
+  }
+
+  function moveUnitVerticalSplit(
+    unitId: string,
+    splitId: string,
+    position: number
+  ) {
+    const unitWidth =
+      getUnitWidth(
+        unitId
+      );
+
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
+
+      if (!unit) {
+        return current;
+      }
+
+      const nextSplits =
+        unit.verticalSplits
+          .map(
+            (split) =>
+              split.id ===
+              splitId
+                ? {
+                    ...split,
+                    position
+                  }
+                : split
+          )
+          .sort(
+            (a, b) =>
+              a.position -
+              b.position
+          );
+
+      const updatedSizes =
+        sizesFromSplits(
+          nextSplits,
+          unitWidth
+        );
+
+      setSliderSplitMode(
+        "custom"
+      );
+
+      setSliderCustomSizes(
+        updatedSizes
+      );
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [unitId]: {
+            ...unit,
+
+            verticalSplits:
+              nextSplits
+          }
+        }
+      };
+    });
   }
 
   function setLiteOperation(
@@ -1530,6 +1754,19 @@ export default function App() {
         ? 3
         : 2;
 
+    const splits =
+      positions.map(
+        (
+          position,
+          index
+        ) => ({
+          id: newId(
+            `slider-v-${unitId}-${index}`
+          ),
+          position
+        })
+      );
+
     setState((current) => {
       const existing =
         current.windowUnits?.[
@@ -1553,17 +1790,7 @@ export default function App() {
             litesTall: 1,
 
             verticalSplits:
-              positions.map(
-                (
-                  position,
-                  index
-                ) => ({
-                  id: newId(
-                    `slider-v-${unitId}-${index}`
-                  ),
-                  position
-                })
-              ),
+              splits,
 
             horizontalSplits:
               [],
@@ -1746,7 +1973,9 @@ export default function App() {
 
     let next =
       sliderCustomSizes.length
-        ? [...sliderCustomSizes]
+        ? [
+            ...sliderCustomSizes
+          ]
         : horizontal
         ? sizesFromSplits(
             unit.verticalSplits,
@@ -1788,12 +2017,11 @@ export default function App() {
         );
     }
 
-    next =
-      rebalanceSizes(
-        next,
-        total,
-        autoIndex
-      );
+    next = rebalanceSizes(
+      next,
+      total,
+      autoIndex
+    );
 
     setSliderCustomSizes(
       next
@@ -1855,174 +2083,11 @@ export default function App() {
     });
   }
 
-  function moveUnitHorizontalSplit(
-    unitId: string,
-    splitId: string,
-    position: number
-  ) {
-    const unitHeight =
-      getUnitHeight(
-        unitId
-      );
-
-    setState((current) => {
-      const unit =
-        current.windowUnits?.[
-          unitId
-        ];
-
-      if (!unit) {
-        return current;
-      }
-
-      const nextSplits =
-        unit.horizontalSplits
-          .map(
-            (split) =>
-              split.id ===
-              splitId
-                ? {
-                    ...split,
-                    position
-                  }
-                : split
-          )
-          .sort(
-            (a, b) =>
-              a.position -
-              b.position
-          );
-
-      if (
-        productType ===
-        "Slider"
-      ) {
-        setSliderSplitMode(
-          "custom"
-        );
-
-        setSliderCustomSizes(
-          sizesFromSplits(
-            nextSplits,
-            unitHeight
-          )
-        );
-      } else {
-        setUnitSplitModes(
-          (currentModes) => ({
-            ...currentModes,
-            [unitId]:
-              "custom"
-          })
-        );
-
-        setUnitCustomHeights(
-          (currentHeights) => ({
-            ...currentHeights,
-            [unitId]:
-              sizesFromSplits(
-                nextSplits,
-                unitHeight
-              )
-          })
-        );
-      }
-
-      return {
-        ...current,
-
-        windowUnits: {
-          ...(current.windowUnits ??
-            {}),
-
-          [unitId]: {
-            ...unit,
-            horizontalSplits:
-              nextSplits
-          }
-        }
-      };
-    });
-  }
-
-  function moveUnitVerticalSplit(
-    unitId: string,
-    splitId: string,
-    position: number
-  ) {
-    const unitWidth =
-      getUnitWidth(
-        unitId
-      );
-
-    setState((current) => {
-      const unit =
-        current.windowUnits?.[
-          unitId
-        ];
-
-      if (!unit) {
-        return current;
-      }
-
-      const nextSplits =
-        unit.verticalSplits
-          .map(
-            (split) =>
-              split.id ===
-              splitId
-                ? {
-                    ...split,
-                    position
-                  }
-                : split
-          )
-          .sort(
-            (a, b) =>
-              a.position -
-              b.position
-          );
-
-      setSliderSplitMode(
-        "custom"
-      );
-
-      setSliderCustomSizes(
-        sizesFromSplits(
-          nextSplits,
-          unitWidth
-        )
-      );
-
-      return {
-        ...current,
-
-        windowUnits: {
-          ...(current.windowUnits ??
-            {}),
-
-          [unitId]: {
-            ...unit,
-            verticalSplits:
-              nextSplits
-          }
-        }
-      };
-    });
-  }
-
   function reset() {
-    setState(
-      initialState
-    );
+    setState(initialState);
 
-    setWidthInput(
-      "96"
-    );
-
-    setHeightInput(
-      "60"
-    );
+    setWidthInput("96");
+    setHeightInput("60");
 
     setProductType(
       "Casement / Awning"
@@ -2052,13 +2117,8 @@ export default function App() {
       []
     );
 
-    setUnitsWide(
-      1
-    );
-
-    setUnitsTall(
-      1
-    );
+    setUnitsWide(1);
+    setUnitsTall(1);
 
     setHorizontalSizingMode(
       "equal"
@@ -2068,34 +2128,19 @@ export default function App() {
       "equal"
     );
 
-    setCustomWidths(
-      []
-    );
+    setCustomWidths([]);
+    setCustomHeights([]);
 
-    setCustomHeights(
-      []
-    );
+    setUnitSplitModes({});
+    setUnitCustomHeights({});
+    setPictureStyles({});
 
-    setUnitSplitModes(
-      {}
-    );
-
-    setUnitCustomHeights(
-      {}
-    );
-
-    setPictureStyles(
-      {}
-    );
-
-    setSelectedUnit(
-      null
-    );
+    setSelectedUnit(null);
   }
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v18",
+      "pv-app-react-v17",
 
       JSON.stringify({
         state,
@@ -2154,7 +2199,6 @@ export default function App() {
       <header className="topbar">
 
         <div>
-
           <div className="brand">
             Pacific View
           </div>
@@ -2162,7 +2206,6 @@ export default function App() {
           <div className="title">
             Window Configurator
           </div>
-
         </div>
 
         <button
@@ -2212,10 +2255,6 @@ export default function App() {
                 }
 
                 onClick={() => {
-                  const unitId =
-                    selectedUnit ??
-                    "0-0";
-
                   setProductType(
                     "Slider"
                   );
@@ -2238,16 +2277,6 @@ export default function App() {
 
                   setSliderCustomSizes(
                     []
-                  );
-
-                  setSelectedUnit(
-                    unitId
-                  );
-
-                  applyHorizontalSliderToUnit(
-                    unitId,
-                    "Single Vent",
-                    "equal"
                   );
                 }}
               >
@@ -2535,8 +2564,13 @@ export default function App() {
                 horizontalSliderType ===
                   "Double Slider" && (
 
-                <div className="split-note">
-                  Configuration: <strong>XX</strong>
+                <div
+                  className="split-note"
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  Configuration: <strong>XX</strong> — both sashes operate
                 </div>
 
               )}
@@ -2546,8 +2580,13 @@ export default function App() {
                 horizontalSliderType ===
                   "Double Vent + Centre Picture" && (
 
-                <div className="split-note">
-                  Configuration: <strong>XOX</strong>
+                <div
+                  className="split-note"
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  Configuration: <strong>XOX</strong> — outside vents operate, centre fixed
                 </div>
 
               )}
@@ -2710,6 +2749,14 @@ export default function App() {
 
               )}
 
+              {!selectedUnit && (
+
+                <div className="split-note">
+                  Tap a unit in the drawing to configure its slider.
+                </div>
+
+              )}
+
             </section>
 
           )}
@@ -2793,6 +2840,7 @@ export default function App() {
 
                 <input
                   type="text"
+                  inputMode="decimal"
                   value={widthInput}
 
                   onChange={(event) =>
@@ -2808,6 +2856,7 @@ export default function App() {
 
                 <input
                   type="text"
+                  inputMode="decimal"
                   value={heightInput}
 
                   onChange={(event) =>
@@ -2833,16 +2882,34 @@ export default function App() {
               <div className="option-buttons">
 
                 <button
+                  className={
+                    horizontalSizingMode ===
+                    "equal"
+                      ? "active"
+                      : ""
+                  }
+
                   onClick={
                     applyEqualWidths
                   }
                 >
-                  Equal
+                  {unitsWide === 2
+                    ? "1/2 + 1/2"
+                    : unitsWide === 3
+                    ? "1/3 + 1/3 + 1/3"
+                    : "Equal Widths"}
                 </button>
 
                 {unitsWide === 3 && (
 
                   <button
+                    className={
+                      horizontalSizingMode ===
+                      "center-feature"
+                        ? "active"
+                        : ""
+                    }
+
                     onClick={
                       applyCenterFeature
                     }
@@ -2853,14 +2920,74 @@ export default function App() {
                 )}
 
                 <button
+                  className={
+                    horizontalSizingMode ===
+                    "custom"
+                      ? "active"
+                      : ""
+                  }
+
                   onClick={
                     startCustomWidths
                   }
                 >
-                  Custom
+                  Custom Sizes
                 </button>
 
               </div>
+
+              {horizontalSizingMode ===
+                "custom" && (
+
+                <div
+                  style={{
+                    marginTop: 12
+                  }}
+                >
+
+                  <div className="number-row">
+
+                    {customWidths.map(
+                      (
+                        value,
+                        index
+                      ) => (
+
+                        <label
+                          key={index}
+                        >
+                          Unit{" "}
+                          {index + 1}
+                          {index ===
+                            widthAutoIndex
+                            ? " (auto)"
+                            : ""}
+
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={value}
+
+                            onChange={(
+                              event
+                            ) =>
+                              updateCustomWidth(
+                                index,
+                                event.target.value
+                              )
+                            }
+                          />
+
+                        </label>
+
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+
+              )}
 
             </section>
 
@@ -2877,22 +3004,89 @@ export default function App() {
               <div className="option-buttons">
 
                 <button
+                  className={
+                    verticalSizingMode ===
+                    "equal"
+                      ? "active"
+                      : ""
+                  }
+
                   onClick={
                     applyEqualHeights
                   }
                 >
-                  Equal
+                  Equal Heights
                 </button>
 
                 <button
+                  className={
+                    verticalSizingMode ===
+                    "custom"
+                      ? "active"
+                      : ""
+                  }
+
                   onClick={
                     startCustomHeights
                   }
                 >
-                  Custom
+                  Custom Heights
                 </button>
 
               </div>
+
+              {verticalSizingMode ===
+                "custom" && (
+
+                <div
+                  style={{
+                    marginTop: 12
+                  }}
+                >
+
+                  <div className="number-row">
+
+                    {customHeights.map(
+                      (
+                        value,
+                        index
+                      ) => (
+
+                        <label
+                          key={index}
+                        >
+                          Unit Row{" "}
+                          {index + 1}
+                          {index ===
+                            heightAutoIndex
+                            ? " (auto)"
+                            : ""}
+
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={value}
+
+                            onChange={(
+                              event
+                            ) =>
+                              updateCustomHeight(
+                                index,
+                                event.target.value
+                              )
+                            }
+                          />
+
+                        </label>
+
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+
+              )}
 
             </section>
 
@@ -2907,108 +3101,159 @@ export default function App() {
                 Configure Unit
               </div>
 
+              <div className="selected-info">
+                {selectedUnit
+                  ? `Unit ${selectedUnit} selected`
+                  : "Tap a unit in the drawing"}
+              </div>
+
               {selectedUnitConfig && (
 
                 <>
-                  <label>
-                    Number High
-
-                    <select
-                      value={
-                        selectedUnitConfig.litesTall
-                      }
-
-                      onChange={(event) =>
-                        changeSelectedNumberHigh(
-                          Number(
-                            event.target.value
-                          )
-                        )
-                      }
-                    >
-                      {[1, 2, 3, 4].map(
-                        (number) => (
-                          <option
-                            key={number}
-                            value={number}
-                          >
-                            {number}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </label>
-
-                  {selectedUnitConfig.litesTall >
-                    1 && (
+                  <div className="number-row">
 
                     <label>
-                      Split
+                      Number High
 
                       <select
                         value={
-                          selectedSplitMode
+                          selectedUnitConfig.litesTall
                         }
 
                         onChange={(event) =>
-                          applyUnitSplit(
-                            event.target.value as UnitSplitMode
+                          changeSelectedNumberHigh(
+                            Number(
+                              event.target.value
+                            )
                           )
                         }
                       >
-                        <option value="equal">
-                          Equal
-                        </option>
-
-                        <option value="top-third">
-                          1/3 - 2/3
-                        </option>
-
-                        <option value="bottom-third">
-                          2/3 - 1/3
-                        </option>
-
-                        <option value="custom">
-                          Custom
-                        </option>
+                        {[1, 2, 3, 4].map(
+                          (number) => (
+                            <option
+                              key={number}
+                              value={number}
+                            >
+                              {number}
+                            </option>
+                          )
+                        )}
                       </select>
                     </label>
 
-                  )}
+                    {selectedUnitConfig.litesTall >
+                      1 && (
+
+                      <label>
+                        Split
+
+                        <select
+                          value={
+                            selectedSplitMode
+                          }
+
+                          onChange={(event) =>
+                            applyUnitSplit(
+                              event.target.value as UnitSplitMode
+                            )
+                          }
+                        >
+                          <option value="equal">
+                            {selectedUnitConfig.litesTall ===
+                            2
+                              ? "1/2 - 1/2"
+                              : selectedUnitConfig.litesTall ===
+                                3
+                              ? "1/3 - 1/3 - 1/3"
+                              : "Equal"}
+                          </option>
+
+                          {selectedUnitConfig.litesTall ===
+                            2 && (
+                            <>
+                              <option value="top-third">
+                                1/3 - 2/3
+                              </option>
+
+                              <option value="bottom-third">
+                                2/3 - 1/3
+                              </option>
+                            </>
+                          )}
+
+                          {selectedUnitConfig.litesTall ===
+                            3 && (
+                            <>
+                              <option value="center-feature">
+                                1/4 - 1/2 - 1/4
+                              </option>
+
+                              <option value="top-half">
+                                1/2 - 1/4 - 1/4
+                              </option>
+
+                              <option value="bottom-half">
+                                1/4 - 1/4 - 1/2
+                              </option>
+                            </>
+                          )}
+
+                          <option value="custom">
+                            Custom
+                          </option>
+                        </select>
+                      </label>
+
+                    )}
+
+                  </div>
 
                   {selectedSplitMode ===
-                    "custom" && (
+                    "custom" &&
+                    selectedUnitConfig.litesTall >
+                      1 && (
 
-                    <div className="number-row">
+                    <div
+                      style={{
+                        marginTop: 10
+                      }}
+                    >
 
-                      {selectedCustomHeights.map(
-                        (
-                          value,
-                          index
-                        ) => (
+                      <div className="number-row">
 
-                          <label
-                            key={index}
-                          >
-                            Lite{" "}
-                            {index + 1}
+                        {selectedCustomHeights.map(
+                          (
+                            value,
+                            index
+                          ) => (
 
-                            <input
-                              value={value}
+                            <label
+                              key={index}
+                            >
+                              Lite{" "}
+                              {index + 1}
 
-                              onChange={(
-                                event
-                              ) =>
-                                updateUnitCustomHeight(
-                                  index,
-                                  event.target.value
-                                )
-                              }
-                            />
-                          </label>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={value}
 
-                        )
-                      )}
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateUnitCustomHeight(
+                                    index,
+                                    event.target.value
+                                  )
+                                }
+                              />
+
+                            </label>
+
+                          )
+                        )}
+
+                      </div>
 
                     </div>
 
@@ -3028,22 +3273,41 @@ export default function App() {
 
           <div className="drawing-header">
 
-            <strong>
-              {state.overallWidth.toFixed(
-                2
-              )}
-              " ×{" "}
-              {state.overallHeight.toFixed(
-                2
-              )}
-              "
-            </strong>
+            <div>
+              <strong>
+                {state.overallWidth.toFixed(
+                  2
+                )}
+                " ×{" "}
+                {state.overallHeight.toFixed(
+                  2
+                )}
+                "
+              </strong>
 
-            <button
-              onClick={reset}
-            >
-              Reset
-            </button>
+              <span>
+                {unitsWide} unit
+                {unitsWide !== 1
+                  ? "s"
+                  : ""}{" "}
+                wide ×{" "}
+                {unitsTall} unit
+                {unitsTall !== 1
+                  ? "s"
+                  : ""}{" "}
+                tall
+              </span>
+            </div>
+
+            <div className="drawing-actions">
+
+              <button
+                onClick={reset}
+              >
+                Reset
+              </button>
+
+            </div>
 
           </div>
 
@@ -3151,6 +3415,10 @@ export default function App() {
             />
 
           </div>
+
+          <p className="hint">
+            Tap a unit to configure it.
+          </p>
 
         </section>
 
