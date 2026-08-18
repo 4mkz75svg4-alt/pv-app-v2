@@ -2945,7 +2945,21 @@ export default function App() {
               pictureStyles={
                 pictureStyles
               }
+              productType={
+  productType
+}
 
+sliderOrientation={
+  sliderOrientation
+}
+
+horizontalSliderType={
+  horizontalSliderType
+}
+
+verticalSliderType={
+  verticalSliderType
+}
               gridColumns={0}
               gridRows={0}
 
