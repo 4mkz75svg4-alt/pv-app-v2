@@ -43,6 +43,12 @@ type SingleVentHanding =
   | "Left Vent"
   | "Right Vent";
 
+type GridStyle =
+  | "None"
+  | "Colonial"
+  | "Top Colonial"
+  | "Prairie";
+
 type Props = {
   widthInches: number;
   heightInches: number;
@@ -73,6 +79,8 @@ type Props = {
   verticalSliderType?: VerticalSliderType;
 
   singleVentHanding?: SingleVentHanding;
+
+  gridStyle?: GridStyle;
 
   gridColumns: number;
   gridRows: number;
@@ -800,6 +808,90 @@ export default function WindowCanvas(
     );
   }
 
+  function renderGrid(
+    x: number,
+    y: number,
+    w: number,
+    h: number
+  ) {
+    if (
+      !props.gridStyle ||
+      props.gridStyle === "None"
+    ) {
+      return null;
+    }
+
+    const inset = 22;
+    const left = x + inset;
+    const right = x + w - inset;
+    const top = y + inset;
+    const bottom = y + h - inset;
+
+    const innerW = Math.max(0, right - left);
+    const innerH = Math.max(0, bottom - top);
+
+    if (innerW <= 0 || innerH <= 0) {
+      return null;
+    }
+
+    if (props.gridStyle === "Colonial") {
+      return (
+        <g
+          className="grid-pattern"
+          stroke="currentColor"
+          strokeWidth={2}
+          opacity={0.7}
+          pointerEvents="none"
+        >
+          <line className="grid-pattern-line" x1={left + innerW / 3} y1={top} x2={left + innerW / 3} y2={bottom} />
+          <line className="grid-pattern-line" x1={left + (innerW * 2) / 3} y1={top} x2={left + (innerW * 2) / 3} y2={bottom} />
+          <line className="grid-pattern-line" x1={left} y1={top + innerH / 3} x2={right} y2={top + innerH / 3} />
+          <line className="grid-pattern-line" x1={left} y1={top + (innerH * 2) / 3} x2={right} y2={top + (innerH * 2) / 3} />
+        </g>
+      );
+    }
+
+    if (props.gridStyle === "Top Colonial") {
+      const gridBottom = top + innerH * 0.4;
+
+      return (
+        <g
+          className="grid-pattern"
+          stroke="currentColor"
+          strokeWidth={2}
+          opacity={0.7}
+          pointerEvents="none"
+        >
+          <line className="grid-pattern-line" x1={left} y1={gridBottom} x2={right} y2={gridBottom} />
+          <line className="grid-pattern-line" x1={left + innerW / 3} y1={top} x2={left + innerW / 3} y2={gridBottom} />
+          <line className="grid-pattern-line" x1={left + (innerW * 2) / 3} y1={top} x2={left + (innerW * 2) / 3} y2={gridBottom} />
+        </g>
+      );
+    }
+
+    if (props.gridStyle === "Prairie") {
+      const sideOffset = innerW * 0.22;
+      const topOffset = innerH * 0.22;
+
+      return (
+        <g
+          className="grid-pattern"
+          stroke="currentColor"
+          strokeWidth={2}
+          opacity={0.7}
+          pointerEvents="none"
+        >
+          <line className="grid-pattern-line" x1={left + sideOffset} y1={top} x2={left + sideOffset} y2={bottom} />
+          <line className="grid-pattern-line" x1={right - sideOffset} y1={top} x2={right - sideOffset} y2={bottom} />
+          <line className="grid-pattern-line" x1={left} y1={top + topOffset} x2={right} y2={top + topOffset} />
+          <line className="grid-pattern-line" x1={left} y1={bottom - topOffset} x2={right} y2={bottom - topOffset} />
+        </g>
+      );
+    }
+
+    return null;
+  }
+
   function renderHorizontalArrow(
     x: number,
     y: number,
@@ -1339,6 +1431,13 @@ export default function WindowCanvas(
                   }
                 >
 
+                  {renderGrid(
+                    sectionX,
+                    unit.y,
+                    sectionWidth,
+                    unit.h
+                  )}
+
                   {operating &&
                     renderSash(
                       sectionX,
@@ -1578,6 +1677,13 @@ export default function WindowCanvas(
                   }
                 >
 
+                  {renderGrid(
+                    unit.x,
+                    sectionY,
+                    unit.w,
+                    sectionHeight
+                  )}
+
                   {operating &&
                     renderSash(
                       unit.x,
@@ -1786,6 +1892,13 @@ export default function WindowCanvas(
                     `${unit.id}-${liteId}`
                   }
                 >
+
+                  {renderGrid(
+                    unit.x,
+                    liteY,
+                    unit.w,
+                    liteHeight
+                  )}
 
                   {hasSash &&
                     renderSash(
