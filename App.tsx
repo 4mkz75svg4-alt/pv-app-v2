@@ -26,6 +26,15 @@ type SizingMode =
   | "center-feature"
   | "custom";
 
+type UnitSplitMode =
+  | "equal"
+  | "top-third"
+  | "bottom-third"
+  | "center-feature"
+  | "top-half"
+  | "bottom-half"
+  | "custom";
+
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(16)
@@ -54,14 +63,8 @@ function createLiteConfigs(
   const configs: WindowUnitConfig["liteConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
-    for (
-      let column = 0;
-      column < wide;
-      column++
-    ) {
-      configs[
-        `${row}-${column}`
-      ] = {
+    for (let column = 0; column < wide; column++) {
+      configs[`${row}-${column}`] = {
         type: "Picture"
       };
     }
@@ -72,20 +75,14 @@ function createLiteConfigs(
 
 function createWindowUnit(
   id: string,
-  litesWide = 1,
   litesTall = 1
 ): WindowUnitConfig {
   return {
     id,
-
-    litesWide,
+    litesWide: 1,
     litesTall,
 
-    verticalSplits:
-      createEqualSplits(
-        litesWide,
-        `lite-v-${id}`
-      ),
+    verticalSplits: [],
 
     horizontalSplits:
       createEqualSplits(
@@ -95,7 +92,7 @@ function createWindowUnit(
 
     liteConfigs:
       createLiteConfigs(
-        litesWide,
+        1,
         litesTall
       )
   };
@@ -111,16 +108,9 @@ function createWindowUnits(
   > = {};
 
   for (let row = 0; row < tall; row++) {
-    for (
-      let column = 0;
-      column < wide;
-      column++
-    ) {
-      const id =
-        `${row}-${column}`;
-
-      units[id] =
-        createWindowUnit(id);
+    for (let column = 0; column < wide; column++) {
+      const id = `${row}-${column}`;
+      units[id] = createWindowUnit(id);
     }
   }
 
@@ -135,14 +125,8 @@ function createPanelConfigs(
     ConfiguratorState["panelConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
-    for (
-      let column = 0;
-      column < wide;
-      column++
-    ) {
-      configs[
-        `${row}-${column}`
-      ] = {
+    for (let column = 0; column < wide; column++) {
+      configs[`${row}-${column}`] = {
         type: "Picture"
       };
     }
@@ -156,8 +140,7 @@ function sizesFromSplits(
   total: number
 ) {
   const sorted = [...splits].sort(
-    (a, b) =>
-      a.position - b.position
+    (a, b) => a.position - b.position
   );
 
   const positions = [
@@ -202,7 +185,6 @@ function splitsFromSizes(
       id: newId(
         `${prefix}-${index}`
       ),
-
       position:
         running / total
     });
@@ -346,6 +328,24 @@ export default function App() {
   ] =
     useState<string | null>(null);
 
+  const [
+    unitSplitModes,
+    setUnitSplitModes
+  ] =
+    useState<Record<
+      string,
+      UnitSplitMode
+    >>({});
+
+  const [
+    unitCustomHeights,
+    setUnitCustomHeights
+  ] =
+    useState<Record<
+      string,
+      string[]
+    >>({});
+
   const mode: Mode = "select";
 
   const selectedUnitConfig =
@@ -354,6 +354,45 @@ export default function App() {
           selectedUnit
         ] ?? null
       : null;
+
+  function getSelectedUnitHeight() {
+    if (!selectedUnit) {
+      return 0;
+    }
+
+    const [rowText] =
+      selectedUnit.split("-");
+
+    const row =
+      Number(rowText);
+
+    const sorted =
+      [...state.horizontalSplits].sort(
+        (a, b) =>
+          a.position -
+          b.position
+      );
+
+    const positions = [
+      0,
+      ...sorted.map(
+        (split) =>
+          split.position
+      ),
+      1
+    ];
+
+    const start =
+      positions[row] ?? 0;
+
+    const end =
+      positions[row + 1] ?? 1;
+
+    return (
+      (end - start) *
+      state.overallHeight
+    );
+  }
 
   function buildUnitLayout(
     wide: number,
@@ -397,6 +436,9 @@ export default function App() {
 
     setCustomWidths([]);
     setCustomHeights([]);
+
+    setUnitSplitModes({});
+    setUnitCustomHeights({});
 
     setSelectedUnit(null);
   }
@@ -539,7 +581,9 @@ export default function App() {
         );
     }
 
-    setWidthAutoIndex(autoIndex);
+    setWidthAutoIndex(
+      autoIndex
+    );
 
     next = rebalanceSizes(
       next,
@@ -651,7 +695,9 @@ export default function App() {
         );
     }
 
-    setHeightAutoIndex(autoIndex);
+    setHeightAutoIndex(
+      autoIndex
+    );
 
     next = rebalanceSizes(
       next,
@@ -874,59 +920,7 @@ export default function App() {
     });
   }
 
-  function changeSelectedLitesWide(
-    value: number
-  ) {
-    if (!selectedUnit) return;
-
-    const wide = Math.max(
-      1,
-      Math.min(4, value)
-    );
-
-    setState((current) => {
-      const existing =
-        current.windowUnits?.[
-          selectedUnit
-        ] ??
-        createWindowUnit(
-          selectedUnit
-        );
-
-      const updated:
-        WindowUnitConfig = {
-        ...existing,
-
-        litesWide: wide,
-
-        verticalSplits:
-          createEqualSplits(
-            wide,
-            `lite-v-${selectedUnit}`
-          ),
-
-        liteConfigs:
-          createLiteConfigs(
-            wide,
-            existing.litesTall
-          )
-      };
-
-      return {
-        ...current,
-
-        windowUnits: {
-          ...(current.windowUnits ??
-            {}),
-
-          [selectedUnit]:
-            updated
-        }
-      };
-    });
-  }
-
-  function changeSelectedLitesTall(
+  function changeSelectedNumberHigh(
     value: number
   ) {
     if (!selectedUnit) return;
@@ -949,7 +943,10 @@ export default function App() {
         WindowUnitConfig = {
         ...existing,
 
+        litesWide: 1,
         litesTall: tall,
+
+        verticalSplits: [],
 
         horizontalSplits:
           createEqualSplits(
@@ -959,7 +956,7 @@ export default function App() {
 
         liteConfigs:
           createLiteConfigs(
-            existing.litesWide,
+            1,
             tall
           )
       };
@@ -976,6 +973,269 @@ export default function App() {
         }
       };
     });
+
+    setUnitSplitModes(
+      (current) => ({
+        ...current,
+        [selectedUnit]:
+          "equal"
+      })
+    );
+
+    setUnitCustomHeights(
+      (current) => ({
+        ...current,
+        [selectedUnit]: []
+      })
+    );
+  }
+
+  function applyUnitSplit(
+    mode: UnitSplitMode
+  ) {
+    if (
+      !selectedUnit ||
+      !selectedUnitConfig
+    ) {
+      return;
+    }
+
+    const count =
+      selectedUnitConfig.litesTall;
+
+    let positions: number[] = [];
+
+    if (count === 2) {
+      if (mode === "equal") {
+        positions = [0.5];
+      }
+
+      if (mode === "top-third") {
+        positions = [
+          1 / 3
+        ];
+      }
+
+      if (mode === "bottom-third") {
+        positions = [
+          2 / 3
+        ];
+      }
+    }
+
+    if (count === 3) {
+      if (mode === "equal") {
+        positions = [
+          1 / 3,
+          2 / 3
+        ];
+      }
+
+      if (mode === "center-feature") {
+        positions = [
+          0.25,
+          0.75
+        ];
+      }
+
+      if (mode === "top-half") {
+        positions = [
+          0.5,
+          0.75
+        ];
+      }
+
+      if (mode === "bottom-half") {
+        positions = [
+          0.25,
+          0.5
+        ];
+      }
+    }
+
+    if (count === 4) {
+      if (mode === "equal") {
+        positions = [
+          0.25,
+          0.5,
+          0.75
+        ];
+      }
+    }
+
+    if (mode === "custom") {
+      const unitHeight =
+        getSelectedUnitHeight();
+
+      const currentSizes =
+        sizesFromSplits(
+          selectedUnitConfig.horizontalSplits,
+          unitHeight
+        );
+
+      setUnitCustomHeights(
+        (current) => ({
+          ...current,
+          [selectedUnit]:
+            currentSizes
+        })
+      );
+
+      setUnitSplitModes(
+        (current) => ({
+          ...current,
+          [selectedUnit]:
+            "custom"
+        })
+      );
+
+      return;
+    }
+
+    const splits =
+      positions.map(
+        (position, index) => ({
+          id: newId(
+            `lite-h-${selectedUnit}-${index}`
+          ),
+          position
+        })
+      );
+
+    setState((current) => ({
+      ...current,
+
+      windowUnits: {
+        ...(current.windowUnits ??
+          {}),
+
+        [selectedUnit]: {
+          ...selectedUnitConfig,
+          horizontalSplits:
+            splits
+        }
+      }
+    }));
+
+    setUnitSplitModes(
+      (current) => ({
+        ...current,
+        [selectedUnit]:
+          mode
+      })
+    );
+
+    setUnitCustomHeights(
+      (current) => ({
+        ...current,
+        [selectedUnit]: []
+      })
+    );
+  }
+
+  function updateUnitCustomHeight(
+    index: number,
+    value: string
+  ) {
+    if (
+      !selectedUnit ||
+      !selectedUnitConfig
+    ) {
+      return;
+    }
+
+    const unitHeight =
+      getSelectedUnitHeight();
+
+    const current =
+      unitCustomHeights[
+        selectedUnit
+      ] ??
+      sizesFromSplits(
+        selectedUnitConfig.horizontalSplits,
+        unitHeight
+      );
+
+    let next = [...current];
+
+    next[index] = value;
+
+    const number =
+      Number(value);
+
+    if (
+      !Number.isFinite(number) ||
+      number <= 0
+    ) {
+      setUnitCustomHeights(
+        (all) => ({
+          ...all,
+          [selectedUnit]:
+            next
+        })
+      );
+
+      return;
+    }
+
+    let autoIndex =
+      next.length - 1;
+
+    if (
+      index ===
+      next.length - 1
+    ) {
+      autoIndex =
+        Math.max(
+          0,
+          next.length - 2
+        );
+    }
+
+    next = rebalanceSizes(
+      next,
+      unitHeight,
+      autoIndex
+    );
+
+    setUnitCustomHeights(
+      (all) => ({
+        ...all,
+        [selectedUnit]:
+          next
+      })
+    );
+
+    const numbers =
+      next.map(Number);
+
+    if (
+      numbers.every(
+        (item) =>
+          Number.isFinite(item) &&
+          item > 0
+      )
+    ) {
+      setState((currentState) => ({
+        ...currentState,
+
+        windowUnits: {
+          ...(currentState.windowUnits ??
+            {}),
+
+          [selectedUnit]: {
+            ...selectedUnitConfig,
+
+            horizontalSplits:
+              splitsFromSizes(
+                numbers,
+                unitHeight,
+                `lite-h-${selectedUnit}`
+              )
+          }
+        }
+      }));
+    }
   }
 
   function reset() {
@@ -1006,12 +1266,15 @@ export default function App() {
     setCustomWidths([]);
     setCustomHeights([]);
 
+    setUnitSplitModes({});
+    setUnitCustomHeights({});
+
     setSelectedUnit(null);
   }
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v10",
+      "pv-app-react-v11",
       JSON.stringify({
         state,
         productType,
@@ -1036,6 +1299,20 @@ export default function App() {
       }, 900);
     }
   }
+
+  const selectedSplitMode =
+    selectedUnit
+      ? unitSplitModes[
+          selectedUnit
+        ] ?? "equal"
+      : "equal";
+
+  const selectedCustomHeights =
+    selectedUnit
+      ? unitCustomHeights[
+          selectedUnit
+        ] ?? []
+      : [];
 
   return (
     <>
@@ -1124,7 +1401,6 @@ export default function App() {
               </button>
 
             </div>
-
           </section>
 
           {productType ===
@@ -1173,9 +1449,7 @@ export default function App() {
                 </button>
 
               </div>
-
             </section>
-
           )}
 
           <section className="config-section">
@@ -1241,7 +1515,6 @@ export default function App() {
               </label>
 
             </div>
-
           </section>
 
           <section className="config-section">
@@ -1285,7 +1558,6 @@ export default function App() {
               </label>
 
             </div>
-
           </section>
 
           {unitsWide > 1 && (
@@ -1527,36 +1799,7 @@ export default function App() {
                 <div className="number-row">
 
                   <label>
-                    Lites Wide
-
-                    <select
-                      value={
-                        selectedUnitConfig.litesWide
-                      }
-
-                      onChange={(event) =>
-                        changeSelectedLitesWide(
-                          Number(
-                            event.target.value
-                          )
-                        )
-                      }
-                    >
-                      {[1, 2, 3, 4].map(
-                        (number) => (
-                          <option
-                            key={number}
-                            value={number}
-                          >
-                            {number}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </label>
-
-                  <label>
-                    Lites Tall
+                    Number High
 
                     <select
                       value={
@@ -1564,7 +1807,7 @@ export default function App() {
                       }
 
                       onChange={(event) =>
-                        changeSelectedLitesTall(
+                        changeSelectedNumberHigh(
                           Number(
                             event.target.value
                           )
@@ -1584,26 +1827,125 @@ export default function App() {
                     </select>
                   </label>
 
+                  {selectedUnitConfig.litesTall >
+                    1 && (
+
+                    <label>
+                      Split
+
+                      <select
+                        value={
+                          selectedSplitMode
+                        }
+
+                        onChange={(event) =>
+                          applyUnitSplit(
+                            event.target
+                              .value as UnitSplitMode
+                          )
+                        }
+                      >
+                        <option value="equal">
+                          {selectedUnitConfig.litesTall ===
+                          2
+                            ? "1/2 - 1/2"
+                            : selectedUnitConfig.litesTall ===
+                              3
+                            ? "1/3 - 1/3 - 1/3"
+                            : "Equal"}
+                        </option>
+
+                        {selectedUnitConfig.litesTall ===
+                          2 && (
+                          <>
+                            <option value="top-third">
+                              1/3 - 2/3
+                            </option>
+
+                            <option value="bottom-third">
+                              2/3 - 1/3
+                            </option>
+                          </>
+                        )}
+
+                        {selectedUnitConfig.litesTall ===
+                          3 && (
+                          <>
+                            <option value="center-feature">
+                              1/4 - 1/2 - 1/4
+                            </option>
+
+                            <option value="top-half">
+                              1/2 - 1/4 - 1/4
+                            </option>
+
+                            <option value="bottom-half">
+                              1/4 - 1/4 - 1/2
+                            </option>
+                          </>
+                        )}
+
+                        <option value="custom">
+                          Custom
+                        </option>
+                      </select>
+                    </label>
+
+                  )}
+
                 </div>
 
-                <div
-                  className="split-note"
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-                  Unit layout:{" "}
-                  <strong>
-                    {
-                      selectedUnitConfig.litesWide
-                    }{" "}
-                    wide ×{" "}
-                    {
-                      selectedUnitConfig.litesTall
-                    }{" "}
-                    tall
-                  </strong>
-                </div>
+                {selectedSplitMode ===
+                  "custom" &&
+                  selectedUnitConfig.litesTall >
+                    1 && (
+
+                  <div
+                    style={{
+                      marginTop: 10
+                    }}
+                  >
+
+                    <div className="number-row">
+
+                      {selectedCustomHeights.map(
+                        (
+                          value,
+                          index
+                        ) => (
+
+                          <label
+                            key={index}
+                          >
+                            Lite{" "}
+                            {index + 1}
+
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={value}
+
+                              onChange={(
+                                event
+                              ) =>
+                                updateUnitCustomHeight(
+                                  index,
+                                  event.target.value
+                                )
+                              }
+                            />
+
+                          </label>
+
+                        )
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
+
               </>
 
             )}
@@ -1724,7 +2066,7 @@ export default function App() {
           </div>
 
           <p className="hint">
-            Tap a unit to configure it. Each unit can have its own internal lite layout.
+            Tap a unit to configure it. Internal split lines will be draggable next.
           </p>
 
         </section>
