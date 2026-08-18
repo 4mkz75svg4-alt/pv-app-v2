@@ -77,6 +77,11 @@ type WindowColour =
   | "Black"
   | "Brown"
   | "Custom";
+type GridStyle =
+  | "None"
+  | "Colonial"
+  | "Top Colonial"
+  | "Prairie";
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(16)
@@ -475,6 +480,13 @@ const [
 ] =
   useState<WindowColour>(
     "White"
+  );
+  const [
+  gridStyle,
+  setGridStyle
+] =
+  useState<GridStyle>(
+    "None"
   );
   const mode: Mode =
     "select";
@@ -2175,6 +2187,7 @@ const [
 
       JSON.stringify({
         state,
+        gridStyle,
         flangeType,
         exteriorColour,
         interiorColour,
@@ -3017,6 +3030,42 @@ const [
     </label>
 
   </div>
+
+</section>
+<section className="config-section">
+
+  <div className="step-title">
+    Grids
+  </div>
+
+  <label>
+    Grid Style
+
+    <select
+      value={gridStyle}
+      onChange={(event) =>
+        setGridStyle(
+          event.target.value as GridStyle
+        )
+      }
+    >
+      <option value="None">
+        None
+      </option>
+
+      <option value="Colonial">
+        Colonial
+      </option>
+
+      <option value="Top Colonial">
+        Top Colonial
+      </option>
+
+      <option value="Prairie">
+        Prairie
+      </option>
+    </select>
+  </label>
 
 </section>
           {unitsWide > 1 && (
