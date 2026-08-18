@@ -26,6 +26,18 @@ type PictureStyle =
   | "Balanced Sash"
   | "Direct Set";
 
+type SliderOrientation =
+  | "Horizontal"
+  | "Vertical";
+
+type HorizontalSliderType =
+  | "Single Vent"
+  | "Double Vent";
+
+type VerticalSliderType =
+  | "Single Hung"
+  | "Double Hung";
+
 type Props = {
   widthInches: number;
   heightInches: number;
@@ -49,6 +61,14 @@ type Props = {
     string,
     PictureStyle
   >;
+
+  productType?: string;
+
+  sliderOrientation?: SliderOrientation;
+
+  horizontalSliderType?: HorizontalSliderType;
+
+  verticalSliderType?: VerticalSliderType;
 
   gridColumns: number;
   gridRows: number;
@@ -228,20 +248,11 @@ export default function WindowCanvas(
           props.widthInches,
           props.heightInches
         ),
-
       [
         props.widthInches,
         props.heightInches
       ]
     );
-
-  const [
-    preview,
-    setPreview
-  ] = useState<{
-    axis: "x" | "y";
-    value: number;
-  } | null>(null);
 
   const [
     dragging,
@@ -285,7 +296,6 @@ export default function WindowCanvas(
             a.position -
             b.position
         ),
-
       [props.verticalSplits]
     );
 
@@ -299,7 +309,6 @@ export default function WindowCanvas(
             a.position -
             b.position
         ),
-
       [props.horizontalSplits]
     );
 
@@ -424,73 +433,6 @@ export default function WindowCanvas(
     );
   }
 
-  function pointerDownOnCanvas(
-    event: PointerEvent<SVGSVGElement>
-  ) {
-    if (
-      props.mode === "select"
-    ) {
-      return;
-    }
-
-    const point =
-      pointFromEvent(event);
-
-    const within =
-      point.x >= FRAME.x &&
-      point.x <=
-        FRAME.x +
-          FRAME.width &&
-      point.y >= FRAME.y &&
-      point.y <=
-        FRAME.y +
-          FRAME.height;
-
-    if (!within) {
-      return;
-    }
-
-    event.currentTarget
-      .setPointerCapture(
-        event.pointerId
-      );
-
-    if (
-      props.mode ===
-      "draw-vertical"
-    ) {
-      setPreview({
-        axis: "x",
-
-        value: clamp(
-          (
-            point.x -
-            FRAME.x
-          ) /
-            FRAME.width,
-
-          0.05,
-          0.95
-        )
-      });
-    } else {
-      setPreview({
-        axis: "y",
-
-        value: clamp(
-          (
-            point.y -
-            FRAME.y
-          ) /
-            FRAME.height,
-
-          0.05,
-          0.95
-        )
-      });
-    }
-  }
-
   function startFrameDrag(
     edge: FrameEdge,
     event: PointerEvent<SVGLineElement>
@@ -610,9 +552,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextWidth.toFixed(
-                2
-              )
+              nextWidth.toFixed(2)
             )
           )
         );
@@ -634,9 +574,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextWidth.toFixed(
-                2
-              )
+              nextWidth.toFixed(2)
             )
           )
         );
@@ -658,9 +596,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextHeight.toFixed(
-                2
-              )
+              nextHeight.toFixed(2)
             )
           )
         );
@@ -682,9 +618,7 @@ export default function WindowCanvas(
           Math.max(
             12,
             Number(
-              nextHeight.toFixed(
-                2
-              )
+              nextHeight.toFixed(2)
             )
           )
         );
@@ -754,6 +688,14 @@ export default function WindowCanvas(
     props.onSelectPanel(
       unitId
     );
+
+    if (
+      props.productType ===
+      "Slider"
+    ) {
+      setLitePopup(null);
+      return;
+    }
 
     const popupWidth = 180;
     const popupHeight = 190;
@@ -846,21 +788,29 @@ export default function WindowCanvas(
     x: number,
     y: number,
     w: number,
-    h: number
+    h: number,
+    slider = false
   ) {
     const inset =
       clamp(
         Math.min(
           w,
           h
-        ) * 0.075,
-        8,
+        ) *
+          (slider
+            ? 0.065
+            : 0.075),
+        7,
         18
       );
 
     return (
       <rect
-        className="sash-outline"
+        className={
+          slider
+            ? "slider-sash-outline"
+            : "sash-outline"
+        }
 
         x={
           x + inset
@@ -891,7 +841,7 @@ export default function WindowCanvas(
     );
   }
 
-  function renderOperationSymbol(
+  function renderOpeningSymbol(
     operation: PanelType,
     x: number,
     y: number,
@@ -945,6 +895,7 @@ export default function WindowCanvas(
     ) {
       return (
         <g className="opening-symbol">
+
           <line
             x1={left}
             y1={bottom}
@@ -958,6 +909,7 @@ export default function WindowCanvas(
             x2={middleX}
             y2={top}
           />
+
         </g>
       );
     }
@@ -968,6 +920,7 @@ export default function WindowCanvas(
     ) {
       return (
         <g className="opening-symbol">
+
           <line
             x1={right}
             y1={top}
@@ -981,6 +934,7 @@ export default function WindowCanvas(
             x2={left}
             y2={middleY}
           />
+
         </g>
       );
     }
@@ -991,6 +945,7 @@ export default function WindowCanvas(
     ) {
       return (
         <g className="opening-symbol">
+
           <line
             x1={left}
             y1={top}
@@ -1004,6 +959,7 @@ export default function WindowCanvas(
             x2={right}
             y2={middleY}
           />
+
         </g>
       );
     }
@@ -1011,24 +967,566 @@ export default function WindowCanvas(
     return null;
   }
 
-  function renderUnit(
+  function renderHorizontalArrow(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    direction:
+      | "left"
+      | "right"
+  ) {
+    const middleY =
+      y + h / 2;
+
+    const pad =
+      clamp(
+        w * 0.2,
+        12,
+        35
+      );
+
+    const startX =
+      direction === "right"
+        ? x + pad
+        : x + w - pad;
+
+    const endX =
+      direction === "right"
+        ? x + w - pad
+        : x + pad;
+
+    const arrow =
+      direction === "right"
+        ? -1
+        : 1;
+
+    return (
+      <g className="slider-arrow">
+
+        <line
+          x1={startX}
+          y1={middleY}
+          x2={endX}
+          y2={middleY}
+        />
+
+        <line
+          x1={endX}
+          y1={middleY}
+          x2={
+            endX +
+            arrow * 14
+          }
+          y2={
+            middleY - 10
+          }
+        />
+
+        <line
+          x1={endX}
+          y1={middleY}
+          x2={
+            endX +
+            arrow * 14
+          }
+          y2={
+            middleY + 10
+          }
+        />
+
+      </g>
+    );
+  }
+
+  function renderVerticalArrow(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    direction:
+      | "up"
+      | "down"
+  ) {
+    const middleX =
+      x + w / 2;
+
+    const pad =
+      clamp(
+        h * 0.2,
+        12,
+        35
+      );
+
+    const startY =
+      direction === "down"
+        ? y + pad
+        : y + h - pad;
+
+    const endY =
+      direction === "down"
+        ? y + h - pad
+        : y + pad;
+
+    const arrow =
+      direction === "down"
+        ? -1
+        : 1;
+
+    return (
+      <g className="slider-arrow">
+
+        <line
+          x1={middleX}
+          y1={startY}
+          x2={middleX}
+          y2={endY}
+        />
+
+        <line
+          x1={middleX}
+          y1={endY}
+          x2={
+            middleX - 10
+          }
+          y2={
+            endY +
+            arrow * 14
+          }
+        />
+
+        <line
+          x1={middleX}
+          y1={endY}
+          x2={
+            middleX + 10
+          }
+          y2={
+            endY +
+            arrow * 14
+          }
+        />
+
+      </g>
+    );
+  }
+
+  function renderSliderUnit(
     unit: {
       id: string;
       x: number;
       y: number;
       w: number;
       h: number;
-    }
+    },
+    config: WindowUnitConfig
   ) {
-    const config =
-      props.windowUnits?.[
-        unit.id
+    if (
+      props.sliderOrientation ===
+      "Horizontal"
+    ) {
+      const splits =
+        [
+          ...config.verticalSplits
+        ].sort(
+          (a, b) =>
+            a.position -
+            b.position
+        );
+
+      const positions = [
+        0,
+        ...splits.map(
+          (split) =>
+            split.position
+        ),
+        1
       ];
 
-    if (!config) {
-      return null;
+      return (
+        <>
+          {positions
+            .slice(0, -1)
+            .map(
+              (
+                start,
+                index
+              ) => {
+                const end =
+                  positions[
+                    index + 1
+                  ];
+
+                const liteX =
+                  unit.x +
+                  start *
+                    unit.w;
+
+                const liteWidth =
+                  (
+                    end -
+                    start
+                  ) *
+                  unit.w;
+
+                let operating =
+                  false;
+
+                let direction:
+                  | "left"
+                  | "right"
+                  | null =
+                  null;
+
+                if (
+                  props.horizontalSliderType ===
+                  "Single Vent"
+                ) {
+                  operating =
+                    index === 0;
+
+                  direction =
+                    operating
+                      ? "right"
+                      : null;
+                }
+
+                if (
+                  props.horizontalSliderType ===
+                  "Double Vent"
+                ) {
+                  operating =
+                    index === 0 ||
+                    index ===
+                      positions.length -
+                        2;
+
+                  if (index === 0) {
+                    direction =
+                      "right";
+                  }
+
+                  if (
+                    index ===
+                    positions.length -
+                      2
+                  ) {
+                    direction =
+                      "left";
+                  }
+                }
+
+                return (
+                  <g
+                    key={
+                      `${unit.id}-slider-${index}`
+                    }
+                  >
+
+                    {operating &&
+                      renderSash(
+                        liteX,
+                        unit.y,
+                        liteWidth,
+                        unit.h,
+                        true
+                      )}
+
+                    {operating &&
+                      direction &&
+                      renderHorizontalArrow(
+                        liteX,
+                        unit.y,
+                        liteWidth,
+                        unit.h,
+                        direction
+                      )}
+
+                    <rect
+                      className="lite-hit"
+
+                      x={liteX}
+                      y={unit.y}
+
+                      width={
+                        liteWidth
+                      }
+
+                      height={
+                        unit.h
+                      }
+
+                      onPointerDown={(
+                        event
+                      ) => {
+                        event.stopPropagation();
+
+                        props.onSelectPanel(
+                          unit.id
+                        );
+
+                        setLitePopup(
+                          null
+                        );
+                      }}
+                    />
+
+                  </g>
+                );
+              }
+            )}
+
+          {splits.map(
+            (split) => {
+              const x =
+                unit.x +
+                split.position *
+                  unit.w;
+
+              return (
+                <line
+                  key={split.id}
+                  className="lite-split-line"
+
+                  x1={x}
+                  y1={unit.y}
+
+                  x2={x}
+                  y2={
+                    unit.y +
+                    unit.h
+                  }
+                />
+              );
+            }
+          )}
+
+        </>
+      );
     }
 
+    const splits =
+      [
+        ...config.horizontalSplits
+      ].sort(
+        (a, b) =>
+          a.position -
+          b.position
+      );
+
+    const positions = [
+      0,
+      ...splits.map(
+        (split) =>
+          split.position
+      ),
+      1
+    ];
+
+    return (
+      <>
+        {positions
+          .slice(0, -1)
+          .map(
+            (
+              start,
+              index
+            ) => {
+              const end =
+                positions[
+                  index + 1
+                ];
+
+              const liteY =
+                unit.y +
+                start *
+                  unit.h;
+
+              const liteHeight =
+                (
+                  end -
+                  start
+                ) *
+                unit.h;
+
+              const top =
+                index === 0;
+
+              const bottom =
+                index ===
+                positions.length -
+                  2;
+
+              let operating =
+                false;
+
+              let direction:
+                | "up"
+                | "down"
+                | null =
+                null;
+
+              if (
+                props.verticalSliderType ===
+                "Single Hung"
+              ) {
+                operating =
+                  bottom;
+
+                direction =
+                  bottom
+                    ? "up"
+                    : null;
+              }
+
+              if (
+                props.verticalSliderType ===
+                "Double Hung"
+              ) {
+                operating =
+                  top ||
+                  bottom;
+
+                if (top) {
+                  direction =
+                    "down";
+                }
+
+                if (bottom) {
+                  direction =
+                    "up";
+                }
+              }
+
+              return (
+                <g
+                  key={
+                    `${unit.id}-hung-${index}`
+                  }
+                >
+
+                  {operating &&
+                    renderSash(
+                      unit.x,
+                      liteY,
+                      unit.w,
+                      liteHeight,
+                      true
+                    )}
+
+                  {operating &&
+                    direction &&
+                    renderVerticalArrow(
+                      unit.x,
+                      liteY,
+                      unit.w,
+                      liteHeight,
+                      direction
+                    )}
+
+                  <rect
+                    className="lite-hit"
+
+                    x={unit.x}
+                    y={liteY}
+
+                    width={
+                      unit.w
+                    }
+
+                    height={
+                      liteHeight
+                    }
+
+                    onPointerDown={(
+                      event
+                    ) => {
+                      event.stopPropagation();
+
+                      props.onSelectPanel(
+                        unit.id
+                      );
+
+                      setLitePopup(
+                        null
+                      );
+                    }}
+                  />
+
+                </g>
+              );
+            }
+          )}
+
+        {splits.map(
+          (split) => {
+            const y =
+              unit.y +
+              split.position *
+                unit.h;
+
+            return (
+              <g key={split.id}>
+
+                <line
+                  className="lite-split-line"
+
+                  x1={unit.x}
+                  y1={y}
+
+                  x2={
+                    unit.x +
+                    unit.w
+                  }
+
+                  y2={y}
+                />
+
+                <line
+                  className="lite-split-hit"
+
+                  x1={unit.x}
+                  y1={y}
+
+                  x2={
+                    unit.x +
+                    unit.w
+                  }
+
+                  y2={y}
+
+                  onPointerDown={(
+                    event
+                  ) =>
+                    startUnitSplitDrag(
+                      unit.id,
+                      split.id,
+                      unit.y,
+                      unit.h,
+                      event
+                    )
+                  }
+                />
+
+              </g>
+            );
+          }
+        )}
+
+      </>
+    );
+  }
+
+  function renderCasementUnit(
+    unit: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    },
+    config: WindowUnitConfig
+  ) {
     const horizontal =
       [
         ...config.horizontalSplits
@@ -1109,7 +1607,7 @@ export default function WindowCanvas(
                       liteHeight
                     )}
 
-                  {renderOperationSymbol(
+                  {renderOpeningSymbol(
                     operation,
                     unit.x,
                     liteY,
@@ -1123,7 +1621,10 @@ export default function WindowCanvas(
                     x={unit.x}
                     y={liteY}
 
-                    width={unit.w}
+                    width={
+                      unit.w
+                    }
+
                     height={
                       liteHeight
                     }
@@ -1202,7 +1703,42 @@ export default function WindowCanvas(
             );
           }
         )}
+
       </>
+    );
+  }
+
+  function renderUnit(
+    unit: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
+  ) {
+    const config =
+      props.windowUnits?.[
+        unit.id
+      ];
+
+    if (!config) {
+      return null;
+    }
+
+    if (
+      props.productType ===
+      "Slider"
+    ) {
+      return renderSliderUnit(
+        unit,
+        config
+      );
+    }
+
+    return renderCasementUnit(
+      unit,
+      config
     );
   }
 
@@ -1214,10 +1750,6 @@ export default function WindowCanvas(
 
       viewBox="0 0 1000 625"
 
-      onPointerDown={
-        pointerDownOnCanvas
-      }
-
       onPointerMove={
         pointerMove
       }
@@ -1227,7 +1759,6 @@ export default function WindowCanvas(
       }
 
       onPointerCancel={() => {
-        setPreview(null);
         setDragging(null);
         setFrameDragging(null);
         setUnitSplitDragging(
