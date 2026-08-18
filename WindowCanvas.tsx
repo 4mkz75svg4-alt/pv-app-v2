@@ -69,6 +69,12 @@ type Props = {
   onOverallHeightChange?: (
     height: number
   ) => void;
+
+  onMoveUnitHorizontalSplit?: (
+    unitId: string,
+    splitId: string,
+    position: number
+  ) => void;
 };
 
 type FrameEdge =
@@ -88,6 +94,19 @@ type FrameDrag = {
 
   pixelsPerInchX: number;
   pixelsPerInchY: number;
+};
+
+type OuterSplitDrag = {
+  axis: "x" | "y";
+  id: string;
+};
+
+type UnitSplitDrag = {
+  unitId: string;
+  splitId: string;
+
+  unitY: number;
+  unitHeight: number;
 };
 
 const MAX_FRAME_WIDTH = 960;
@@ -193,10 +212,18 @@ export default function WindowCanvas(
   const [
     dragging,
     setDragging
-  ] = useState<{
-    axis: "x" | "y";
-    id: string;
-  } | null>(null);
+  ] =
+    useState<OuterSplitDrag | null>(
+      null
+    );
+
+  const [
+    unitSplitDragging,
+    setUnitSplitDragging
+  ] =
+    useState<UnitSplitDrag | null>(
+      null
+    );
 
   const [
     frameDragging,
@@ -463,11 +490,55 @@ export default function WindowCanvas(
       );
   }
 
+  function startUnitSplitDrag(
+    unitId: string,
+    splitId: string,
+    unitY: number,
+    unitHeight: number,
+    event: PointerEvent<SVGLineElement>
+  ) {
+    event.stopPropagation();
+
+    setUnitSplitDragging({
+      unitId,
+      splitId,
+      unitY,
+      unitHeight
+    });
+
+    event.currentTarget
+      .setPointerCapture(
+        event.pointerId
+      );
+  }
+
   function pointerMove(
     event: PointerEvent<SVGSVGElement>
   ) {
     const point =
       pointFromEvent(event);
+
+    if (unitSplitDragging) {
+      const position =
+        clamp(
+          (
+            point.y -
+            unitSplitDragging.unitY
+          ) /
+            unitSplitDragging.unitHeight,
+
+          0.05,
+          0.95
+        );
+
+      props.onMoveUnitHorizontalSplit?.(
+        unitSplitDragging.unitId,
+        unitSplitDragging.splitId,
+        position
+      );
+
+      return;
+    }
 
     if (frameDragging) {
       const deltaX =
@@ -656,9 +727,15 @@ export default function WindowCanvas(
     }
   }
 
-  function pointerUp(
-    event: PointerEvent<SVGSVGElement>
-  ) {
+  function pointerUp() {
+    if (unitSplitDragging) {
+      setUnitSplitDragging(
+        null
+      );
+
+      return;
+    }
+
     if (frameDragging) {
       setFrameDragging(
         null
@@ -710,15 +787,10 @@ export default function WindowCanvas(
       return null;
     }
 
-    const vertical =
-      [...config.verticalSplits].sort(
-        (a, b) =>
-          a.position -
-          b.position
-      );
-
     const horizontal =
-      [...config.horizontalSplits].sort(
+      [
+        ...config.horizontalSplits
+      ].sort(
         (a, b) =>
           a.position -
           b.position
@@ -726,29 +798,6 @@ export default function WindowCanvas(
 
     return (
       <>
-        {vertical.map(
-          (split) => {
-            const x =
-              unit.x +
-              split.position *
-                unit.w;
-
-            return (
-              <line
-                key={split.id}
-                className="lite-split-line"
-                x1={x}
-                y1={unit.y}
-                x2={x}
-                y2={
-                  unit.y +
-                  unit.h
-                }
-              />
-            );
-          }
-        )}
-
         {horizontal.map(
           (split) => {
             const y =
@@ -757,17 +806,49 @@ export default function WindowCanvas(
                 unit.h;
 
             return (
-              <line
-                key={split.id}
-                className="lite-split-line"
-                x1={unit.x}
-                y1={y}
-                x2={
-                  unit.x +
-                  unit.w
-                }
-                y2={y}
-              />
+              <g key={split.id}>
+
+                <line
+                  className="lite-split-line"
+
+                  x1={unit.x}
+                  y1={y}
+
+                  x2={
+                    unit.x +
+                    unit.w
+                  }
+
+                  y2={y}
+                />
+
+                <line
+                  className="lite-split-hit"
+
+                  x1={unit.x}
+                  y1={y}
+
+                  x2={
+                    unit.x +
+                    unit.w
+                  }
+
+                  y2={y}
+
+                  onPointerDown={(
+                    event
+                  ) =>
+                    startUnitSplitDrag(
+                      unit.id,
+                      split.id,
+                      unit.y,
+                      unit.h,
+                      event
+                    )
+                  }
+                />
+
+              </g>
             );
           }
         )}
@@ -799,6 +880,9 @@ export default function WindowCanvas(
         setPreview(null);
         setDragging(null);
         setFrameDragging(null);
+        setUnitSplitDragging(
+          null
+        );
       }}
     >
 
