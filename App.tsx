@@ -3569,7 +3569,9 @@ const [
               singleVentHanding={
                 singleVentHanding
               }
-
+gridStyle={
+  gridStyle
+}
               gridColumns={0}
               gridRows={0}
 
