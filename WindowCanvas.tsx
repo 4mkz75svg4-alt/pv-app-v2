@@ -32,11 +32,16 @@ type SliderOrientation =
 
 type HorizontalSliderType =
   | "Single Vent"
-  | "Double Vent";
+  | "Double Slider"
+  | "Double Vent + Centre Picture";
 
 type VerticalSliderType =
   | "Single Hung"
   | "Double Hung";
+
+type SingleVentHanding =
+  | "Left Vent"
+  | "Right Vent";
 
 type Props = {
   widthInches: number;
@@ -69,6 +74,8 @@ type Props = {
   horizontalSliderType?: HorizontalSliderType;
 
   verticalSliderType?: VerticalSliderType;
+
+  singleVentHanding?: SingleVentHanding;
 
   gridColumns: number;
   gridRows: number;
@@ -674,116 +681,6 @@ export default function WindowCanvas(
     setDragging(null);
   }
 
-  function openLitePopup(
-    unitId: string,
-    liteId: string,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    event: PointerEvent<SVGRectElement>
-  ) {
-    event.stopPropagation();
-
-    props.onSelectPanel(
-      unitId
-    );
-
-    if (
-      props.productType ===
-      "Slider"
-    ) {
-      setLitePopup(null);
-      return;
-    }
-
-    const popupWidth = 180;
-    const popupHeight = 190;
-
-    let popupX =
-      x +
-      w / 2 -
-      popupWidth / 2;
-
-    let popupY =
-      y +
-      h / 2 -
-      popupHeight / 2;
-
-    popupX = clamp(
-      popupX,
-      10,
-      1000 -
-        popupWidth -
-        10
-    );
-
-    popupY = clamp(
-      popupY,
-      10,
-      625 -
-        popupHeight -
-        10
-    );
-
-    setLitePopup({
-      unitId,
-      liteId,
-
-      x: popupX,
-      y: popupY,
-
-      stage:
-        "operation"
-    });
-  }
-
-  function chooseOperation(
-    operation: LiteOperation
-  ) {
-    if (!litePopup) {
-      return;
-    }
-
-    if (
-      operation ===
-      "Picture"
-    ) {
-      setLitePopup({
-        ...litePopup,
-        stage:
-          "picture"
-      });
-
-      return;
-    }
-
-    props.onSetLiteOperation?.(
-      litePopup.unitId,
-      litePopup.liteId,
-      operation
-    );
-
-    setLitePopup(null);
-  }
-
-  function choosePictureStyle(
-    style: PictureStyle
-  ) {
-    if (!litePopup) {
-      return;
-    }
-
-    props.onSetLiteOperation?.(
-      litePopup.unitId,
-      litePopup.liteId,
-      "Picture",
-      style
-    );
-
-    setLitePopup(null);
-  }
-
   function renderSash(
     x: number,
     y: number,
@@ -797,9 +694,12 @@ export default function WindowCanvas(
           w,
           h
         ) *
-          (slider
-            ? 0.065
-            : 0.075),
+          (
+            slider
+              ? 0.065
+              : 0.075
+          ),
+
         7,
         18
       );
@@ -838,6 +738,152 @@ export default function WindowCanvas(
 
         rx="2"
       />
+    );
+  }
+
+  function renderHorizontalArrow(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    direction:
+      | "left"
+      | "right"
+  ) {
+    const middleY =
+      y +
+      h / 2;
+
+    const pad =
+      clamp(
+        w * 0.22,
+        12,
+        35
+      );
+
+    const startX =
+      direction === "right"
+        ? x + pad
+        : x + w - pad;
+
+    const endX =
+      direction === "right"
+        ? x + w - pad
+        : x + pad;
+
+    const arrowOffset =
+      direction === "right"
+        ? -14
+        : 14;
+
+    return (
+      <g className="slider-arrow">
+
+        <line
+          x1={startX}
+          y1={middleY}
+          x2={endX}
+          y2={middleY}
+        />
+
+        <line
+          x1={endX}
+          y1={middleY}
+          x2={
+            endX +
+            arrowOffset
+          }
+          y2={
+            middleY - 10
+          }
+        />
+
+        <line
+          x1={endX}
+          y1={middleY}
+          x2={
+            endX +
+            arrowOffset
+          }
+          y2={
+            middleY + 10
+          }
+        />
+
+      </g>
+    );
+  }
+
+  function renderVerticalArrow(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    direction:
+      | "up"
+      | "down"
+  ) {
+    const middleX =
+      x +
+      w / 2;
+
+    const pad =
+      clamp(
+        h * 0.22,
+        12,
+        35
+      );
+
+    const startY =
+      direction === "up"
+        ? y + h - pad
+        : y + pad;
+
+    const endY =
+      direction === "up"
+        ? y + pad
+        : y + h - pad;
+
+    const arrowOffset =
+      direction === "up"
+        ? 14
+        : -14;
+
+    return (
+      <g className="slider-arrow">
+
+        <line
+          x1={middleX}
+          y1={startY}
+          x2={middleX}
+          y2={endY}
+        />
+
+        <line
+          x1={middleX}
+          y1={endY}
+          x2={
+            middleX - 10
+          }
+          y2={
+            endY +
+            arrowOffset
+          }
+        />
+
+        <line
+          x1={middleX}
+          y1={endY}
+          x2={
+            middleX + 10
+          }
+          y2={
+            endY +
+            arrowOffset
+          }
+        />
+
+      </g>
     );
   }
 
@@ -967,151 +1013,124 @@ export default function WindowCanvas(
     return null;
   }
 
-  function renderHorizontalArrow(
+  function openLitePopup(
+    unitId: string,
+    liteId: string,
     x: number,
     y: number,
     w: number,
     h: number,
-    direction:
-      | "left"
-      | "right"
+    event: PointerEvent<SVGRectElement>
   ) {
-    const middleY =
-      y + h / 2;
+    event.stopPropagation();
 
-    const pad =
+    props.onSelectPanel(
+      unitId
+    );
+
+    if (
+      props.productType ===
+      "Slider"
+    ) {
+      setLitePopup(null);
+      return;
+    }
+
+    const popupWidth =
+      180;
+
+    const popupHeight =
+      190;
+
+    let popupX =
+      x +
+      w / 2 -
+      popupWidth / 2;
+
+    let popupY =
+      y +
+      h / 2 -
+      popupHeight / 2;
+
+    popupX =
       clamp(
-        w * 0.2,
-        12,
-        35
+        popupX,
+        10,
+        1000 -
+          popupWidth -
+          10
       );
 
-    const startX =
-      direction === "right"
-        ? x + pad
-        : x + w - pad;
-
-    const endX =
-      direction === "right"
-        ? x + w - pad
-        : x + pad;
-
-    const arrow =
-      direction === "right"
-        ? -1
-        : 1;
-
-    return (
-      <g className="slider-arrow">
-
-        <line
-          x1={startX}
-          y1={middleY}
-          x2={endX}
-          y2={middleY}
-        />
-
-        <line
-          x1={endX}
-          y1={middleY}
-          x2={
-            endX +
-            arrow * 14
-          }
-          y2={
-            middleY - 10
-          }
-        />
-
-        <line
-          x1={endX}
-          y1={middleY}
-          x2={
-            endX +
-            arrow * 14
-          }
-          y2={
-            middleY + 10
-          }
-        />
-
-      </g>
-    );
-  }
-
-  function renderVerticalArrow(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    direction:
-      | "up"
-      | "down"
-  ) {
-    const middleX =
-      x + w / 2;
-
-    const pad =
+    popupY =
       clamp(
-        h * 0.2,
-        12,
-        35
+        popupY,
+        10,
+        625 -
+          popupHeight -
+          10
       );
 
-    const startY =
-      direction === "down"
-        ? y + pad
-        : y + h - pad;
-
-    const endY =
-      direction === "down"
-        ? y + h - pad
-        : y + pad;
-
-    const arrow =
-      direction === "down"
-        ? -1
-        : 1;
-
-    return (
-      <g className="slider-arrow">
-
-        <line
-          x1={middleX}
-          y1={startY}
-          x2={middleX}
-          y2={endY}
-        />
-
-        <line
-          x1={middleX}
-          y1={endY}
-          x2={
-            middleX - 10
-          }
-          y2={
-            endY +
-            arrow * 14
-          }
-        />
-
-        <line
-          x1={middleX}
-          y1={endY}
-          x2={
-            middleX + 10
-          }
-          y2={
-            endY +
-            arrow * 14
-          }
-        />
-
-      </g>
-    );
+    setLitePopup({
+      unitId,
+      liteId,
+      x: popupX,
+      y: popupY,
+      stage:
+        "operation"
+    });
   }
 
-  function renderSliderUnit(
+  function chooseOperation(
+    operation: LiteOperation
+  ) {
+    if (
+      !litePopup
+    ) {
+      return;
+    }
+
+    if (
+      operation ===
+      "Picture"
+    ) {
+      setLitePopup({
+        ...litePopup,
+        stage:
+          "picture"
+      });
+
+      return;
+    }
+
+    props.onSetLiteOperation?.(
+      litePopup.unitId,
+      litePopup.liteId,
+      operation
+    );
+
+    setLitePopup(null);
+  }
+
+  function choosePictureStyle(
+    style: PictureStyle
+  ) {
+    if (
+      !litePopup
+    ) {
+      return;
+    }
+
+    props.onSetLiteOperation?.(
+      litePopup.unitId,
+      litePopup.liteId,
+      "Picture",
+      style
+    );
+
+    setLitePopup(null);
+  }
+
+  function renderHorizontalSlider(
     unit: {
       id: string;
       x: number;
@@ -1121,190 +1140,228 @@ export default function WindowCanvas(
     },
     config: WindowUnitConfig
   ) {
-    if (
-      props.sliderOrientation ===
-      "Horizontal"
-    ) {
-      const splits =
-        [
-          ...config.verticalSplits
-        ].sort(
-          (a, b) =>
-            a.position -
-            b.position
-        );
+    const splits =
+      [
+        ...config.verticalSplits
+      ].sort(
+        (a, b) =>
+          a.position -
+          b.position
+      );
 
-      const positions = [
-        0,
-        ...splits.map(
-          (split) =>
-            split.position
-        ),
-        1
-      ];
+    const positions = [
+      0,
+      ...splits.map(
+        (split) =>
+          split.position
+      ),
+      1
+    ];
 
-      return (
-        <>
-          {positions
-            .slice(0, -1)
-            .map(
-              (
-                start,
-                index
-              ) => {
-                const end =
-                  positions[
-                    index + 1
-                  ];
+    return (
+      <>
+        {positions
+          .slice(0, -1)
+          .map(
+            (
+              start,
+              index
+            ) => {
+              const end =
+                positions[
+                  index + 1
+                ];
 
-                const liteX =
-                  unit.x +
-                  start *
-                    unit.w;
-
-                const liteWidth =
-                  (
-                    end -
-                    start
-                  ) *
+              const liteX =
+                unit.x +
+                start *
                   unit.w;
 
-                let operating =
-                  false;
+              const liteWidth =
+                (
+                  end -
+                  start
+                ) *
+                unit.w;
 
-                let direction:
-                  | "left"
-                  | "right"
-                  | null =
-                  null;
+              const lastIndex =
+                positions.length -
+                2;
 
+              let operating =
+                false;
+
+              let direction:
+                | "left"
+                | "right"
+                | null =
+                null;
+
+              if (
+                props.horizontalSliderType ===
+                "Single Vent"
+              ) {
                 if (
-                  props.horizontalSliderType ===
-                  "Single Vent"
+                  props.singleVentHanding ===
+                  "Right Vent"
                 ) {
                   operating =
-                    index === 0;
+                    index ===
+                    lastIndex;
+
+                  direction =
+                    operating
+                      ? "left"
+                      : null;
+                } else {
+                  operating =
+                    index ===
+                    0;
 
                   direction =
                     operating
                       ? "right"
                       : null;
                 }
+              }
+
+              if (
+                props.horizontalSliderType ===
+                "Double Slider"
+              ) {
+                operating =
+                  true;
+
+                direction =
+                  index === 0
+                    ? "right"
+                    : "left";
+              }
+
+              if (
+                props.horizontalSliderType ===
+                "Double Vent + Centre Picture"
+              ) {
+                operating =
+                  index === 0 ||
+                  index ===
+                    lastIndex;
 
                 if (
-                  props.horizontalSliderType ===
-                  "Double Vent"
+                  index === 0
                 ) {
-                  operating =
-                    index === 0 ||
-                    index ===
-                      positions.length -
-                        2;
-
-                  if (index === 0) {
-                    direction =
-                      "right";
-                  }
-
-                  if (
-                    index ===
-                    positions.length -
-                      2
-                  ) {
-                    direction =
-                      "left";
-                  }
+                  direction =
+                    "right";
                 }
 
-                return (
-                  <g
-                    key={
-                      `${unit.id}-slider-${index}`
-                    }
-                  >
-
-                    {operating &&
-                      renderSash(
-                        liteX,
-                        unit.y,
-                        liteWidth,
-                        unit.h,
-                        true
-                      )}
-
-                    {operating &&
-                      direction &&
-                      renderHorizontalArrow(
-                        liteX,
-                        unit.y,
-                        liteWidth,
-                        unit.h,
-                        direction
-                      )}
-
-                    <rect
-                      className="lite-hit"
-
-                      x={liteX}
-                      y={unit.y}
-
-                      width={
-                        liteWidth
-                      }
-
-                      height={
-                        unit.h
-                      }
-
-                      onPointerDown={(
-                        event
-                      ) => {
-                        event.stopPropagation();
-
-                        props.onSelectPanel(
-                          unit.id
-                        );
-
-                        setLitePopup(
-                          null
-                        );
-                      }}
-                    />
-
-                  </g>
-                );
+                if (
+                  index ===
+                  lastIndex
+                ) {
+                  direction =
+                    "left";
+                }
               }
-            )}
-
-          {splits.map(
-            (split) => {
-              const x =
-                unit.x +
-                split.position *
-                  unit.w;
 
               return (
-                <line
-                  key={split.id}
-                  className="lite-split-line"
-
-                  x1={x}
-                  y1={unit.y}
-
-                  x2={x}
-                  y2={
-                    unit.y +
-                    unit.h
+                <g
+                  key={
+                    `${unit.id}-hslider-${index}`
                   }
-                />
+                >
+
+                  {operating &&
+                    renderSash(
+                      liteX,
+                      unit.y,
+                      liteWidth,
+                      unit.h,
+                      true
+                    )}
+
+                  {operating &&
+                    direction &&
+                    renderHorizontalArrow(
+                      liteX,
+                      unit.y,
+                      liteWidth,
+                      unit.h,
+                      direction
+                    )}
+
+                  <rect
+                    className="lite-hit"
+
+                    x={liteX}
+                    y={unit.y}
+
+                    width={
+                      liteWidth
+                    }
+
+                    height={
+                      unit.h
+                    }
+
+                    onPointerDown={(
+                      event
+                    ) => {
+                      event.stopPropagation();
+
+                      props.onSelectPanel(
+                        unit.id
+                      );
+
+                      setLitePopup(
+                        null
+                      );
+                    }}
+                  />
+
+                </g>
               );
             }
           )}
 
-        </>
-      );
-    }
+        {splits.map(
+          (split) => {
+            const x =
+              unit.x +
+              split.position *
+                unit.w;
 
+            return (
+              <line
+                key={split.id}
+                className="lite-split-line"
+
+                x1={x}
+                y1={unit.y}
+
+                x2={x}
+                y2={
+                  unit.y +
+                  unit.h
+                }
+              />
+            );
+          }
+        )}
+
+      </>
+    );
+  }
+
+  function renderVerticalSlider(
+    unit: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    },
+    config: WindowUnitConfig
+  ) {
     const splits =
       [
         ...config.horizontalSplits
@@ -1387,12 +1444,16 @@ export default function WindowCanvas(
                   top ||
                   bottom;
 
-                if (top) {
+                if (
+                  top
+                ) {
                   direction =
                     "down";
                 }
 
-                if (bottom) {
+                if (
+                  bottom
+                ) {
                   direction =
                     "up";
                 }
@@ -1401,7 +1462,7 @@ export default function WindowCanvas(
               return (
                 <g
                   key={
-                    `${unit.id}-hung-${index}`
+                    `${unit.id}-vslider-${index}`
                   }
                 >
 
@@ -1722,7 +1783,9 @@ export default function WindowCanvas(
         unit.id
       ];
 
-    if (!config) {
+    if (
+      !config
+    ) {
       return null;
     }
 
@@ -1730,7 +1793,17 @@ export default function WindowCanvas(
       props.productType ===
       "Slider"
     ) {
-      return renderSliderUnit(
+      if (
+        props.sliderOrientation ===
+        "Vertical"
+      ) {
+        return renderVerticalSlider(
+          unit,
+          config
+        );
+      }
+
+      return renderHorizontalSlider(
         unit,
         config
       );
@@ -2219,7 +2292,6 @@ export default function WindowCanvas(
                   onClick={() =>
                     setLitePopup({
                       ...litePopup,
-
                       stage:
                         "operation"
                     })
