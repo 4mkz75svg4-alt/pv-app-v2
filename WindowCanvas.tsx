@@ -52,10 +52,7 @@ type Props = {
 
   selectedPanel: string | null;
 
-  panelTypes: Record<
-    string,
-    PanelType
-  >;
+  panelTypes: Record<string, PanelType>;
 
   windowUnits?: Record<
     string,
@@ -118,6 +115,12 @@ type Props = {
     position: number
   ) => void;
 
+  onMoveUnitVerticalSplit?: (
+    unitId: string,
+    splitId: string,
+    position: number
+  ) => void;
+
   onSetLiteOperation?: (
     unitId: string,
     liteId: string,
@@ -134,13 +137,10 @@ type FrameEdge =
 
 type FrameDrag = {
   edge: FrameEdge;
-
   startX: number;
   startY: number;
-
   startWidth: number;
   startHeight: number;
-
   pixelsPerInchX: number;
   pixelsPerInchY: number;
 };
@@ -150,21 +150,25 @@ type OuterSplitDrag = {
   id: string;
 };
 
-type UnitSplitDrag = {
+type UnitHorizontalSplitDrag = {
   unitId: string;
   splitId: string;
-
   unitY: number;
   unitHeight: number;
+};
+
+type UnitVerticalSplitDrag = {
+  unitId: string;
+  splitId: string;
+  unitX: number;
+  unitWidth: number;
 };
 
 type LitePopup = {
   unitId: string;
   liteId: string;
-
   x: number;
   y: number;
-
   stage:
     | "operation"
     | "picture";
@@ -207,7 +211,6 @@ function getFrame(
     Math.min(
       MAX_FRAME_WIDTH /
         safeWidth,
-
       MAX_FRAME_HEIGHT /
         safeHeight
     );
@@ -270,10 +273,18 @@ export default function WindowCanvas(
     );
 
   const [
-    unitSplitDragging,
-    setUnitSplitDragging
+    unitHorizontalSplitDragging,
+    setUnitHorizontalSplitDragging
   ] =
-    useState<UnitSplitDrag | null>(
+    useState<UnitHorizontalSplitDrag | null>(
+      null
+    );
+
+  const [
+    unitVerticalSplitDragging,
+    setUnitVerticalSplitDragging
+  ] =
+    useState<UnitVerticalSplitDrag | null>(
       null
     );
 
@@ -484,7 +495,7 @@ export default function WindowCanvas(
       );
   }
 
-  function startUnitSplitDrag(
+  function startUnitHorizontalSplitDrag(
     unitId: string,
     splitId: string,
     unitY: number,
@@ -495,11 +506,35 @@ export default function WindowCanvas(
 
     setLitePopup(null);
 
-    setUnitSplitDragging({
+    setUnitHorizontalSplitDragging({
       unitId,
       splitId,
       unitY,
       unitHeight
+    });
+
+    event.currentTarget
+      .setPointerCapture(
+        event.pointerId
+      );
+  }
+
+  function startUnitVerticalSplitDrag(
+    unitId: string,
+    splitId: string,
+    unitX: number,
+    unitWidth: number,
+    event: PointerEvent<SVGLineElement>
+  ) {
+    event.stopPropagation();
+
+    setLitePopup(null);
+
+    setUnitVerticalSplitDragging({
+      unitId,
+      splitId,
+      unitX,
+      unitWidth
     });
 
     event.currentTarget
@@ -514,22 +549,48 @@ export default function WindowCanvas(
     const point =
       pointFromEvent(event);
 
-    if (unitSplitDragging) {
+    if (
+      unitVerticalSplitDragging
+    ) {
+      const position =
+        clamp(
+          (
+            point.x -
+            unitVerticalSplitDragging.unitX
+          ) /
+            unitVerticalSplitDragging.unitWidth,
+
+          0.05,
+          0.95
+        );
+
+      props.onMoveUnitVerticalSplit?.(
+        unitVerticalSplitDragging.unitId,
+        unitVerticalSplitDragging.splitId,
+        position
+      );
+
+      return;
+    }
+
+    if (
+      unitHorizontalSplitDragging
+    ) {
       const position =
         clamp(
           (
             point.y -
-            unitSplitDragging.unitY
+            unitHorizontalSplitDragging.unitY
           ) /
-            unitSplitDragging.unitHeight,
+            unitHorizontalSplitDragging.unitHeight,
 
           0.05,
           0.95
         );
 
       props.onMoveUnitHorizontalSplit?.(
-        unitSplitDragging.unitId,
-        unitSplitDragging.splitId,
+        unitHorizontalSplitDragging.unitId,
+        unitHorizontalSplitDragging.splitId,
         position
       );
 
@@ -676,9 +737,21 @@ export default function WindowCanvas(
   }
 
   function pointerUp() {
-    setUnitSplitDragging(null);
-    setFrameDragging(null);
-    setDragging(null);
+    setUnitVerticalSplitDragging(
+      null
+    );
+
+    setUnitHorizontalSplitDragging(
+      null
+    );
+
+    setFrameDragging(
+      null
+    );
+
+    setDragging(
+      null
+    );
   }
 
   function renderSash(
@@ -758,7 +831,7 @@ export default function WindowCanvas(
       clamp(
         w * 0.22,
         12,
-        35
+        30
       );
 
     const startX =
@@ -773,8 +846,8 @@ export default function WindowCanvas(
 
     const arrowOffset =
       direction === "right"
-        ? -14
-        : 14;
+        ? -12
+        : 12;
 
     return (
       <g className="slider-arrow">
@@ -794,7 +867,7 @@ export default function WindowCanvas(
             arrowOffset
           }
           y2={
-            middleY - 10
+            middleY - 9
           }
         />
 
@@ -806,7 +879,7 @@ export default function WindowCanvas(
             arrowOffset
           }
           y2={
-            middleY + 10
+            middleY + 9
           }
         />
 
@@ -831,7 +904,7 @@ export default function WindowCanvas(
       clamp(
         h * 0.22,
         12,
-        35
+        30
       );
 
     const startY =
@@ -846,8 +919,8 @@ export default function WindowCanvas(
 
     const arrowOffset =
       direction === "up"
-        ? 14
-        : -14;
+        ? 12
+        : -12;
 
     return (
       <g className="slider-arrow">
@@ -863,7 +936,7 @@ export default function WindowCanvas(
           x1={middleX}
           y1={endY}
           x2={
-            middleX - 10
+            middleX - 9
           }
           y2={
             endY +
@@ -875,7 +948,7 @@ export default function WindowCanvas(
           x1={middleX}
           y1={endY}
           x2={
-            middleX + 10
+            middleX + 9
           }
           y2={
             endY +
@@ -1032,7 +1105,10 @@ export default function WindowCanvas(
       props.productType ===
       "Slider"
     ) {
-      setLitePopup(null);
+      setLitePopup(
+        null
+      );
+
       return;
     }
 
@@ -1108,7 +1184,9 @@ export default function WindowCanvas(
       operation
     );
 
-    setLitePopup(null);
+    setLitePopup(
+      null
+    );
   }
 
   function choosePictureStyle(
@@ -1127,7 +1205,9 @@ export default function WindowCanvas(
       style
     );
 
-    setLitePopup(null);
+    setLitePopup(
+      null
+    );
   }
 
   function renderHorizontalSlider(
@@ -1158,6 +1238,10 @@ export default function WindowCanvas(
       1
     ];
 
+    const lastIndex =
+      positions.length -
+      2;
+
     return (
       <>
         {positions
@@ -1172,21 +1256,17 @@ export default function WindowCanvas(
                   index + 1
                 ];
 
-              const liteX =
+              const sectionX =
                 unit.x +
                 start *
                   unit.w;
 
-              const liteWidth =
+              const sectionWidth =
                 (
                   end -
                   start
                 ) *
                 unit.w;
-
-              const lastIndex =
-                positions.length -
-                2;
 
               let operating =
                 false;
@@ -1209,19 +1289,22 @@ export default function WindowCanvas(
                     index ===
                     lastIndex;
 
-                  direction =
+                  if (
                     operating
-                      ? "left"
-                      : null;
+                  ) {
+                    direction =
+                      "left";
+                  }
                 } else {
                   operating =
-                    index ===
-                    0;
+                    index === 0;
 
-                  direction =
+                  if (
                     operating
-                      ? "right"
-                      : null;
+                  ) {
+                    direction =
+                      "right";
+                  }
                 }
               }
 
@@ -1266,15 +1349,15 @@ export default function WindowCanvas(
               return (
                 <g
                   key={
-                    `${unit.id}-hslider-${index}`
+                    `${unit.id}-horizontal-slider-${index}`
                   }
                 >
 
                   {operating &&
                     renderSash(
-                      liteX,
+                      sectionX,
                       unit.y,
-                      liteWidth,
+                      sectionWidth,
                       unit.h,
                       true
                     )}
@@ -1282,9 +1365,9 @@ export default function WindowCanvas(
                   {operating &&
                     direction &&
                     renderHorizontalArrow(
-                      liteX,
+                      sectionX,
                       unit.y,
-                      liteWidth,
+                      sectionWidth,
                       unit.h,
                       direction
                     )}
@@ -1292,11 +1375,16 @@ export default function WindowCanvas(
                   <rect
                     className="lite-hit"
 
-                    x={liteX}
-                    y={unit.y}
+                    x={
+                      sectionX
+                    }
+
+                    y={
+                      unit.y
+                    }
 
                     width={
-                      liteWidth
+                      sectionWidth
                     }
 
                     height={
@@ -1331,19 +1419,55 @@ export default function WindowCanvas(
                 unit.w;
 
             return (
-              <line
-                key={split.id}
-                className="lite-split-line"
-
-                x1={x}
-                y1={unit.y}
-
-                x2={x}
-                y2={
-                  unit.y +
-                  unit.h
+              <g
+                key={
+                  split.id
                 }
-              />
+              >
+
+                <line
+                  className="lite-split-line"
+
+                  x1={x}
+                  y1={
+                    unit.y
+                  }
+
+                  x2={x}
+                  y2={
+                    unit.y +
+                    unit.h
+                  }
+                />
+
+                <line
+                  className="slider-vertical-split-hit"
+
+                  x1={x}
+                  y1={
+                    unit.y
+                  }
+
+                  x2={x}
+                  y2={
+                    unit.y +
+                    unit.h
+                  }
+
+                  onPointerDown={(
+                    event
+                  ) =>
+                    startUnitVerticalSplitDrag(
+                      unit.id,
+                      split.id,
+                      unit.x,
+                      unit.w,
+                      event
+                    )
+                  }
+                />
+
+              </g>
             );
           }
         )}
@@ -1394,12 +1518,12 @@ export default function WindowCanvas(
                   index + 1
                 ];
 
-              const liteY =
+              const sectionY =
                 unit.y +
                 start *
                   unit.h;
 
-              const liteHeight =
+              const sectionHeight =
                 (
                   end -
                   start
@@ -1430,10 +1554,12 @@ export default function WindowCanvas(
                 operating =
                   bottom;
 
-                direction =
+                if (
                   bottom
-                    ? "up"
-                    : null;
+                ) {
+                  direction =
+                    "up";
+                }
               }
 
               if (
@@ -1462,16 +1588,16 @@ export default function WindowCanvas(
               return (
                 <g
                   key={
-                    `${unit.id}-vslider-${index}`
+                    `${unit.id}-vertical-slider-${index}`
                   }
                 >
 
                   {operating &&
                     renderSash(
                       unit.x,
-                      liteY,
+                      sectionY,
                       unit.w,
-                      liteHeight,
+                      sectionHeight,
                       true
                     )}
 
@@ -1479,24 +1605,29 @@ export default function WindowCanvas(
                     direction &&
                     renderVerticalArrow(
                       unit.x,
-                      liteY,
+                      sectionY,
                       unit.w,
-                      liteHeight,
+                      sectionHeight,
                       direction
                     )}
 
                   <rect
                     className="lite-hit"
 
-                    x={unit.x}
-                    y={liteY}
+                    x={
+                      unit.x
+                    }
+
+                    y={
+                      sectionY
+                    }
 
                     width={
                       unit.w
                     }
 
                     height={
-                      liteHeight
+                      sectionHeight
                     }
 
                     onPointerDown={(
@@ -1527,12 +1658,19 @@ export default function WindowCanvas(
                 unit.h;
 
             return (
-              <g key={split.id}>
+              <g
+                key={
+                  split.id
+                }
+              >
 
                 <line
                   className="lite-split-line"
 
-                  x1={unit.x}
+                  x1={
+                    unit.x
+                  }
+
                   y1={y}
 
                   x2={
@@ -1546,7 +1684,10 @@ export default function WindowCanvas(
                 <line
                   className="lite-split-hit"
 
-                  x1={unit.x}
+                  x1={
+                    unit.x
+                  }
+
                   y1={y}
 
                   x2={
@@ -1559,7 +1700,7 @@ export default function WindowCanvas(
                   onPointerDown={(
                     event
                   ) =>
-                    startUnitSplitDrag(
+                    startUnitHorizontalSplitDrag(
                       unit.id,
                       split.id,
                       unit.y,
@@ -1679,8 +1820,13 @@ export default function WindowCanvas(
                   <rect
                     className="lite-hit"
 
-                    x={unit.x}
-                    y={liteY}
+                    x={
+                      unit.x
+                    }
+
+                    y={
+                      liteY
+                    }
 
                     width={
                       unit.w
@@ -1718,12 +1864,19 @@ export default function WindowCanvas(
                 unit.h;
 
             return (
-              <g key={split.id}>
+              <g
+                key={
+                  split.id
+                }
+              >
 
                 <line
                   className="lite-split-line"
 
-                  x1={unit.x}
+                  x1={
+                    unit.x
+                  }
+
                   y1={y}
 
                   x2={
@@ -1737,7 +1890,10 @@ export default function WindowCanvas(
                 <line
                   className="lite-split-hit"
 
-                  x1={unit.x}
+                  x1={
+                    unit.x
+                  }
+
                   y1={y}
 
                   x2={
@@ -1750,7 +1906,7 @@ export default function WindowCanvas(
                   onPointerDown={(
                     event
                   ) =>
-                    startUnitSplitDrag(
+                    startUnitHorizontalSplitDrag(
                       unit.id,
                       split.id,
                       unit.y,
@@ -1783,9 +1939,7 @@ export default function WindowCanvas(
         unit.id
       ];
 
-    if (
-      !config
-    ) {
+    if (!config) {
       return null;
     }
 
@@ -1833,8 +1987,14 @@ export default function WindowCanvas(
 
       onPointerCancel={() => {
         setDragging(null);
+
         setFrameDragging(null);
-        setUnitSplitDragging(
+
+        setUnitHorizontalSplitDragging(
+          null
+        );
+
+        setUnitVerticalSplitDragging(
           null
         );
       }}
@@ -1843,8 +2003,13 @@ export default function WindowCanvas(
       <rect
         className="glass-background"
 
-        x={FRAME.x}
-        y={FRAME.y}
+        x={
+          FRAME.x
+        }
+
+        y={
+          FRAME.y
+        }
 
         width={
           FRAME.width
@@ -1864,7 +2029,11 @@ export default function WindowCanvas(
             props.selectedPanel;
 
           return (
-            <g key={unit.id}>
+            <g
+              key={
+                unit.id
+              }
+            >
 
               <rect
                 className={
@@ -1949,13 +2118,19 @@ export default function WindowCanvas(
               FRAME.width;
 
           return (
-            <g key={split.id}>
+            <g
+              key={
+                split.id
+              }
+            >
 
               <line
                 className="split-line"
 
                 x1={x}
-                y1={FRAME.y}
+                y1={
+                  FRAME.y
+                }
 
                 x2={x}
 
@@ -1969,7 +2144,9 @@ export default function WindowCanvas(
                 className="split-hit"
 
                 x1={x}
-                y1={FRAME.y}
+                y1={
+                  FRAME.y
+                }
 
                 x2={x}
 
@@ -1983,11 +2160,15 @@ export default function WindowCanvas(
                 ) => {
                   event.stopPropagation();
 
-                  setLitePopup(null);
+                  setLitePopup(
+                    null
+                  );
 
                   setDragging({
-                    axis: "x",
-                    id: split.id
+                    axis:
+                      "x",
+                    id:
+                      split.id
                   });
 
                   event.currentTarget
@@ -2010,12 +2191,19 @@ export default function WindowCanvas(
               FRAME.height;
 
           return (
-            <g key={split.id}>
+            <g
+              key={
+                split.id
+              }
+            >
 
               <line
                 className="split-line"
 
-                x1={FRAME.x}
+                x1={
+                  FRAME.x
+                }
+
                 y1={y}
 
                 x2={
@@ -2029,7 +2217,10 @@ export default function WindowCanvas(
               <line
                 className="split-hit"
 
-                x1={FRAME.x}
+                x1={
+                  FRAME.x
+                }
+
                 y1={y}
 
                 x2={
@@ -2044,11 +2235,15 @@ export default function WindowCanvas(
                 ) => {
                   event.stopPropagation();
 
-                  setLitePopup(null);
+                  setLitePopup(
+                    null
+                  );
 
                   setDragging({
-                    axis: "y",
-                    id: split.id
+                    axis:
+                      "y",
+                    id:
+                      split.id
                   });
 
                   event.currentTarget
@@ -2066,8 +2261,13 @@ export default function WindowCanvas(
       <rect
         className="outer-frame"
 
-        x={FRAME.x}
-        y={FRAME.y}
+        x={
+          FRAME.x
+        }
+
+        y={
+          FRAME.y
+        }
 
         width={
           FRAME.width
@@ -2083,10 +2283,18 @@ export default function WindowCanvas(
       <line
         className="frame-resize-hit"
 
-        x1={FRAME.x}
-        y1={FRAME.y}
+        x1={
+          FRAME.x
+        }
 
-        x2={FRAME.x}
+        y1={
+          FRAME.y
+        }
+
+        x2={
+          FRAME.x
+        }
+
         y2={
           FRAME.y +
           FRAME.height
@@ -2110,7 +2318,9 @@ export default function WindowCanvas(
           FRAME.width
         }
 
-        y1={FRAME.y}
+        y1={
+          FRAME.y
+        }
 
         x2={
           FRAME.x +
@@ -2135,15 +2345,22 @@ export default function WindowCanvas(
       <line
         className="frame-resize-hit-horizontal"
 
-        x1={FRAME.x}
-        y1={FRAME.y}
+        x1={
+          FRAME.x
+        }
+
+        y1={
+          FRAME.y
+        }
 
         x2={
           FRAME.x +
           FRAME.width
         }
 
-        y2={FRAME.y}
+        y2={
+          FRAME.y
+        }
 
         onPointerDown={(
           event
@@ -2158,7 +2375,9 @@ export default function WindowCanvas(
       <line
         className="frame-resize-hit-horizontal"
 
-        x1={FRAME.x}
+        x1={
+          FRAME.x
+        }
 
         y1={
           FRAME.y +
@@ -2187,11 +2406,18 @@ export default function WindowCanvas(
 
       {litePopup && (
         <foreignObject
-          x={litePopup.x}
-          y={litePopup.y}
+          x={
+            litePopup.x
+          }
+
+          y={
+            litePopup.y
+          }
+
           width="180"
           height="200"
         >
+
           <div
             className="lite-popup"
 
@@ -2306,13 +2532,16 @@ export default function WindowCanvas(
               className="popup-close"
 
               onClick={() =>
-                setLitePopup(null)
+                setLitePopup(
+                  null
+                )
               }
             >
               ×
             </button>
 
           </div>
+
         </foreignObject>
       )}
 
