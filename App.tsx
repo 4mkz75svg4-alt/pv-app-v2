@@ -3496,7 +3496,9 @@ export default function App() {
               verticalSliderType={
                 verticalSliderType
               }
-
+              singleVentHanding={
+              singleVentHanding
+              }
               gridColumns={0}
               gridRows={0}
 
