@@ -530,3 +530,12 @@ button:disabled {
   stroke-linejoin: round;
   pointer-events: none;
 }
+/* HORIZONTAL SLIDER MEETING RAIL DRAG */
+
+.slider-vertical-split-hit {
+  stroke: transparent;
+  stroke-width: 30;
+  pointer-events: stroke;
+  cursor: ew-resize;
+  touch-action: none;
+}
