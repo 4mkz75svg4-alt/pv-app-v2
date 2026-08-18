@@ -22,6 +22,21 @@ type SliderOrientation =
   | "Horizontal"
   | "Vertical";
 
+type HorizontalSliderType =
+  | "Single Vent"
+  | "Double Vent";
+
+type VerticalSliderType =
+  | "Single Hung"
+  | "Double Hung";
+
+type SliderSplitMode =
+  | "equal"
+  | "one-third"
+  | "two-thirds"
+  | "center-feature"
+  | "custom";
+
 type SizingMode =
   | "equal"
   | "center-feature"
@@ -90,14 +105,19 @@ function createLiteConfigs(
 
 function createWindowUnit(
   id: string,
+  litesWide = 1,
   litesTall = 1
 ): WindowUnitConfig {
   return {
     id,
-    litesWide: 1,
+    litesWide,
     litesTall,
 
-    verticalSplits: [],
+    verticalSplits:
+      createEqualSplits(
+        litesWide,
+        `lite-v-${id}`
+      ),
 
     horizontalSplits:
       createEqualSplits(
@@ -107,7 +127,7 @@ function createWindowUnit(
 
     liteConfigs:
       createLiteConfigs(
-        1,
+        litesWide,
         litesTall
       )
   };
@@ -211,7 +231,6 @@ function splitsFromSizes(
       id: newId(
         `${prefix}-${index}`
       ),
-
       position:
         running / total
     });
@@ -310,6 +329,36 @@ export default function App() {
     useState<SliderOrientation>(
       "Horizontal"
     );
+
+  const [
+    horizontalSliderType,
+    setHorizontalSliderType
+  ] =
+    useState<HorizontalSliderType>(
+      "Single Vent"
+    );
+
+  const [
+    verticalSliderType,
+    setVerticalSliderType
+  ] =
+    useState<VerticalSliderType>(
+      "Single Hung"
+    );
+
+  const [
+    sliderSplitMode,
+    setSliderSplitMode
+  ] =
+    useState<SliderSplitMode>(
+      "equal"
+    );
+
+  const [
+    sliderCustomSizes,
+    setSliderCustomSizes
+  ] =
+    useState<string[]>([]);
 
   const [unitsWide, setUnitsWide] =
     useState(1);
@@ -425,6 +474,43 @@ export default function App() {
     return (
       (end - start) *
       state.overallHeight
+    );
+  }
+
+  function getUnitWidth(
+    unitId: string
+  ) {
+    const [, columnText] =
+      unitId.split("-");
+
+    const column =
+      Number(columnText);
+
+    const sorted =
+      [...state.verticalSplits].sort(
+        (a, b) =>
+          a.position -
+          b.position
+      );
+
+    const positions = [
+      0,
+      ...sorted.map(
+        (split) =>
+          split.position
+      ),
+      1
+    ];
+
+    const start =
+      positions[column] ?? 0;
+
+    const end =
+      positions[column + 1] ?? 1;
+
+    return (
+      (end - start) *
+      state.overallWidth
     );
   }
 
@@ -1022,6 +1108,7 @@ export default function App() {
     setUnitSplitModes(
       (current) => ({
         ...current,
+
         [selectedUnit]:
           "equal"
       })
@@ -1030,6 +1117,7 @@ export default function App() {
     setUnitCustomHeights(
       (current) => ({
         ...current,
+
         [selectedUnit]: []
       })
     );
@@ -1425,6 +1513,7 @@ export default function App() {
       setPictureStyles(
         (current) => ({
           ...current,
+
           [key]:
             pictureStyle
         })
@@ -1444,6 +1533,356 @@ export default function App() {
     }
   }
 
+  function applyHorizontalSlider(
+    type: HorizontalSliderType,
+    splitMode: SliderSplitMode
+  ) {
+    if (!selectedUnit) return;
+
+    const unitWidth =
+      getUnitWidth(selectedUnit);
+
+    let positions: number[] = [];
+
+    if (type === "Single Vent") {
+      if (splitMode === "equal") {
+        positions = [0.5];
+      }
+
+      if (splitMode === "one-third") {
+        positions = [1 / 3];
+      }
+    }
+
+    if (type === "Double Vent") {
+      if (
+        splitMode ===
+        "center-feature"
+      ) {
+        positions = [
+          0.25,
+          0.75
+        ];
+      }
+
+      if (splitMode === "equal") {
+        positions = [
+          1 / 3,
+          2 / 3
+        ];
+      }
+    }
+
+    if (splitMode === "custom") {
+      const unit =
+        state.windowUnits?.[
+          selectedUnit
+        ];
+
+      if (!unit) return;
+
+      setSliderCustomSizes(
+        sizesFromSplits(
+          unit.verticalSplits,
+          unitWidth
+        )
+      );
+
+      setSliderSplitMode(
+        "custom"
+      );
+
+      return;
+    }
+
+    const splits =
+      positions.map(
+        (position, index) => ({
+          id: newId(
+            `slider-v-${selectedUnit}-${index}`
+          ),
+          position
+        })
+      );
+
+    const litesWide =
+      type === "Single Vent"
+        ? 2
+        : 3;
+
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          selectedUnit
+        ] ??
+        createWindowUnit(
+          selectedUnit
+        );
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [selectedUnit]: {
+            ...existing,
+
+            litesWide,
+            litesTall: 1,
+
+            verticalSplits:
+              splits,
+
+            horizontalSplits: [],
+
+            liteConfigs:
+              createLiteConfigs(
+                litesWide,
+                1
+              )
+          }
+        }
+      };
+    });
+
+    setSliderCustomSizes([]);
+  }
+
+  function applyVerticalSlider(
+    type: VerticalSliderType,
+    splitMode: SliderSplitMode
+  ) {
+    if (!selectedUnit) return;
+
+    const unitHeight =
+      getUnitHeight(
+        selectedUnit
+      );
+
+    if (splitMode === "custom") {
+      const unit =
+        state.windowUnits?.[
+          selectedUnit
+        ];
+
+      if (!unit) return;
+
+      setSliderCustomSizes(
+        sizesFromSplits(
+          unit.horizontalSplits,
+          unitHeight
+        )
+      );
+
+      setSliderSplitMode(
+        "custom"
+      );
+
+      return;
+    }
+
+    let position = 0.5;
+
+    if (
+      splitMode ===
+      "one-third"
+    ) {
+      position = 1 / 3;
+    }
+
+    if (
+      splitMode ===
+      "two-thirds"
+    ) {
+      position = 2 / 3;
+    }
+
+    const splits: Split[] = [
+      {
+        id: newId(
+          `slider-h-${selectedUnit}`
+        ),
+        position
+      }
+    ];
+
+    setState((current) => {
+      const existing =
+        current.windowUnits?.[
+          selectedUnit
+        ] ??
+        createWindowUnit(
+          selectedUnit
+        );
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [selectedUnit]: {
+            ...existing,
+
+            litesWide: 1,
+            litesTall: 2,
+
+            verticalSplits: [],
+
+            horizontalSplits:
+              splits,
+
+            liteConfigs:
+              createLiteConfigs(
+                1,
+                2
+              )
+          }
+        }
+      };
+    });
+
+    setSliderCustomSizes([]);
+  }
+
+  function updateSliderCustomSize(
+    index: number,
+    value: string
+  ) {
+    if (!selectedUnit) return;
+
+    const unit =
+      state.windowUnits?.[
+        selectedUnit
+      ];
+
+    if (!unit) return;
+
+    const horizontal =
+      sliderOrientation ===
+      "Horizontal";
+
+    const total =
+      horizontal
+        ? getUnitWidth(
+            selectedUnit
+          )
+        : getUnitHeight(
+            selectedUnit
+          );
+
+    let next =
+      sliderCustomSizes.length
+        ? [...sliderCustomSizes]
+        : horizontal
+        ? sizesFromSplits(
+            unit.verticalSplits,
+            total
+          )
+        : sizesFromSplits(
+            unit.horizontalSplits,
+            total
+          );
+
+    next[index] = value;
+
+    const number =
+      Number(value);
+
+    if (
+      !Number.isFinite(number) ||
+      number <= 0
+    ) {
+      setSliderCustomSizes(
+        next
+      );
+
+      return;
+    }
+
+    let autoIndex =
+      next.length - 1;
+
+    if (
+      index ===
+      next.length - 1
+    ) {
+      autoIndex =
+        Math.max(
+          0,
+          next.length - 2
+        );
+    }
+
+    next = rebalanceSizes(
+      next,
+      total,
+      autoIndex
+    );
+
+    setSliderCustomSizes(
+      next
+    );
+
+    const numbers =
+      next.map(Number);
+
+    if (
+      !numbers.every(
+        (item) =>
+          Number.isFinite(item) &&
+          item > 0
+      )
+    ) {
+      return;
+    }
+
+    setState((current) => {
+      const currentUnit =
+        current.windowUnits?.[
+          selectedUnit
+        ];
+
+      if (!currentUnit) {
+        return current;
+      }
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [selectedUnit]: {
+            ...currentUnit,
+
+            verticalSplits:
+              horizontal
+                ? splitsFromSizes(
+                    numbers,
+                    total,
+                    `slider-v-${selectedUnit}`
+                  )
+                : [],
+
+            horizontalSplits:
+              horizontal
+                ? []
+                : splitsFromSizes(
+                    numbers,
+                    total,
+                    `slider-h-${selectedUnit}`
+                  )
+          }
+        }
+      };
+    });
+  }
+
   function reset() {
     setState(initialState);
 
@@ -1457,6 +1896,20 @@ export default function App() {
     setSliderOrientation(
       "Horizontal"
     );
+
+    setHorizontalSliderType(
+      "Single Vent"
+    );
+
+    setVerticalSliderType(
+      "Single Hung"
+    );
+
+    setSliderSplitMode(
+      "equal"
+    );
+
+    setSliderCustomSizes([]);
 
     setUnitsWide(1);
     setUnitsTall(1);
@@ -1481,11 +1934,14 @@ export default function App() {
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v13",
+      "pv-app-react-v14",
       JSON.stringify({
         state,
         productType,
         sliderOrientation,
+        horizontalSliderType,
+        verticalSliderType,
+        sliderSplitMode,
         unitsWide,
         unitsTall,
         pictureStyles
@@ -1580,11 +2036,15 @@ export default function App() {
                     : ""
                 }
 
-                onClick={() =>
+                onClick={() => {
                   setProductType(
                     "Slider"
-                  )
-                }
+                  );
+
+                  setSliderSplitMode(
+                    "equal"
+                  );
+                }}
               >
                 Slider
               </button>
@@ -1607,7 +2067,6 @@ export default function App() {
               </button>
 
             </div>
-
           </section>
 
           {productType ===
@@ -1616,46 +2075,292 @@ export default function App() {
             <section className="config-section">
 
               <div className="step-title">
-                2. Slider Type
+                2. Slider Orientation
               </div>
 
-              <div className="option-buttons">
+              <div className="number-row">
 
-                <button
-                  className={
-                    sliderOrientation ===
-                    "Horizontal"
-                      ? "active"
-                      : ""
-                  }
+                <label>
+                  Orientation
 
-                  onClick={() =>
-                    setSliderOrientation(
-                      "Horizontal"
-                    )
-                  }
-                >
-                  Horizontal Slider
-                </button>
+                  <select
+                    value={
+                      sliderOrientation
+                    }
 
-                <button
-                  className={
-                    sliderOrientation ===
-                    "Vertical"
-                      ? "active"
-                      : ""
-                  }
+                    onChange={(event) => {
+                      const next =
+                        event.target
+                          .value as SliderOrientation;
 
-                  onClick={() =>
-                    setSliderOrientation(
-                      "Vertical"
-                    )
-                  }
-                >
-                  Vertical Slider
-                </button>
+                      setSliderOrientation(
+                        next
+                      );
+
+                      setSliderSplitMode(
+                        next ===
+                          "Horizontal"
+                          ? "equal"
+                          : "one-third"
+                      );
+
+                      setSliderCustomSizes(
+                        []
+                      );
+                    }}
+                  >
+                    <option value="Horizontal">
+                      Horizontal
+                    </option>
+
+                    <option value="Vertical">
+                      Vertical
+                    </option>
+                  </select>
+                </label>
+
+                {sliderOrientation ===
+                "Horizontal" ? (
+
+                  <label>
+                    Vent Type
+
+                    <select
+                      value={
+                        horizontalSliderType
+                      }
+
+                      onChange={(event) => {
+                        const next =
+                          event.target
+                            .value as HorizontalSliderType;
+
+                        setHorizontalSliderType(
+                          next
+                        );
+
+                        const split =
+                          next ===
+                          "Single Vent"
+                            ? "equal"
+                            : "center-feature";
+
+                        setSliderSplitMode(
+                          split
+                        );
+
+                        if (
+                          selectedUnit
+                        ) {
+                          applyHorizontalSlider(
+                            next,
+                            split
+                          );
+                        }
+                      }}
+                    >
+                      <option value="Single Vent">
+                        Single Vent
+                      </option>
+
+                      <option value="Double Vent">
+                        Double Vent
+                      </option>
+                    </select>
+                  </label>
+
+                ) : (
+
+                  <label>
+                    Hung Type
+
+                    <select
+                      value={
+                        verticalSliderType
+                      }
+
+                      onChange={(event) => {
+                        const next =
+                          event.target
+                            .value as VerticalSliderType;
+
+                        setVerticalSliderType(
+                          next
+                        );
+
+                        setSliderSplitMode(
+                          "one-third"
+                        );
+
+                        if (
+                          selectedUnit
+                        ) {
+                          applyVerticalSlider(
+                            next,
+                            "one-third"
+                          );
+                        }
+                      }}
+                    >
+                      <option value="Single Hung">
+                        Single Hung
+                      </option>
+
+                      <option value="Double Hung">
+                        Double Hung
+                      </option>
+                    </select>
+                  </label>
+
+                )}
 
               </div>
+
+              {selectedUnit && (
+                <div
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  <label>
+                    Split
+
+                    <select
+                      value={
+                        sliderSplitMode
+                      }
+
+                      onChange={(event) => {
+                        const next =
+                          event.target
+                            .value as SliderSplitMode;
+
+                        setSliderSplitMode(
+                          next
+                        );
+
+                        if (
+                          sliderOrientation ===
+                          "Horizontal"
+                        ) {
+                          applyHorizontalSlider(
+                            horizontalSliderType,
+                            next
+                          );
+                        } else {
+                          applyVerticalSlider(
+                            verticalSliderType,
+                            next
+                          );
+                        }
+                      }}
+                    >
+
+                      {sliderOrientation ===
+                        "Horizontal" &&
+                        horizontalSliderType ===
+                          "Single Vent" && (
+                          <>
+                            <option value="equal">
+                              1/2 - 1/2
+                            </option>
+
+                            <option value="one-third">
+                              1/3 - 2/3
+                            </option>
+
+                            <option value="custom">
+                              Custom
+                            </option>
+                          </>
+                        )}
+
+                      {sliderOrientation ===
+                        "Horizontal" &&
+                        horizontalSliderType ===
+                          "Double Vent" && (
+                          <>
+                            <option value="center-feature">
+                              1/4 - 1/2 - 1/4
+                            </option>
+
+                            <option value="equal">
+                              1/3 - 1/3 - 1/3
+                            </option>
+
+                            <option value="custom">
+                              Custom
+                            </option>
+                          </>
+                        )}
+
+                      {sliderOrientation ===
+                        "Vertical" && (
+                          <>
+                            <option value="one-third">
+                              1/3 - 2/3
+                            </option>
+
+                            <option value="two-thirds">
+                              2/3 - 1/3
+                            </option>
+
+                            <option value="custom">
+                              Custom
+                            </option>
+                          </>
+                        )}
+
+                    </select>
+                  </label>
+
+                  {sliderSplitMode ===
+                    "custom" && (
+                    <div
+                      className="number-row"
+                      style={{
+                        marginTop: 10
+                      }}
+                    >
+                      {sliderCustomSizes.map(
+                        (
+                          value,
+                          index
+                        ) => (
+                          <label
+                            key={index}
+                          >
+                            Panel{" "}
+                            {index + 1}
+
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={value}
+
+                              onChange={(
+                                event
+                              ) =>
+                                updateSliderCustomSize(
+                                  index,
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </label>
+                        )
+                      )}
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+              {!selectedUnit && (
+                <div className="split-note">
+                  Tap a unit in the drawing to configure its slider layout.
+                </div>
+              )}
 
             </section>
 
@@ -1844,7 +2549,6 @@ export default function App() {
                     marginTop: 12
                   }}
                 >
-
                   <div className="number-row">
 
                     {customWidths.map(
@@ -1877,16 +2581,12 @@ export default function App() {
                               )
                             }
                           />
-
                         </label>
-
                       )
                     )}
 
                   </div>
-
                 </div>
-
               )}
 
             </section>
@@ -1943,7 +2643,6 @@ export default function App() {
                     marginTop: 12
                   }}
                 >
-
                   <div className="number-row">
 
                     {customHeights.map(
@@ -1976,192 +2675,190 @@ export default function App() {
                               )
                             }
                           />
-
                         </label>
-
                       )
                     )}
 
                   </div>
-
                 </div>
-
               )}
 
             </section>
 
           )}
 
-          <section className="config-section">
+          {productType ===
+            "Casement / Awning" && (
 
-            <div className="step-title">
-              Configure Unit
-            </div>
+            <section className="config-section">
 
-            <div className="selected-info">
-              {selectedUnit
-                ? `Unit ${selectedUnit} selected`
-                : "Tap a unit in the drawing"}
-            </div>
+              <div className="step-title">
+                Configure Unit
+              </div>
 
-            {selectedUnitConfig && (
+              <div className="selected-info">
+                {selectedUnit
+                  ? `Unit ${selectedUnit} selected`
+                  : "Tap a unit in the drawing"}
+              </div>
 
-              <>
-                <div className="number-row">
+              {selectedUnitConfig && (
 
-                  <label>
-                    Number High
-
-                    <select
-                      value={
-                        selectedUnitConfig.litesTall
-                      }
-
-                      onChange={(event) =>
-                        changeSelectedNumberHigh(
-                          Number(
-                            event.target.value
-                          )
-                        )
-                      }
-                    >
-                      {[1, 2, 3, 4].map(
-                        (number) => (
-                          <option
-                            key={number}
-                            value={number}
-                          >
-                            {number}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </label>
-
-                  {selectedUnitConfig.litesTall >
-                    1 && (
+                <>
+                  <div className="number-row">
 
                     <label>
-                      Split
+                      Number High
 
                       <select
                         value={
-                          selectedSplitMode
+                          selectedUnitConfig.litesTall
                         }
 
                         onChange={(event) =>
-                          applyUnitSplit(
-                            event.target
-                              .value as UnitSplitMode
+                          changeSelectedNumberHigh(
+                            Number(
+                              event.target.value
+                            )
                           )
                         }
                       >
-                        <option value="equal">
-                          {selectedUnitConfig.litesTall ===
-                          2
-                            ? "1/2 - 1/2"
-                            : selectedUnitConfig.litesTall ===
-                              3
-                            ? "1/3 - 1/3 - 1/3"
-                            : "Equal"}
-                        </option>
-
-                        {selectedUnitConfig.litesTall ===
-                          2 && (
-                          <>
-                            <option value="top-third">
-                              1/3 - 2/3
+                        {[1, 2, 3, 4].map(
+                          (number) => (
+                            <option
+                              key={number}
+                              value={number}
+                            >
+                              {number}
                             </option>
-
-                            <option value="bottom-third">
-                              2/3 - 1/3
-                            </option>
-                          </>
+                          )
                         )}
-
-                        {selectedUnitConfig.litesTall ===
-                          3 && (
-                          <>
-                            <option value="center-feature">
-                              1/4 - 1/2 - 1/4
-                            </option>
-
-                            <option value="top-half">
-                              1/2 - 1/4 - 1/4
-                            </option>
-
-                            <option value="bottom-half">
-                              1/4 - 1/4 - 1/2
-                            </option>
-                          </>
-                        )}
-
-                        <option value="custom">
-                          Custom
-                        </option>
                       </select>
                     </label>
 
-                  )}
+                    {selectedUnitConfig.litesTall >
+                      1 && (
 
-                </div>
+                      <label>
+                        Split
 
-                {selectedSplitMode ===
-                  "custom" &&
-                  selectedUnitConfig.litesTall >
-                    1 && (
+                        <select
+                          value={
+                            selectedSplitMode
+                          }
 
-                  <div
-                    style={{
-                      marginTop: 10
-                    }}
-                  >
+                          onChange={(event) =>
+                            applyUnitSplit(
+                              event.target
+                                .value as UnitSplitMode
+                            )
+                          }
+                        >
+                          <option value="equal">
+                            {selectedUnitConfig.litesTall ===
+                            2
+                              ? "1/2 - 1/2"
+                              : selectedUnitConfig.litesTall ===
+                                3
+                              ? "1/3 - 1/3 - 1/3"
+                              : "Equal"}
+                          </option>
 
-                    <div className="number-row">
+                          {selectedUnitConfig.litesTall ===
+                            2 && (
+                            <>
+                              <option value="top-third">
+                                1/3 - 2/3
+                              </option>
 
-                      {selectedCustomHeights.map(
-                        (
-                          value,
-                          index
-                        ) => (
+                              <option value="bottom-third">
+                                2/3 - 1/3
+                              </option>
+                            </>
+                          )}
 
-                          <label
-                            key={index}
-                          >
-                            Lite{" "}
-                            {index + 1}
+                          {selectedUnitConfig.litesTall ===
+                            3 && (
+                            <>
+                              <option value="center-feature">
+                                1/4 - 1/2 - 1/4
+                              </option>
 
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={value}
+                              <option value="top-half">
+                                1/2 - 1/4 - 1/4
+                              </option>
 
-                              onChange={(
-                                event
-                              ) =>
-                                updateUnitCustomHeight(
-                                  index,
-                                  event.target.value
-                                )
-                              }
-                            />
+                              <option value="bottom-half">
+                                1/4 - 1/4 - 1/2
+                              </option>
+                            </>
+                          )}
 
-                          </label>
+                          <option value="custom">
+                            Custom
+                          </option>
+                        </select>
+                      </label>
 
-                        )
-                      )}
-
-                    </div>
+                    )}
 
                   </div>
 
-                )}
+                  {selectedSplitMode ===
+                    "custom" &&
+                    selectedUnitConfig.litesTall >
+                      1 && (
 
-              </>
+                    <div
+                      style={{
+                        marginTop: 10
+                      }}
+                    >
+                      <div className="number-row">
 
-            )}
+                        {selectedCustomHeights.map(
+                          (
+                            value,
+                            index
+                          ) => (
 
-          </section>
+                            <label
+                              key={index}
+                            >
+                              Lite{" "}
+                              {index + 1}
+
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={value}
+
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateUnitCustomHeight(
+                                    index,
+                                    event.target.value
+                                  )
+                                }
+                              />
+
+                            </label>
+
+                          )
+                        )}
+
+                      </div>
+                    </div>
+                  )}
+
+                </>
+
+              )}
+
+            </section>
+
+          )}
 
         </aside>
 
@@ -2244,9 +2941,11 @@ export default function App() {
               windowUnits={
                 state.windowUnits
               }
+
               pictureStyles={
-              pictureStyles
+                pictureStyles
               }
+
               gridColumns={0}
               gridRows={0}
 
@@ -2287,7 +2986,7 @@ export default function App() {
           </div>
 
           <p className="hint">
-            Tap a lite to choose its operation. Drag internal mullions with your mouse or finger to adjust the split.
+            Tap a unit to configure it.
           </p>
 
         </section>
