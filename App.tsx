@@ -67,7 +67,16 @@ type LiteOperation =
 type PictureStyle =
   | "Balanced Sash"
   | "Direct Set";
+type FlangeType =
+  | "Nail Fin"
+  | "Brick Mould"
+  | "Reno Flange";
 
+type WindowColour =
+  | "White"
+  | "Black"
+  | "Brown"
+  | "Custom";
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(16)
@@ -444,7 +453,29 @@ export default function App() {
       string,
       PictureStyle
     >>({});
+const [
+  flangeType,
+  setFlangeType
+] =
+  useState<FlangeType>(
+    "Nail Fin"
+  );
 
+const [
+  exteriorColour,
+  setExteriorColour
+] =
+  useState<WindowColour>(
+    "White"
+  );
+
+const [
+  interiorColour,
+  setInteriorColour
+] =
+  useState<WindowColour>(
+    "White"
+  );
   const mode: Mode =
     "select";
 
@@ -2144,6 +2175,9 @@ export default function App() {
 
       JSON.stringify({
         state,
+        flangeType,
+        exteriorColour,
+        interiorColour,
         productType,
         sliderOrientation,
         horizontalSliderType,
@@ -2883,7 +2917,108 @@ export default function App() {
             </div>
 
           </section>
+<section className="config-section">
 
+  <div className="step-title">
+    Flange Type
+  </div>
+
+  <label>
+    Flange
+
+    <select
+      value={flangeType}
+      onChange={(event) =>
+        setFlangeType(
+          event.target.value as FlangeType
+        )
+      }
+    >
+      <option value="Nail Fin">
+        Nail Fin
+      </option>
+
+      <option value="Brick Mould">
+        Brick Mould
+      </option>
+
+      <option value="Reno Flange">
+        Reno Flange
+      </option>
+    </select>
+  </label>
+
+</section>
+
+<section className="config-section">
+
+  <div className="step-title">
+    Colour
+  </div>
+
+  <div className="number-row">
+
+    <label>
+      Exterior
+
+      <select
+        value={exteriorColour}
+        onChange={(event) =>
+          setExteriorColour(
+            event.target.value as WindowColour
+          )
+        }
+      >
+        <option value="White">
+          White
+        </option>
+
+        <option value="Black">
+          Black
+        </option>
+
+        <option value="Brown">
+          Brown
+        </option>
+
+        <option value="Custom">
+          Custom
+        </option>
+      </select>
+    </label>
+
+    <label>
+      Interior
+
+      <select
+        value={interiorColour}
+        onChange={(event) =>
+          setInteriorColour(
+            event.target.value as WindowColour
+          )
+        }
+      >
+        <option value="White">
+          White
+        </option>
+
+        <option value="Black">
+          Black
+        </option>
+
+        <option value="Brown">
+          Brown
+        </option>
+
+        <option value="Custom">
+          Custom
+        </option>
+      </select>
+    </label>
+
+  </div>
+
+</section>
           {unitsWide > 1 && (
 
             <section className="config-section">
