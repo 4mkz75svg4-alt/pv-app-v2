@@ -2244,7 +2244,9 @@ export default function App() {
               windowUnits={
                 state.windowUnits
               }
-
+              pictureStyles={
+              pictureStyles
+              }
               gridColumns={0}
               gridRows={0}
 
