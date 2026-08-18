@@ -4,7 +4,8 @@ import WindowCanvas from "./WindowCanvas";
 import type {
   ConfiguratorState,
   Split,
-  WindowUnitConfig
+  WindowUnitConfig,
+  PanelType
 } from "./types";
 
 type Mode =
@@ -35,6 +36,16 @@ type UnitSplitMode =
   | "bottom-half"
   | "custom";
 
+type LiteOperation =
+  | "Picture"
+  | "Awning"
+  | "Casement Left"
+  | "Casement Right";
+
+type PictureStyle =
+  | "Balanced Sash"
+  | "Direct Set";
+
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(16)
@@ -63,7 +74,11 @@ function createLiteConfigs(
   const configs: WindowUnitConfig["liteConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
-    for (let column = 0; column < wide; column++) {
+    for (
+      let column = 0;
+      column < wide;
+      column++
+    ) {
       configs[`${row}-${column}`] = {
         type: "Picture"
       };
@@ -108,9 +123,15 @@ function createWindowUnits(
   > = {};
 
   for (let row = 0; row < tall; row++) {
-    for (let column = 0; column < wide; column++) {
+    for (
+      let column = 0;
+      column < wide;
+      column++
+    ) {
       const id = `${row}-${column}`;
-      units[id] = createWindowUnit(id);
+
+      units[id] =
+        createWindowUnit(id);
     }
   }
 
@@ -125,7 +146,11 @@ function createPanelConfigs(
     ConfiguratorState["panelConfigs"] = {};
 
   for (let row = 0; row < tall; row++) {
-    for (let column = 0; column < wide; column++) {
+    for (
+      let column = 0;
+      column < wide;
+      column++
+    ) {
       configs[`${row}-${column}`] = {
         type: "Picture"
       };
@@ -140,7 +165,8 @@ function sizesFromSplits(
   total: number
 ) {
   const sorted = [...splits].sort(
-    (a, b) => a.position - b.position
+    (a, b) =>
+      a.position - b.position
   );
 
   const positions = [
@@ -185,6 +211,7 @@ function splitsFromSizes(
       id: newId(
         `${prefix}-${index}`
       ),
+
       position:
         running / total
     });
@@ -346,6 +373,15 @@ export default function App() {
       string[]
     >>({});
 
+  const [
+    pictureStyles,
+    setPictureStyles
+  ] =
+    useState<Record<
+      string,
+      PictureStyle
+    >>({});
+
   const mode: Mode = "select";
 
   const selectedUnitConfig =
@@ -447,6 +483,7 @@ export default function App() {
 
     setUnitSplitModes({});
     setUnitCustomHeights({});
+    setPictureStyles({});
 
     setSelectedUnit(null);
   }
@@ -1019,15 +1056,11 @@ export default function App() {
       }
 
       if (splitMode === "top-third") {
-        positions = [
-          1 / 3
-        ];
+        positions = [1 / 3];
       }
 
       if (splitMode === "bottom-third") {
-        positions = [
-          2 / 3
-        ];
+        positions = [2 / 3];
       }
     }
 
@@ -1039,21 +1072,30 @@ export default function App() {
         ];
       }
 
-      if (splitMode === "center-feature") {
+      if (
+        splitMode ===
+        "center-feature"
+      ) {
         positions = [
           0.25,
           0.75
         ];
       }
 
-      if (splitMode === "top-half") {
+      if (
+        splitMode ===
+        "top-half"
+      ) {
         positions = [
           0.5,
           0.75
         ];
       }
 
-      if (splitMode === "bottom-half") {
+      if (
+        splitMode ===
+        "bottom-half"
+      ) {
         positions = [
           0.25,
           0.5
@@ -1061,17 +1103,21 @@ export default function App() {
       }
     }
 
-    if (count === 4) {
-      if (splitMode === "equal") {
-        positions = [
-          0.25,
-          0.5,
-          0.75
-        ];
-      }
+    if (
+      count === 4 &&
+      splitMode === "equal"
+    ) {
+      positions = [
+        0.25,
+        0.5,
+        0.75
+      ];
     }
 
-    if (splitMode === "custom") {
+    if (
+      splitMode ===
+      "custom"
+    ) {
       const unitHeight =
         getSelectedUnitHeight();
 
@@ -1084,6 +1130,7 @@ export default function App() {
       setUnitCustomHeights(
         (current) => ({
           ...current,
+
           [selectedUnit]:
             currentSizes
         })
@@ -1092,6 +1139,7 @@ export default function App() {
       setUnitSplitModes(
         (current) => ({
           ...current,
+
           [selectedUnit]:
             "custom"
         })
@@ -1119,6 +1167,7 @@ export default function App() {
 
         [selectedUnit]: {
           ...selectedUnitConfig,
+
           horizontalSplits:
             splits
         }
@@ -1128,6 +1177,7 @@ export default function App() {
     setUnitSplitModes(
       (current) => ({
         ...current,
+
         [selectedUnit]:
           splitMode
       })
@@ -1136,6 +1186,7 @@ export default function App() {
     setUnitCustomHeights(
       (current) => ({
         ...current,
+
         [selectedUnit]: []
       })
     );
@@ -1178,6 +1229,7 @@ export default function App() {
       setUnitCustomHeights(
         (all) => ({
           ...all,
+
           [selectedUnit]:
             next
         })
@@ -1209,6 +1261,7 @@ export default function App() {
     setUnitCustomHeights(
       (all) => ({
         ...all,
+
         [selectedUnit]:
           next
       })
@@ -1254,9 +1307,6 @@ export default function App() {
     const unitHeight =
       getUnitHeight(unitId);
 
-    let updatedSizes:
-      string[] = [];
-
     setState((current) => {
       const unit =
         current.windowUnits?.[
@@ -1284,11 +1334,29 @@ export default function App() {
               b.position
           );
 
-      updatedSizes =
+      const updatedSizes =
         sizesFromSplits(
           nextSplits,
           unitHeight
         );
+
+      setUnitSplitModes(
+        (modes) => ({
+          ...modes,
+
+          [unitId]:
+            "custom"
+        })
+      );
+
+      setUnitCustomHeights(
+        (heights) => ({
+          ...heights,
+
+          [unitId]:
+            updatedSizes
+        })
+      );
 
       return {
         ...current,
@@ -1299,30 +1367,79 @@ export default function App() {
 
           [unitId]: {
             ...unit,
+
             horizontalSplits:
               nextSplits
           }
         }
       };
     });
+  }
 
-    setUnitSplitModes(
-      (current) => ({
+  function setLiteOperation(
+    unitId: string,
+    liteId: string,
+    operation: LiteOperation,
+    pictureStyle?: PictureStyle
+  ) {
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
+
+      if (!unit) {
+        return current;
+      }
+
+      return {
         ...current,
-        [unitId]:
-          "custom"
-      })
-    );
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [unitId]: {
+            ...unit,
+
+            liteConfigs: {
+              ...unit.liteConfigs,
+
+              [liteId]: {
+                type:
+                  operation as PanelType
+              }
+            }
+          }
+        }
+      };
+    });
+
+    const key =
+      `${unitId}:${liteId}`;
 
     if (
-      updatedSizes.length
+      operation === "Picture" &&
+      pictureStyle
     ) {
-      setUnitCustomHeights(
+      setPictureStyles(
         (current) => ({
           ...current,
-          [unitId]:
-            updatedSizes
+          [key]:
+            pictureStyle
         })
+      );
+    } else {
+      setPictureStyles(
+        (current) => {
+          const next = {
+            ...current
+          };
+
+          delete next[key];
+
+          return next;
+        }
       );
     }
   }
@@ -1357,19 +1474,21 @@ export default function App() {
 
     setUnitSplitModes({});
     setUnitCustomHeights({});
+    setPictureStyles({});
 
     setSelectedUnit(null);
   }
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v12",
+      "pv-app-react-v13",
       JSON.stringify({
         state,
         productType,
         sliderOrientation,
         unitsWide,
-        unitsTall
+        unitsTall,
+        pictureStyles
       })
     );
 
@@ -1406,7 +1525,6 @@ export default function App() {
   return (
     <>
       <header className="topbar">
-
         <div>
           <div className="brand">
             Pacific View
@@ -1423,7 +1541,6 @@ export default function App() {
         >
           Save
         </button>
-
       </header>
 
       <main className="configurator-layout">
@@ -1490,6 +1607,7 @@ export default function App() {
               </button>
 
             </div>
+
           </section>
 
           {productType ===
@@ -1538,7 +1656,9 @@ export default function App() {
                 </button>
 
               </div>
+
             </section>
+
           )}
 
           <section className="config-section">
@@ -1604,6 +1724,7 @@ export default function App() {
               </label>
 
             </div>
+
           </section>
 
           <section className="config-section">
@@ -1647,6 +1768,7 @@ export default function App() {
               </label>
 
             </div>
+
           </section>
 
           {unitsWide > 1 && (
@@ -2154,12 +2276,16 @@ export default function App() {
               onMoveUnitHorizontalSplit={
                 moveUnitHorizontalSplit
               }
+
+              onSetLiteOperation={
+                setLiteOperation
+              }
             />
 
           </div>
 
           <p className="hint">
-            Tap a unit to configure it. Drag an internal mullion with your mouse or finger to create a custom split.
+            Tap a lite to choose its operation. Drag internal mullions with your mouse or finger to adjust the split.
           </p>
 
         </section>
