@@ -355,13 +355,11 @@ export default function App() {
         ] ?? null
       : null;
 
-  function getSelectedUnitHeight() {
-    if (!selectedUnit) {
-      return 0;
-    }
-
+  function getUnitHeight(
+    unitId: string
+  ) {
     const [rowText] =
-      selectedUnit.split("-");
+      unitId.split("-");
 
     const row =
       Number(rowText);
@@ -391,6 +389,16 @@ export default function App() {
     return (
       (end - start) *
       state.overallHeight
+    );
+  }
+
+  function getSelectedUnitHeight() {
+    if (!selectedUnit) {
+      return 0;
+    }
+
+    return getUnitHeight(
+      selectedUnit
     );
   }
 
@@ -991,7 +999,7 @@ export default function App() {
   }
 
   function applyUnitSplit(
-    mode: UnitSplitMode
+    splitMode: UnitSplitMode
   ) {
     if (
       !selectedUnit ||
@@ -1006,17 +1014,17 @@ export default function App() {
     let positions: number[] = [];
 
     if (count === 2) {
-      if (mode === "equal") {
+      if (splitMode === "equal") {
         positions = [0.5];
       }
 
-      if (mode === "top-third") {
+      if (splitMode === "top-third") {
         positions = [
           1 / 3
         ];
       }
 
-      if (mode === "bottom-third") {
+      if (splitMode === "bottom-third") {
         positions = [
           2 / 3
         ];
@@ -1024,28 +1032,28 @@ export default function App() {
     }
 
     if (count === 3) {
-      if (mode === "equal") {
+      if (splitMode === "equal") {
         positions = [
           1 / 3,
           2 / 3
         ];
       }
 
-      if (mode === "center-feature") {
+      if (splitMode === "center-feature") {
         positions = [
           0.25,
           0.75
         ];
       }
 
-      if (mode === "top-half") {
+      if (splitMode === "top-half") {
         positions = [
           0.5,
           0.75
         ];
       }
 
-      if (mode === "bottom-half") {
+      if (splitMode === "bottom-half") {
         positions = [
           0.25,
           0.5
@@ -1054,7 +1062,7 @@ export default function App() {
     }
 
     if (count === 4) {
-      if (mode === "equal") {
+      if (splitMode === "equal") {
         positions = [
           0.25,
           0.5,
@@ -1063,7 +1071,7 @@ export default function App() {
       }
     }
 
-    if (mode === "custom") {
+    if (splitMode === "custom") {
       const unitHeight =
         getSelectedUnitHeight();
 
@@ -1121,7 +1129,7 @@ export default function App() {
       (current) => ({
         ...current,
         [selectedUnit]:
-          mode
+          splitMode
       })
     );
 
@@ -1238,6 +1246,87 @@ export default function App() {
     }
   }
 
+  function moveUnitHorizontalSplit(
+    unitId: string,
+    splitId: string,
+    position: number
+  ) {
+    const unitHeight =
+      getUnitHeight(unitId);
+
+    let updatedSizes:
+      string[] = [];
+
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
+
+      if (!unit) {
+        return current;
+      }
+
+      const nextSplits =
+        unit.horizontalSplits
+          .map((split) =>
+            split.id ===
+            splitId
+              ? {
+                  ...split,
+                  position
+                }
+              : split
+          )
+          .sort(
+            (a, b) =>
+              a.position -
+              b.position
+          );
+
+      updatedSizes =
+        sizesFromSplits(
+          nextSplits,
+          unitHeight
+        );
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [unitId]: {
+            ...unit,
+            horizontalSplits:
+              nextSplits
+          }
+        }
+      };
+    });
+
+    setUnitSplitModes(
+      (current) => ({
+        ...current,
+        [unitId]:
+          "custom"
+      })
+    );
+
+    if (
+      updatedSizes.length
+    ) {
+      setUnitCustomHeights(
+        (current) => ({
+          ...current,
+          [unitId]:
+            updatedSizes
+        })
+      );
+    }
+  }
+
   function reset() {
     setState(initialState);
 
@@ -1274,7 +1363,7 @@ export default function App() {
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v11",
+      "pv-app-react-v12",
       JSON.stringify({
         state,
         productType,
@@ -2061,12 +2150,16 @@ export default function App() {
               onOverallHeightChange={
                 handleFrameHeightChange
               }
+
+              onMoveUnitHorizontalSplit={
+                moveUnitHorizontalSplit
+              }
             />
 
           </div>
 
           <p className="hint">
-            Tap a unit to configure it. Internal split lines will be draggable next.
+            Tap a unit to configure it. Drag an internal mullion with your mouse or finger to create a custom split.
           </p>
 
         </section>
