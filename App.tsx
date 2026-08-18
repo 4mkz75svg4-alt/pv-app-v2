@@ -178,8 +178,7 @@ function sizesFromSplits(
   total: number
 ) {
   const sorted = [...splits].sort(
-    (a, b) =>
-      a.position - b.position
+    (a, b) => a.position - b.position
   );
 
   const positions = [
@@ -224,6 +223,7 @@ function splitsFromSizes(
       id: newId(
         `${prefix}-${index}`
       ),
+
       position:
         running / total
     });
@@ -1478,21 +1478,34 @@ export default function App() {
           unitHeight
         );
 
-      setUnitSplitModes(
-        (modes) => ({
-          ...modes,
-          [unitId]:
-            "custom"
-        })
-      );
+      if (
+        productType ===
+        "Slider"
+      ) {
+        setSliderSplitMode(
+          "custom"
+        );
 
-      setUnitCustomHeights(
-        (heights) => ({
-          ...heights,
-          [unitId]:
-            updatedSizes
-        })
-      );
+        setSliderCustomSizes(
+          updatedSizes
+        );
+      } else {
+        setUnitSplitModes(
+          (modes) => ({
+            ...modes,
+            [unitId]:
+              "custom"
+          })
+        );
+
+        setUnitCustomHeights(
+          (heights) => ({
+            ...heights,
+            [unitId]:
+              updatedSizes
+          })
+        );
+      }
 
       return {
         ...current,
@@ -1504,6 +1517,76 @@ export default function App() {
           [unitId]: {
             ...unit,
             horizontalSplits:
+              nextSplits
+          }
+        }
+      };
+    });
+  }
+
+  function moveUnitVerticalSplit(
+    unitId: string,
+    splitId: string,
+    position: number
+  ) {
+    const unitWidth =
+      getUnitWidth(
+        unitId
+      );
+
+    setState((current) => {
+      const unit =
+        current.windowUnits?.[
+          unitId
+        ];
+
+      if (!unit) {
+        return current;
+      }
+
+      const nextSplits =
+        unit.verticalSplits
+          .map(
+            (split) =>
+              split.id ===
+              splitId
+                ? {
+                    ...split,
+                    position
+                  }
+                : split
+          )
+          .sort(
+            (a, b) =>
+              a.position -
+              b.position
+          );
+
+      const updatedSizes =
+        sizesFromSplits(
+          nextSplits,
+          unitWidth
+        );
+
+      setSliderSplitMode(
+        "custom"
+      );
+
+      setSliderCustomSizes(
+        updatedSizes
+      );
+
+      return {
+        ...current,
+
+        windowUnits: {
+          ...(current.windowUnits ??
+            {}),
+
+          [unitId]: {
+            ...unit,
+
+            verticalSplits:
               nextSplits
           }
         }
@@ -2057,7 +2140,7 @@ export default function App() {
 
   function save() {
     localStorage.setItem(
-      "pv-app-react-v16",
+      "pv-app-react-v17",
 
       JSON.stringify({
         state,
@@ -2818,6 +2901,7 @@ export default function App() {
                 </button>
 
                 {unitsWide === 3 && (
+
                   <button
                     className={
                       horizontalSizingMode ===
@@ -2832,6 +2916,7 @@ export default function App() {
                   >
                     1/4 + 1/2 + 1/4
                   </button>
+
                 )}
 
                 <button
@@ -3318,6 +3403,10 @@ export default function App() {
 
               onMoveUnitHorizontalSplit={
                 moveUnitHorizontalSplit
+              }
+
+              onMoveUnitVerticalSplit={
+                moveUnitVerticalSplit
               }
 
               onSetLiteOperation={
