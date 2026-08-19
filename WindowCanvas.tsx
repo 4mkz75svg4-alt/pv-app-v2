@@ -769,42 +769,79 @@ export default function WindowCanvas(
     h: number,
     slider = false
   ) {
-   const inset = 14;
+    const inset = 14;
+    const sashX = x + inset;
+    const sashY = y + inset;
+    const sashW = Math.max(
+      0,
+      w - inset * 2
+    );
+    const sashH = Math.max(
+      0,
+      h - inset * 2
+    );
+
+    const profileInset =
+      slider ? 5 : 6;
+
+    const glassInset =
+      slider ? 11 : 12;
 
     return (
-      <rect
+      <g
         className={
           slider
-            ? "slider-sash-outline"
-            : "sash-outline"
+            ? "slider-sash-profile"
+            : "sash-profile"
         }
+        pointerEvents="none"
+      >
+        <rect
+          x={sashX}
+          y={sashY}
+          width={sashW}
+          height={sashH}
+          rx="3"
+          fill="rgba(255,255,255,0.035)"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
 
-        x={
-          x + inset
-        }
-
-        y={
-          y + inset
-        }
-
-        width={
-          Math.max(
+        <rect
+          x={sashX + profileInset}
+          y={sashY + profileInset}
+          width={Math.max(
             0,
-            w -
-              inset * 2
-          )
-        }
-
-        height={
-          Math.max(
+            sashW - profileInset * 2
+          )}
+          height={Math.max(
             0,
-            h -
-              inset * 2
-          )
-        }
+            sashH - profileInset * 2
+          )}
+          rx="2"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.25"
+          opacity="0.6"
+        />
 
-        rx="2"
-      />
+        <rect
+          x={sashX + glassInset}
+          y={sashY + glassInset}
+          width={Math.max(
+            0,
+            sashW - glassInset * 2
+          )}
+          height={Math.max(
+            0,
+            sashH - glassInset * 2
+          )}
+          rx="1.5"
+          fill="rgba(185,220,235,0.16)"
+          stroke="rgba(75,100,110,0.55)"
+          strokeWidth="1"
+        />
+      </g>
     );
   }
 
@@ -2099,26 +2136,80 @@ export default function WindowCanvas(
       }}
     >
 
+      <defs>
+        <linearGradient
+          id="pv-glass-gradient"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="100%"
+        >
+          <stop
+            offset="0%"
+            stopColor="#eef8fc"
+            stopOpacity="0.92"
+          />
+          <stop
+            offset="45%"
+            stopColor="#cfe7f0"
+            stopOpacity="0.74"
+          />
+          <stop
+            offset="100%"
+            stopColor="#b7d6e1"
+            stopOpacity="0.82"
+          />
+        </linearGradient>
+
+        <linearGradient
+          id="pv-glass-sheen"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="100%"
+        >
+          <stop
+            offset="0%"
+            stopColor="#ffffff"
+            stopOpacity="0.34"
+          />
+          <stop
+            offset="38%"
+            stopColor="#ffffff"
+            stopOpacity="0.06"
+          />
+          <stop
+            offset="100%"
+            stopColor="#ffffff"
+            stopOpacity="0"
+          />
+        </linearGradient>
+      </defs>
+
       <rect
         className="glass-background"
+        x={FRAME.x}
+        y={FRAME.y}
+        width={FRAME.width}
+        height={FRAME.height}
+        rx="5"
+        fill="url(#pv-glass-gradient)"
+      />
 
-        x={
-          FRAME.x
-        }
-
-        y={
-          FRAME.y
-        }
-
-        width={
-          FRAME.width
-        }
-
-        height={
-          FRAME.height
-        }
-
+      <rect
+        x={FRAME.x + 8}
+        y={FRAME.y + 8}
+        width={Math.max(
+          0,
+          FRAME.width - 16
+        )}
+        height={Math.max(
+          0,
+          FRAME.height - 16
+        )}
         rx="4"
+        fill="url(#pv-glass-sheen)"
+        pointerEvents="none"
       />
 
       {units.map(
@@ -2357,27 +2448,56 @@ export default function WindowCanvas(
         }
       )}
 
-      <rect
-        className="outer-frame"
+      <g
+        className="outer-frame-profile"
+        pointerEvents="none"
+      >
+        <rect
+          x={FRAME.x}
+          y={FRAME.y}
+          width={FRAME.width}
+          height={FRAME.height}
+          rx="5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="12"
+        />
 
-        x={
-          FRAME.x
-        }
+        <rect
+          x={FRAME.x + 7}
+          y={FRAME.y + 7}
+          width={Math.max(
+            0,
+            FRAME.width - 14
+          )}
+          height={Math.max(
+            0,
+            FRAME.height - 14
+          )}
+          rx="4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          opacity="0.62"
+        />
 
-        y={
-          FRAME.y
-        }
-
-        width={
-          FRAME.width
-        }
-
-        height={
-          FRAME.height
-        }
-
-        rx="4"
-      />
+        <rect
+          x={FRAME.x + 13}
+          y={FRAME.y + 13}
+          width={Math.max(
+            0,
+            FRAME.width - 26
+          )}
+          height={Math.max(
+            0,
+            FRAME.height - 26
+          )}
+          rx="3"
+          fill="none"
+          stroke="rgba(45,60,65,0.45)"
+          strokeWidth="1"
+        />
+      </g>
 
       <line
         className="frame-resize-hit"
