@@ -520,6 +520,15 @@ export default function WindowCanvas(
       false
     );
 
+
+  const [
+    sliderWindowOpen,
+    setSliderWindowOpen
+  ] =
+    useState<boolean>(
+      false
+    );
+
   const sortedVertical =
     useMemo(
       () =>
@@ -1726,24 +1735,37 @@ export default function WindowCanvas(
                     unit.h
                   )}
 
-                  {operating &&
-                    renderSash(
-                      sectionX,
-                      unit.y,
-                      sectionWidth,
-                      unit.h,
-                      true
-                    )}
+                  {operating && (
+                    <g
+                      transform={
+                        sliderWindowOpen &&
+                        direction
+                          ? `translate(${direction === "right" ? sectionWidth * 0.38 : -sectionWidth * 0.38} 0)`
+                          : undefined
+                      }
+                      style={{
+                        transition:
+                          "transform 280ms ease"
+                      }}
+                    >
+                      {renderSash(
+                        sectionX,
+                        unit.y,
+                        sectionWidth,
+                        unit.h,
+                        true
+                      )}
 
-                  {operating &&
-                    direction &&
-                    renderHorizontalArrow(
-                      sectionX,
-                      unit.y,
-                      sectionWidth,
-                      unit.h,
-                      direction
-                    )}
+                      {direction &&
+                        renderHorizontalArrow(
+                          sectionX,
+                          unit.y,
+                          sectionWidth,
+                          unit.h,
+                          direction
+                        )}
+                    </g>
+                  )}
 
                   <rect
                     className="lite-hit"
@@ -1772,6 +1794,21 @@ export default function WindowCanvas(
                       props.onSelectPanel(
                         unit.id
                       );
+
+                      if (
+                        operating
+                      ) {
+                        setSliderWindowOpen(
+                          (current) =>
+                            !current
+                        );
+
+                        setLitePopup(
+                          null
+                        );
+
+                        return;
+                      }
 
                       setLitePopup(
                         null
