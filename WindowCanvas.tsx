@@ -86,26 +86,17 @@ type Props = {
 
   viewMode?: ViewMode;
 
-  exteriorMaterial?: string;
-  exteriorVinylFinish?: string;
+  windowType?: string;
   exteriorColour?: string;
-  exteriorWoodSpecies?: string;
-  exteriorWoodFinish?: string;
-  exteriorWoodStain?: string;
-  exteriorWoodPaintColour?: string;
-
-  interiorMaterial?: string;
-  interiorVinylFinish?: string;
   interiorColour?: string;
-  interiorWoodSpecies?: string;
-  interiorWoodFinish?: string;
-  interiorWoodStain?: string;
-  interiorWoodPaintColour?: string;
+  woodSpecies?: string;
+  woodFinish?: string;
+  woodStain?: string;
 
   flangeType?: string;
   glassAppearance?: string;
   glassPane?: string;
-  glassLowE?: boolean;
+  glassLowEPackage?: string;
   glassSafety?: string;
 
   gridStyle?: GridStyle;
@@ -386,31 +377,32 @@ export default function WindowCanvas(
       ]
     );
 
-  function colourForWood(
-    species: string | undefined,
-    finish: string | undefined,
-    stain: string | undefined,
-    paintColour: string | undefined
-  ) {
-    if (finish === "Painted") {
+  function colourForWood() {
+    if (
+      props.woodFinish === "Painted"
+    ) {
       return (
         STANDARD_COLOUR_MAP[
-          paintColour ?? "White"
+          props.interiorColour ?? "White"
         ] ?? "#f4f2ec"
       );
     }
 
-    if (finish === "Primed White") {
+    if (
+      props.woodFinish === "Primed White"
+    ) {
       return "#f4f2ec";
     }
 
-    if (finish === "Stained") {
+    if (
+      props.woodFinish === "Stained"
+    ) {
       return (
         ULTRA_STAIN_COLOUR_MAP[
-          stain ?? "Bearstone Brown"
+          props.woodStain ?? "Bearstone Brown"
         ] ??
         WOOD_SPECIES_COLOUR_MAP[
-          species ?? "Douglas Fir"
+          props.woodSpecies ?? "Douglas Fir"
         ] ??
         "#d7b27a"
       );
@@ -418,33 +410,29 @@ export default function WindowCanvas(
 
     return (
       WOOD_SPECIES_COLOUR_MAP[
-        species ?? "Douglas Fir"
+        props.woodSpecies ?? "Douglas Fir"
       ] ?? "#d7b27a"
     );
   }
 
+  const interiorView =
+    props.viewMode === "Interior";
+
   const frameColour =
-    props.viewMode === "Interior"
-      ? props.interiorMaterial === "Wood"
-        ? colourForWood(
-            props.interiorWoodSpecies,
-            props.interiorWoodFinish,
-            props.interiorWoodStain,
-            props.interiorWoodPaintColour
-          )
-        : STANDARD_COLOUR_MAP[
-            props.interiorColour ?? "White"
-          ] ?? "#f4f2ec"
-      : props.exteriorMaterial === "Wood"
-      ? colourForWood(
-          props.exteriorWoodSpecies,
-          props.exteriorWoodFinish,
-          props.exteriorWoodStain,
-          props.exteriorWoodPaintColour
-        )
+    interiorView &&
+    props.windowType ===
+      "Aluminum / Wood"
+      ? colourForWood()
       : STANDARD_COLOUR_MAP[
-          props.exteriorColour ?? "White"
+          interiorView
+            ? props.interiorColour ?? "White"
+            : props.exteriorColour ?? "White"
         ] ?? "#f4f2ec";
+
+  const hasLowE =
+    !!props.glassLowEPackage &&
+    props.glassLowEPackage !==
+      "No Low-E";
 
   const [
     dragging,
@@ -1264,6 +1252,15 @@ export default function WindowCanvas(
     w: number,
     h: number
   ) {
+    const visualOperation =
+      interiorView
+        ? visualOperation === "Casement Left"
+          ? "Casement Right"
+          : visualOperation === "Casement Right"
+          ? "Casement Left"
+          : operation
+        : operation;
+
     const pad =
       clamp(
         Math.min(
@@ -1299,14 +1296,14 @@ export default function WindowCanvas(
       h / 2;
 
     if (
-      operation ===
+      visualOperation ===
       "Picture"
     ) {
       return null;
     }
 
     if (
-      operation ===
+      visualOperation ===
       "Awning"
     ) {
       return (
@@ -1331,7 +1328,7 @@ export default function WindowCanvas(
     }
 
     if (
-      operation ===
+      visualOperation ===
       "Casement Left"
     ) {
       return (
@@ -1356,7 +1353,7 @@ export default function WindowCanvas(
     }
 
     if (
-      operation ===
+      visualOperation ===
       "Casement Right"
     ) {
       return (
@@ -1539,6 +1536,14 @@ export default function WindowCanvas(
       positions.length -
       2;
 
+    const effectiveHanding =
+      interiorView
+        ? props.singleVentHanding ===
+          "Right Vent"
+          ? "Left Vent"
+          : "Right Vent"
+        : props.singleVentHanding;
+
     return (
       <>
         {positions
@@ -1579,7 +1584,7 @@ export default function WindowCanvas(
                 "Single Vent"
               ) {
                 if (
-                  props.singleVentHanding ===
+                  effectiveHanding ===
                   "Right Vent"
                 ) {
                   operating =
@@ -1613,7 +1618,11 @@ export default function WindowCanvas(
                   true;
 
                 direction =
-                  index === 0
+                  interiorView
+                    ? index === 0
+                      ? "left"
+                      : "right"
+                    : index === 0
                     ? "right"
                     : "left";
               }
@@ -1631,7 +1640,9 @@ export default function WindowCanvas(
                   index === 0
                 ) {
                   direction =
-                    "right";
+                    interiorView
+                      ? "left"
+                      : "right";
                 }
 
                 if (
@@ -1639,7 +1650,9 @@ export default function WindowCanvas(
                   lastIndex
                 ) {
                   direction =
-                    "left";
+                    interiorView
+                      ? "right"
+                      : "left";
                 }
               }
 
@@ -1731,7 +1744,10 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
-                  stroke={frameColour}
+                  style={{
+                    stroke: frameColour,
+                    strokeWidth: 6
+                  }}
 
                   x1={x}
                   y1={
@@ -1978,7 +1994,10 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
-                  stroke={frameColour}
+                  style={{
+                    stroke: frameColour,
+                    strokeWidth: 6
+                  }}
 
                   x1={
                     unit.x
@@ -2192,7 +2211,10 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
-                  stroke={frameColour}
+                  style={{
+                    stroke: frameColour,
+                    strokeWidth: 6
+                  }}
 
                   x1={
                     unit.x
@@ -2327,9 +2349,9 @@ export default function WindowCanvas(
 
       <defs>
         <linearGradient id="pv-glass-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={props.glassLowE ? "#dceff4" : "#eef8fc"} stopOpacity="0.92" />
-          <stop offset="45%" stopColor={props.glassLowE ? "#b9d7dd" : "#cfe7f0"} stopOpacity="0.74" />
-          <stop offset="100%" stopColor={props.glassLowE ? "#9fc4cc" : "#b7d6e1"} stopOpacity="0.82" />
+          <stop offset="0%" stopColor={hasLowE ? "#dceff4" : "#eef8fc"} stopOpacity="0.92" />
+          <stop offset="45%" stopColor={hasLowE ? "#b9d7dd" : "#cfe7f0"} stopOpacity="0.74" />
+          <stop offset="100%" stopColor={hasLowE ? "#9fc4cc" : "#b7d6e1"} stopOpacity="0.82" />
         </linearGradient>
         <linearGradient id="pv-glass-sheen" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.34" />
@@ -2394,19 +2416,6 @@ export default function WindowCanvas(
         />
       )}
 
-      {props.glassSafety && props.glassSafety !== "None" && (
-        <text
-          x={FRAME.x + FRAME.width - 16}
-          y={FRAME.y + FRAME.height - 12}
-          textAnchor="end"
-          fontSize="12"
-          fontWeight="600"
-          fill="rgba(45,65,72,0.72)"
-          pointerEvents="none"
-        >
-          {props.glassSafety === "Tempered" ? "T" : "LAM"}
-        </text>
-      )}
 
       {units.map(
         (unit) => {
@@ -2512,7 +2521,10 @@ export default function WindowCanvas(
 
               <line
                 className="split-line"
-                stroke={frameColour}
+                style={{
+                  stroke: frameColour,
+                  strokeWidth: 8
+                }}
 
                 x1={x}
                 y1={
@@ -2586,7 +2598,10 @@ export default function WindowCanvas(
 
               <line
                 className="split-line"
-                stroke={frameColour}
+                style={{
+                  stroke: frameColour,
+                  strokeWidth: 8
+                }}
 
                 x1={
                   FRAME.x
@@ -2679,6 +2694,51 @@ export default function WindowCanvas(
           strokeWidth="1"
         />
       </g>
+
+      {props.glassSafety &&
+        props.glassSafety !==
+          "None" && (
+        <g pointerEvents="none">
+          <rect
+            x={
+              FRAME.x +
+              FRAME.width -
+              55
+            }
+            y={
+              FRAME.y +
+              FRAME.height -
+              38
+            }
+            width="38"
+            height="22"
+            rx="4"
+            fill="rgba(255,255,255,0.82)"
+            stroke="rgba(55,70,78,0.45)"
+          />
+          <text
+            x={
+              FRAME.x +
+              FRAME.width -
+              36
+            }
+            y={
+              FRAME.y +
+              FRAME.height -
+              22
+            }
+            textAnchor="middle"
+            fontSize="13"
+            fontWeight="700"
+            fill="#39474d"
+          >
+            {props.glassSafety ===
+            "Tempered"
+              ? "T"
+              : "LAM"}
+          </text>
+        </g>
+      )}
 
       <line
         className="frame-resize-hit"
