@@ -2356,6 +2356,7 @@ export default function WindowCanvas(
       }}
 
       viewBox="0 0 1000 625"
+      preserveAspectRatio="xMidYMin meet"
 
       onPointerMove={
         pointerMove

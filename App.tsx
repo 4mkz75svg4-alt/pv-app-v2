@@ -78,6 +78,75 @@ type WindowType =
   | "Aluminum / Wood"
   | "Fiberglass";
 
+
+type Brand =
+  | "Vinyltek"
+  | "Sierra Pacific"
+  | "ThermoProof"
+  | "Kohltech"
+  | "All Weather"
+  | "Durabuilt"
+  | "Duxton"
+  | "Cortizo";
+
+const PRODUCT_LINES: Record<
+  Brand,
+  string[]
+> = {
+  Vinyltek: [
+    "Boréal",
+    "Boréal+"
+  ],
+
+  "Sierra Pacific": [
+    "H3 Fusion Tech",
+    "Westchester",
+    "Transcend",
+    "Vinyl Collection"
+  ],
+
+  ThermoProof: [
+    "Pacific 6000",
+    "Pacific 7000",
+    "Pacific 8000",
+    "Folding Sliding"
+  ],
+
+  Kohltech: [
+    "Supreme",
+    "Tilt & Turn",
+    "Select"
+  ],
+
+  "All Weather": [
+    "Apex Alloy 9950",
+    "Ascent 6100",
+    "Summit 9700",
+    "Terra 2700",
+    "Terra 2750",
+    "Terrano 2100",
+    "Atmosphere Folding Window"
+  ],
+
+  Durabuilt: [
+    "Vinyl",
+    "Delta Fiberglass"
+  ],
+
+  Duxton: [
+    "FiberWall 328",
+    "FiberWall 458",
+    "FiberWall 458 Plus",
+    "FiberWall 658"
+  ],
+
+  Cortizo: [
+    "COR Vision",
+    "COR Vision Plus",
+    "Millennium"
+  ]
+};
+
 type WoodFinishType =
   | "Clear Coat"
   | "Stained"
@@ -568,6 +637,22 @@ const [
 ] =
   useState<FlangeType>(
     "Nail Fin"
+  );
+
+const [
+  brand,
+  setBrand
+] =
+  useState<Brand>(
+    "Vinyltek"
+  );
+
+const [
+  productLine,
+  setProductLine
+] =
+  useState<string>(
+    "Boréal"
   );
 
 const [
@@ -2335,6 +2420,59 @@ const [
     });
   }
 
+  function applyBrandDefaults(
+    nextBrand: Brand,
+    nextLine: string
+  ) {
+    if (
+      nextBrand === "Duxton" ||
+      (
+        nextBrand === "Durabuilt" &&
+        nextLine === "Delta Fiberglass"
+      )
+    ) {
+      setWindowType(
+        "Fiberglass"
+      );
+      return;
+    }
+
+    if (
+      nextBrand ===
+      "Sierra Pacific"
+    ) {
+      setWindowType(
+        "Aluminum / Wood"
+      );
+      return;
+    }
+
+    if (
+      nextBrand === "Cortizo" ||
+      (
+        nextBrand ===
+        "All Weather" &&
+        nextLine ===
+          "Apex Alloy 9950"
+      )
+    ) {
+      setWindowType(
+        "Aluminum"
+      );
+      return;
+    }
+
+    setBrand(
+      "Vinyltek"
+    );
+    setProductLine(
+      "Boréal"
+    );
+    setWindowType(
+      "Vinyl"
+    );
+  }
+
   function reset() {
     setState(initialState);
 
@@ -2432,6 +2570,8 @@ const [
         state,
         gridStyle,
         flangeType,
+        brand,
+        productLine,
         windowType,
         exteriorColour,
         interiorColour,
@@ -2512,6 +2652,7 @@ const [
       : productType;
 
   const configurationParts = [
+    `${brand} / ${productLine}`,
     operationDescription,
     windowType,
     `Exterior: ${exteriorColour}`,
@@ -2535,6 +2676,87 @@ const [
 
   return (
     <>
+      <style>{`
+        .pv-responsive-layout {
+          height: calc(100vh - 76px);
+          overflow: hidden;
+        }
+
+        .pv-options-panel {
+          height: 100%;
+          overflow-y: auto;
+          overflow-x: hidden;
+          overscroll-behavior: contain;
+          padding-bottom: 40px;
+        }
+
+        .pv-drawing-panel {
+          height: 100%;
+          overflow: hidden;
+          align-self: start;
+        }
+
+        .pv-canvas-wrap {
+          position: sticky;
+          top: 0;
+        }
+
+        @media (max-width: 760px) {
+          .pv-responsive-layout {
+            display: flex !important;
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: calc(100vh - 76px);
+            overflow: visible !important;
+          }
+
+          .pv-drawing-panel {
+            order: 1;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding: 8px 10px 4px !important;
+          }
+
+          .pv-canvas-wrap {
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+          }
+
+          .pv-canvas-wrap svg {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
+          }
+
+          .pv-options-panel {
+            order: 2;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            padding: 10px 12px 40px !important;
+            box-sizing: border-box;
+          }
+
+          .pv-options-panel .number-row {
+            grid-template-columns: 1fr !important;
+          }
+
+          .drawing-header {
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          .panel-dimension {
+            font-size: 12px;
+          }
+        }
+      `}</style>
+
       <header className="topbar">
 
         <div>
@@ -2556,24 +2778,9 @@ const [
 
       </header>
 
-      <main
-        className="configurator-layout"
-        style={{
-          height: "calc(100vh - 76px)",
-          overflow: "hidden"
-        }}
-      >
+      <main className="configurator-layout pv-responsive-layout">
 
-        <aside
-          className="config-panel"
-          style={{
-            height: "100%",
-            overflowY: "auto",
-            overflowX: "hidden",
-            overscrollBehavior: "contain",
-            paddingBottom: 40
-          }}
-        >
+        <aside className="config-panel pv-options-panel">
 
           <section className="config-section">
 
@@ -4017,14 +4224,7 @@ const [
 </section>
         </aside>
 
-        <section
-          className="drawing-area"
-          style={{
-            height: "100%",
-            overflow: "hidden",
-            alignSelf: "start"
-          }}
-        >
+        <section className="drawing-area pv-drawing-panel">
 
           <div className="drawing-header">
 
@@ -4098,13 +4298,7 @@ const [
 
           </div>
 
-          <div
-            className="canvas-wrap"
-            style={{
-              position: "sticky",
-              top: 0
-            }}
-          >
+          <div className="canvas-wrap pv-canvas-wrap">
 
             <WindowCanvas
               widthInches={
