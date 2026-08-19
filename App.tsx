@@ -2837,27 +2837,51 @@ const [
           .pv-responsive-layout {
             display: flex !important;
             flex-direction: column !important;
-            height: auto !important;
-            min-height: calc(100vh - 76px);
-            overflow: visible !important;
+            height: calc(100vh - 76px) !important;
+            height: calc(100dvh - 76px) !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
           }
 
           .pv-drawing-panel {
             order: 1;
+            flex: 0 0 clamp(270px, 43dvh, 370px);
             width: 100% !important;
             height: auto !important;
-            overflow: visible !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
             padding: 8px 10px 4px !important;
             box-sizing: border-box;
+            background: #fff;
+            z-index: 3;
+          }
+
+          .pv-canvas-wrap {
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+          }
+
+          .pv-canvas-wrap svg {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
           }
 
           .pv-options-panel {
             order: 2;
+            flex: 1 1 auto;
             display: grid !important;
             grid-template-columns: 1fr !important;
             width: 100% !important;
             height: auto !important;
-            overflow: visible !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             padding: 10px 12px 40px !important;
             box-sizing: border-box;
           }
@@ -2865,10 +2889,6 @@ const [
           .pv-options-panel > .config-section,
           .pv-options-panel > .pv-wide-section {
             grid-column: 1 !important;
-          }
-
-          .pv-canvas-wrap {
-            position: static !important;
           }
 
           .pv-options-panel .number-row {
