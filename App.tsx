@@ -143,9 +143,6 @@ type ViewMode =
   | "Exterior"
   | "Interior";
 
-
-type DisplayMode = "2D" | "3D";
-
 type GridStyle =
   | "None"
   | "Colonial"
@@ -711,44 +708,6 @@ const [
     "Exterior"
   );
 
-
-const [
-  displayMode,
-  setDisplayMode
-] =
-  useState<DisplayMode>(
-    "2D"
-  );
-
-const [
-  previewRotateY,
-  setPreviewRotateY
-] =
-  useState<number>(
-    -14
-  );
-
-const [
-  previewRotateX,
-  setPreviewRotateX
-] =
-  useState<number>(
-    5
-  );
-
-const [
-  previewDrag,
-  setPreviewDrag
-] =
-  useState<{
-    x: number;
-    y: number;
-    startY: number;
-    startX: number;
-  } | null>(
-    null
-  );
-
 const [
   glassAppearance,
   setGlassAppearance
@@ -953,15 +912,6 @@ const [
 
     setViewMode(
       "Exterior"
-    );
-    setDisplayMode(
-      "2D"
-    );
-    setPreviewRotateY(
-      -14
-    );
-    setPreviewRotateX(
-      5
     );
     setGlassAppearance("Clear");
     setGlassPane("Double");
@@ -2869,16 +2819,11 @@ const [
         }
 
         .pv-canvas-wrap {
+          position: sticky;
+          top: 0;
           width: 100%;
           max-width: 100%;
-          overflow: visible;
-          transform-style: preserve-3d;
-          perspective: 1200px;
-        }
-
-        .pv-canvas-inner {
-          transform-style: preserve-3d;
-          transform-origin: center center;
+          overflow: hidden;
         }
 
         .pv-canvas-wrap svg {
@@ -2888,44 +2833,22 @@ const [
           max-width: 100% !important;
         }
 
-        .pv-view-tools {
-          display: flex;
-          gap: 6px;
-          flex-wrap: wrap;
-          align-items: center;
-        }
-
         @media (max-width: 760px) {
           .pv-responsive-layout {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-            grid-template-rows: minmax(245px, 40vh) minmax(0, 1fr) !important;
-            height: calc(100vh - 76px) !important;
-            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: calc(100vh - 76px);
+            overflow: visible !important;
           }
 
           .pv-drawing-panel {
             order: 1;
             width: 100% !important;
-            height: 100% !important;
-            overflow: hidden !important;
+            height: auto !important;
+            overflow: visible !important;
             padding: 8px 10px 4px !important;
             box-sizing: border-box;
-            background: white;
-            position: relative;
-            z-index: 3;
-          }
-
-          .pv-canvas-wrap {
-            width: 100% !important;
-            height: calc(100% - 58px) !important;
-            overflow: hidden !important;
-          }
-
-          .pv-canvas-wrap svg {
-            width: 100% !important;
-            height: 100% !important;
-            max-width: 100% !important;
           }
 
           .pv-options-panel {
@@ -2933,12 +2856,8 @@ const [
             display: grid !important;
             grid-template-columns: 1fr !important;
             width: 100% !important;
-            height: 100% !important;
-            min-height: 0 !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+            height: auto !important;
+            overflow: visible !important;
             padding: 10px 12px 40px !important;
             box-sizing: border-box;
           }
@@ -2948,22 +2867,12 @@ const [
             grid-column: 1 !important;
           }
 
+          .pv-canvas-wrap {
+            position: static !important;
+          }
+
           .pv-options-panel .number-row {
             grid-template-columns: 1fr !important;
-          }
-
-          .drawing-header {
-            gap: 8px;
-            flex-wrap: wrap;
-          }
-
-          .pv-view-tools {
-            gap: 4px;
-          }
-
-          .pv-view-tools button {
-            padding: 6px 9px !important;
-            font-size: 12px !important;
           }
         }
       `}</style>
@@ -4639,7 +4548,7 @@ const [
               </span>
             </div>
 
-            <div className="drawing-actions pv-view-tools">
+            <div className="drawing-actions">
 
               <button
                 className={
@@ -4674,38 +4583,6 @@ const [
               </button>
 
               <button
-                className={
-                  displayMode ===
-                  "2D"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setDisplayMode(
-                    "2D"
-                  )
-                }
-              >
-                2D
-              </button>
-
-              <button
-                className={
-                  displayMode ===
-                  "3D"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setDisplayMode(
-                    "3D"
-                  )
-                }
-              >
-                3D Rotate
-              </button>
-
-              <button
                 onClick={reset}
               >
                 Reset
@@ -4715,179 +4592,8 @@ const [
 
           </div>
 
-          <div
-            className="canvas-wrap pv-canvas-wrap"
-            style={{
-              perspective: 1100
-            }}
-            onPointerDown={(event) => {
-              if (
-                displayMode !== "3D"
-              ) {
-                return;
-              }
+          <div className="canvas-wrap pv-canvas-wrap">
 
-              setPreviewDragX(
-                event.clientX
-              );
-
-              event.currentTarget.setPointerCapture?.(
-                event.pointerId
-              );
-            }}
-            onPointerMove={(event) => {
-              if (
-                displayMode !== "3D" ||
-                previewDragX === null
-              ) {
-                return;
-              }
-
-              const dx =
-                event.clientX -
-                previewDragX;
-
-              setPreviewRotateY(
-                (current) =>
-                  Math.max(
-                    -42,
-                    Math.min(
-                      42,
-                      current +
-                        dx * 0.18
-                    )
-                  )
-              );
-
-              setPreviewDragX(
-                event.clientX
-              );
-            }}
-            onPointerUp={(event) => {
-              setPreviewDragX(
-                null
-              );
-
-              event.currentTarget.releasePointerCapture?.(
-                event.pointerId
-              );
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                transformStyle:
-                  "preserve-3d",
-                transform:
-                  displayMode === "3D"
-                    ? `rotateY(${previewRotateY}deg)`
-                    : "none",
-                transition:
-                  previewDragX === null
-                    ? "transform 180ms ease"
-                    : "none"
-              }}
-            >
-
-            <div
-              className="pv-canvas-inner"
-              style={{
-                transform:
-                  displayMode === "3D"
-                    ? `perspective(1200px) rotateX(${previewRotateX}deg) rotateY(${previewRotateY}deg)`
-                    : "none",
-                transition:
-                  previewDrag
-                    ? "none"
-                    : "transform 180ms ease",
-                cursor:
-                  displayMode === "3D"
-                    ? previewDrag
-                      ? "grabbing"
-                      : "grab"
-                    : "default",
-                touchAction:
-                  displayMode === "3D"
-                    ? "none"
-                    : "auto"
-              }}
-              onPointerDown={(event) => {
-                if (
-                  displayMode !== "3D"
-                ) {
-                  return;
-                }
-
-                setPreviewDrag({
-                  x: event.clientX,
-                  y: event.clientY,
-                  startY:
-                    previewRotateY,
-                  startX:
-                    previewRotateX
-                });
-
-                event.currentTarget.setPointerCapture?.(
-                  event.pointerId
-                );
-              }}
-              onPointerMove={(event) => {
-                if (
-                  displayMode !== "3D" ||
-                  !previewDrag
-                ) {
-                  return;
-                }
-
-                const dx =
-                  event.clientX -
-                  previewDrag.x;
-                const dy =
-                  event.clientY -
-                  previewDrag.y;
-
-                setPreviewRotateY(
-                  Math.max(
-                    -38,
-                    Math.min(
-                      38,
-                      previewDrag.startY +
-                        dx * 0.18
-                    )
-                  )
-                );
-
-                setPreviewRotateX(
-                  Math.max(
-                    -14,
-                    Math.min(
-                      14,
-                      previewDrag.startX -
-                        dy * 0.12
-                    )
-                  )
-                );
-              }}
-              onPointerUp={(event) => {
-                if (
-                  displayMode === "3D"
-                ) {
-                  setPreviewDrag(
-                    null
-                  );
-
-                  event.currentTarget.releasePointerCapture?.(
-                    event.pointerId
-                  );
-                }
-              }}
-              onPointerCancel={() =>
-                setPreviewDrag(
-                  null
-                )
-              }
-            >
             <WindowCanvas
               key={`${productType}-${patioPanelCount}-${patioHanding}-${viewMode}`}
               widthInches={
@@ -5035,15 +4741,11 @@ const [
                 setLiteOperation
               }
             />
-                        </div>
-</div>
 
           </div>
 
           <p className="hint">
-            {displayMode === "3D"
-              ? "Drag the preview left/right to rotate it."
-              : "Tap a unit to configure it."}
+            Tap a unit to configure it.
           </p>
           <div
             style={{
