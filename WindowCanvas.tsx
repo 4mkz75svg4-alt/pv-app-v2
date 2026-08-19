@@ -49,6 +49,10 @@ type GridStyle =
   | "Top Colonial"
   | "Prairie";
 
+type ViewMode =
+  | "Exterior"
+  | "Interior";
+
 type Props = {
   widthInches: number;
   heightInches: number;
@@ -79,6 +83,16 @@ type Props = {
   verticalSliderType?: VerticalSliderType;
 
   singleVentHanding?: SingleVentHanding;
+
+  viewMode?: ViewMode;
+
+  exteriorColour?: string;
+
+  woodSpecies?: string;
+
+  interiorFinishType?: string;
+
+  interiorFinish?: string;
 
   gridStyle?: GridStyle;
 
@@ -185,6 +199,92 @@ type LitePopup = {
 const MAX_FRAME_WIDTH = 960;
 const MAX_FRAME_HEIGHT = 585;
 
+const EXTERIOR_COLOUR_MAP: Record<
+  string,
+  string
+> = {
+  White: "#f4f2ec",
+  Linen: "#d9d0be",
+  "Colonial White": "#eee9df",
+  Sandstone: "#b6a68e",
+  Beige: "#c7b79e",
+  Tan: "#9e866d",
+  "Gull Gray": "#9b9d99",
+  "French Linen": "#aaa394",
+  "Morning Dove Gray": "#a9aaa7",
+  Seawolf: "#6f7778",
+  "Fashion Gray": "#777875",
+  "Aqua Mist": "#8fa8a4",
+  "Light Blue": "#7797ac",
+  "Slate Blue": "#526b7c",
+  "Black Sable": "#252422",
+  Indigo: "#354554",
+  Green: "#3f5a45",
+  "Hartford Green": "#244739",
+  "Forest Green": "#2e4937",
+  "Patina Green": "#667b69",
+  "Hemlock Green": "#465b49",
+  "Greek Olive": "#6f7357",
+  Clay: "#756c5e",
+  "Harvest Cranberry": "#7e3335",
+  "Colonial Red": "#6e2c2b",
+  "Bahama Brown": "#58443a",
+  Brown: "#5b4233",
+  "TW Brown": "#4c3b32",
+  "Antique Bronze": "#514a3f",
+  Bronze: "#625849",
+  "Battleship Gray": "#5f6261",
+  "Modern Onyx": "#343536",
+  "Dark Bronze": "#3e3932",
+  Black: "#1f2020",
+  "Custom Colour": "#68717a"
+};
+
+const WOOD_SPECIES_COLOUR_MAP: Record<
+  string,
+  string
+> = {
+  Pine: "#d7b27a",
+  Maple: "#d8bf91",
+  Alder: "#c79062",
+  Mahogany: "#855039",
+  Cherry: "#a86345",
+  "Douglas Fir": "#b77d4f",
+  "Black Walnut": "#644735",
+  "White Oak": "#b79c70"
+};
+
+const ULTRA_STAIN_COLOUR_MAP: Record<
+  string,
+  string
+> = {
+  "Bearstone Brown": "#72533e",
+  Briarwood: "#8c674a",
+  Burlap: "#a98867",
+  "Classic Gray": "#857f77",
+  "Clear Coat": "",
+  Frosted: "#c8b89e",
+  "Tux Black": "#2f2c29",
+  "Warm Sun": "#b37d49",
+  "Woven Basket": "#927054"
+};
+
+const ULTRA_COAT_COLOUR_MAP: Record<
+  string,
+  string
+> = {
+  White: "#f1efe9",
+  Black: "#202120",
+  "Dried Thyme": "#6e725f",
+  Creamy: "#e8dfca",
+  "Requisite Gray": "#9c9690",
+  "Accessible Beige": "#b9ac98",
+  "Urbane Bronze": "#5d574d",
+  "Iron Ore": "#464746",
+  "Deep Forest Brown": "#4c453c",
+  "Anchors Aweigh": "#344553"
+};
+
 function clamp(
   value: number,
   min: number,
@@ -271,6 +371,28 @@ export default function WindowCanvas(
         props.heightInches
       ]
     );
+
+  const frameColour =
+    props.viewMode === "Interior"
+      ? props.interiorFinishType ===
+        "Ultra Coat"
+        ? ULTRA_COAT_COLOUR_MAP[
+            props.interiorFinish ??
+              "White"
+          ] ?? "#f1efe9"
+        : ULTRA_STAIN_COLOUR_MAP[
+            props.interiorFinish ??
+              "Clear Coat"
+          ] ||
+          WOOD_SPECIES_COLOUR_MAP[
+            props.woodSpecies ??
+              "Pine"
+          ] ||
+          "#d7b27a"
+      : EXTERIOR_COLOUR_MAP[
+          props.exteriorColour ??
+            "White"
+        ] ?? "#f4f2ec";
 
   const [
     dragging,
@@ -772,20 +894,10 @@ export default function WindowCanvas(
     const inset = 14;
     const sashX = x + inset;
     const sashY = y + inset;
-    const sashW = Math.max(
-      0,
-      w - inset * 2
-    );
-    const sashH = Math.max(
-      0,
-      h - inset * 2
-    );
-
-    const profileInset =
-      slider ? 5 : 6;
-
-    const glassInset =
-      slider ? 11 : 12;
+    const sashW = Math.max(0, w - inset * 2);
+    const sashH = Math.max(0, h - inset * 2);
+    const profileInset = slider ? 5 : 6;
+    const glassInset = slider ? 11 : 12;
 
     return (
       <g
@@ -803,39 +915,25 @@ export default function WindowCanvas(
           height={sashH}
           rx="3"
           fill="rgba(255,255,255,0.035)"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth="4"
         />
-
         <rect
           x={sashX + profileInset}
           y={sashY + profileInset}
-          width={Math.max(
-            0,
-            sashW - profileInset * 2
-          )}
-          height={Math.max(
-            0,
-            sashH - profileInset * 2
-          )}
+          width={Math.max(0, sashW - profileInset * 2)}
+          height={Math.max(0, sashH - profileInset * 2)}
           rx="2"
           fill="none"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth="1.25"
           opacity="0.6"
         />
-
         <rect
           x={sashX + glassInset}
           y={sashY + glassInset}
-          width={Math.max(
-            0,
-            sashW - glassInset * 2
-          )}
-          height={Math.max(
-            0,
-            sashH - glassInset * 2
-          )}
+          width={Math.max(0, sashW - glassInset * 2)}
+          height={Math.max(0, sashH - glassInset * 2)}
           rx="1.5"
           fill="rgba(185,220,235,0.16)"
           stroke="rgba(75,100,110,0.55)"
@@ -875,7 +973,7 @@ export default function WindowCanvas(
       return (
         <g
           className="grid-pattern"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth={2}
           opacity={0.7}
           pointerEvents="none"
@@ -894,7 +992,7 @@ export default function WindowCanvas(
       return (
         <g
           className="grid-pattern"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth={2}
           opacity={0.7}
           pointerEvents="none"
@@ -913,7 +1011,7 @@ export default function WindowCanvas(
       return (
         <g
           className="grid-pattern"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth={2}
           opacity={0.7}
           pointerEvents="none"
@@ -2111,6 +2209,10 @@ export default function WindowCanvas(
 
       className="window-svg"
 
+      style={{
+        color: frameColour
+      }}
+
       viewBox="0 0 1000 625"
 
       onPointerMove={
@@ -2137,52 +2239,15 @@ export default function WindowCanvas(
     >
 
       <defs>
-        <linearGradient
-          id="pv-glass-gradient"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="100%"
-        >
-          <stop
-            offset="0%"
-            stopColor="#eef8fc"
-            stopOpacity="0.92"
-          />
-          <stop
-            offset="45%"
-            stopColor="#cfe7f0"
-            stopOpacity="0.74"
-          />
-          <stop
-            offset="100%"
-            stopColor="#b7d6e1"
-            stopOpacity="0.82"
-          />
+        <linearGradient id="pv-glass-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#eef8fc" stopOpacity="0.92" />
+          <stop offset="45%" stopColor="#cfe7f0" stopOpacity="0.74" />
+          <stop offset="100%" stopColor="#b7d6e1" stopOpacity="0.82" />
         </linearGradient>
-
-        <linearGradient
-          id="pv-glass-sheen"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="100%"
-        >
-          <stop
-            offset="0%"
-            stopColor="#ffffff"
-            stopOpacity="0.34"
-          />
-          <stop
-            offset="38%"
-            stopColor="#ffffff"
-            stopOpacity="0.06"
-          />
-          <stop
-            offset="100%"
-            stopColor="#ffffff"
-            stopOpacity="0"
-          />
+        <linearGradient id="pv-glass-sheen" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.34" />
+          <stop offset="38%" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -2199,14 +2264,8 @@ export default function WindowCanvas(
       <rect
         x={FRAME.x + 8}
         y={FRAME.y + 8}
-        width={Math.max(
-          0,
-          FRAME.width - 16
-        )}
-        height={Math.max(
-          0,
-          FRAME.height - 16
-        )}
+        width={Math.max(0, FRAME.width - 16)}
+        height={Math.max(0, FRAME.height - 16)}
         rx="4"
         fill="url(#pv-glass-sheen)"
         pointerEvents="none"
@@ -2448,10 +2507,7 @@ export default function WindowCanvas(
         }
       )}
 
-      <g
-        className="outer-frame-profile"
-        pointerEvents="none"
-      >
+      <g className="outer-frame-profile" pointerEvents="none">
         <rect
           x={FRAME.x}
           y={FRAME.y}
@@ -2459,39 +2515,25 @@ export default function WindowCanvas(
           height={FRAME.height}
           rx="5"
           fill="none"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth="12"
         />
-
         <rect
           x={FRAME.x + 7}
           y={FRAME.y + 7}
-          width={Math.max(
-            0,
-            FRAME.width - 14
-          )}
-          height={Math.max(
-            0,
-            FRAME.height - 14
-          )}
+          width={Math.max(0, FRAME.width - 14)}
+          height={Math.max(0, FRAME.height - 14)}
           rx="4"
           fill="none"
-          stroke="currentColor"
+          stroke={frameColour}
           strokeWidth="2"
           opacity="0.62"
         />
-
         <rect
           x={FRAME.x + 13}
           y={FRAME.y + 13}
-          width={Math.max(
-            0,
-            FRAME.width - 26
-          )}
-          height={Math.max(
-            0,
-            FRAME.height - 26
-          )}
+          width={Math.max(0, FRAME.width - 26)}
+          height={Math.max(0, FRAME.height - 26)}
           rx="3"
           fill="none"
           stroke="rgba(45,60,65,0.45)"
