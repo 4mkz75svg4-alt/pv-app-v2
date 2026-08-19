@@ -72,16 +72,107 @@ type FlangeType =
   | "Brick Mould"
   | "Reno Flange";
 
-type WindowColour =
-  | "White"
-  | "Black"
-  | "Brown"
-  | "Custom";
+type ExteriorColour = string;
+
+type WoodSpecies =
+  | "Pine"
+  | "Maple"
+  | "Alder"
+  | "Mahogany"
+  | "Cherry"
+  | "Douglas Fir"
+  | "Black Walnut"
+  | "White Oak";
+
+type InteriorFinishType =
+  | "Ultra Stain"
+  | "Ultra Coat";
+
+type InteriorFinish = string;
+
+type ViewMode =
+  | "Exterior"
+  | "Interior";
+
 type GridStyle =
   | "None"
   | "Colonial"
   | "Top Colonial"
   | "Prairie";
+
+const EXTERIOR_COLOURS = [
+  ["White", "001"],
+  ["Linen", "032"],
+  ["Colonial White", "313"],
+  ["Sandstone", "003"],
+  ["Beige", "335"],
+  ["Tan", "043"],
+  ["Gull Gray", "007"],
+  ["French Linen", "112"],
+  ["Morning Dove Gray", "113"],
+  ["Seawolf", "044"],
+  ["Fashion Gray", "111"],
+  ["Aqua Mist", "115"],
+  ["Light Blue", "046"],
+  ["Slate Blue", "008"],
+  ["Black Sable", "060"],
+  ["Indigo", "402"],
+  ["Green", "004"],
+  ["Hartford Green", "050"],
+  ["Forest Green", "049"],
+  ["Patina Green", "051"],
+  ["Hemlock Green", "048"],
+  ["Greek Olive", "081"],
+  ["Clay", "026"],
+  ["Harvest Cranberry", "010"],
+  ["Colonial Red", "054"],
+  ["Bahama Brown", "309"],
+  ["Brown", "002"],
+  ["TW Brown", "058"],
+  ["Antique Bronze", "057"],
+  ["Bronze", "024"],
+  ["Battleship Gray", "321"],
+  ["Modern Onyx", "118"],
+  ["Dark Bronze", "401"],
+  ["Black", "023"],
+  ["Custom Colour", "CUSTOM"]
+] as const;
+
+const WOOD_SPECIES: WoodSpecies[] = [
+  "Pine",
+  "Maple",
+  "Alder",
+  "Mahogany",
+  "Cherry",
+  "Douglas Fir",
+  "Black Walnut",
+  "White Oak"
+];
+
+const ULTRA_STAIN_FINISHES = [
+  "Bearstone Brown",
+  "Briarwood",
+  "Burlap",
+  "Classic Gray",
+  "Clear Coat",
+  "Frosted",
+  "Tux Black",
+  "Warm Sun",
+  "Woven Basket"
+] as const;
+
+const ULTRA_COAT_FINISHES = [
+  "White",
+  "Black",
+  "Dried Thyme",
+  "Creamy",
+  "Requisite Gray",
+  "Accessible Beige",
+  "Urbane Bronze",
+  "Iron Ore",
+  "Deep Forest Brown",
+  "Anchors Aweigh"
+] as const;
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(16)
@@ -470,17 +561,42 @@ const [
   exteriorColour,
   setExteriorColour
 ] =
-  useState<WindowColour>(
+  useState<ExteriorColour>(
     "White"
   );
 
 const [
-  interiorColour,
-  setInteriorColour
+  woodSpecies,
+  setWoodSpecies
 ] =
-  useState<WindowColour>(
-    "White"
+  useState<WoodSpecies>(
+    "Pine"
   );
+
+const [
+  interiorFinishType,
+  setInteriorFinishType
+] =
+  useState<InteriorFinishType>(
+    "Ultra Stain"
+  );
+
+const [
+  interiorFinish,
+  setInteriorFinish
+] =
+  useState<InteriorFinish>(
+    "Clear Coat"
+  );
+
+const [
+  viewMode,
+  setViewMode
+] =
+  useState<ViewMode>(
+    "Exterior"
+  );
+
   const [
   gridStyle,
   setGridStyle
@@ -630,6 +746,34 @@ const [
     setPictureStyles({});
 
     setSelectedUnit(null);
+
+    setFlangeType(
+      "Nail Fin"
+    );
+
+    setExteriorColour(
+      "White"
+    );
+
+    setWoodSpecies(
+      "Pine"
+    );
+
+    setInteriorFinishType(
+      "Ultra Stain"
+    );
+
+    setInteriorFinish(
+      "Clear Coat"
+    );
+
+    setViewMode(
+      "Exterior"
+    );
+
+    setGridStyle(
+      "None"
+    );
   }
 
   function changeUnitsWide(
@@ -2190,7 +2334,10 @@ const [
         gridStyle,
         flangeType,
         exteriorColour,
-        interiorColour,
+        woodSpecies,
+        interiorFinishType,
+        interiorFinish,
+        viewMode,
         productType,
         sliderOrientation,
         horizontalSliderType,
@@ -3140,72 +3287,163 @@ const [
 <section className="config-section">
 
   <div className="step-title">
-    Colour
+    Colour & Interior Finish
   </div>
 
-  <div className="number-row">
+  <label>
+    Exterior Colour
 
+    <select
+      value={exteriorColour}
+      onChange={(event) =>
+        setExteriorColour(
+          event.target.value
+        )
+      }
+    >
+      {EXTERIOR_COLOURS.map(
+        ([name, code]) => (
+          <option
+            key={code}
+            value={name}
+          >
+            {name}
+            {code !== "CUSTOM"
+              ? ` (${code})`
+              : ""}
+          </option>
+        )
+      )}
+    </select>
+  </label>
+
+  <div
+    className="split-note"
+    style={{
+      marginTop: 8
+    }}
+  >
+    Colours shown on screen are visual approximations.
+  </div>
+
+  <div
+    style={{
+      marginTop: 14
+    }}
+  >
     <label>
-      Exterior
+      Interior Material
 
       <select
-        value={exteriorColour}
+        value="Wood"
+        disabled
+      >
+        <option value="Wood">
+          Wood
+        </option>
+      </select>
+    </label>
+  </div>
+
+  <div
+    className="number-row"
+    style={{
+      marginTop: 10
+    }}
+  >
+    <label>
+      Wood Species
+
+      <select
+        value={woodSpecies}
         onChange={(event) =>
-          setExteriorColour(
-            event.target.value as WindowColour
+          setWoodSpecies(
+            event.target.value as WoodSpecies
           )
         }
       >
-        <option value="White">
-          White
-        </option>
-
-        <option value="Black">
-          Black
-        </option>
-
-        <option value="Brown">
-          Brown
-        </option>
-
-        <option value="Custom">
-          Custom
-        </option>
+        {WOOD_SPECIES.map(
+          (species) => (
+            <option
+              key={species}
+              value={species}
+            >
+              {species}
+            </option>
+          )
+        )}
       </select>
     </label>
 
     <label>
-      Interior
+      Finish Type
 
       <select
-        value={interiorColour}
-        onChange={(event) =>
-          setInteriorColour(
-            event.target.value as WindowColour
-          )
+        value={
+          interiorFinishType
         }
+        onChange={(event) => {
+          const next =
+            event.target.value as InteriorFinishType;
+
+          setInteriorFinishType(
+            next
+          );
+
+          setInteriorFinish(
+            next === "Ultra Stain"
+              ? "Clear Coat"
+              : "White"
+          );
+        }}
       >
-        <option value="White">
-          White
+        <option value="Ultra Stain">
+          Ultra Stain
         </option>
 
-        <option value="Black">
-          Black
-        </option>
-
-        <option value="Brown">
-          Brown
-        </option>
-
-        <option value="Custom">
-          Custom
+        <option value="Ultra Coat">
+          Ultra Coat
         </option>
       </select>
     </label>
+  </div>
 
+  <div
+    style={{
+      marginTop: 10
+    }}
+  >
+    <label>
+      Interior Finish
+
+      <select
+        value={interiorFinish}
+        onChange={(event) =>
+          setInteriorFinish(
+            event.target.value
+          )
+        }
+      >
+        {(interiorFinishType ===
+        "Ultra Stain"
+          ? ULTRA_STAIN_FINISHES
+          : ULTRA_COAT_FINISHES
+        ).map(
+          (finish) => (
+            <option
+              key={finish}
+              value={finish}
+            >
+              {finish}
+            </option>
+          )
+        )}
+      </select>
+    </label>
   </div>
 
 </section>
+
 <section className="config-section">
 
   <div className="step-title">
@@ -3499,6 +3737,38 @@ const [
             <div className="drawing-actions">
 
               <button
+                className={
+                  viewMode ===
+                  "Exterior"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setViewMode(
+                    "Exterior"
+                  )
+                }
+              >
+                Exterior
+              </button>
+
+              <button
+                className={
+                  viewMode ===
+                  "Interior"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setViewMode(
+                    "Interior"
+                  )
+                }
+              >
+                Interior
+              </button>
+
+              <button
                 onClick={reset}
               >
                 Reset
@@ -3569,9 +3839,31 @@ const [
               singleVentHanding={
                 singleVentHanding
               }
-gridStyle={
-  gridStyle
-}
+
+              viewMode={
+                viewMode
+              }
+
+              exteriorColour={
+                exteriorColour
+              }
+
+              woodSpecies={
+                woodSpecies
+              }
+
+              interiorFinishType={
+                interiorFinishType
+              }
+
+              interiorFinish={
+                interiorFinish
+              }
+
+              gridStyle={
+                gridStyle
+              }
+
               gridColumns={0}
               gridRows={0}
 
