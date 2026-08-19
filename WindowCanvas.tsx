@@ -102,6 +102,12 @@ type Props = {
   interiorWoodStain?: string;
   interiorWoodPaintColour?: string;
 
+  flangeType?: string;
+  glassAppearance?: string;
+  glassPane?: string;
+  glassLowE?: boolean;
+  glassSafety?: string;
+
   gridStyle?: GridStyle;
 
   gridColumns: number;
@@ -927,6 +933,32 @@ export default function WindowCanvas(
 
     setDragging(
       null
+    );
+  }
+
+  function renderFlange() {
+    const type = props.flangeType ?? "Nail Fin";
+    const offset =
+      type === "Brick Mould" ? 18 :
+      type === "Reno Flange" ? 8 : 10;
+    const strokeWidth =
+      type === "Brick Mould" ? 10 :
+      type === "Reno Flange" ? 5 : 2;
+
+    return (
+      <rect
+        x={FRAME.x - offset}
+        y={FRAME.y - offset}
+        width={FRAME.width + offset * 2}
+        height={FRAME.height + offset * 2}
+        rx="4"
+        fill="none"
+        stroke={frameColour}
+        strokeWidth={strokeWidth}
+        opacity={type === "Nail Fin" ? 0.5 : 0.8}
+        strokeDasharray={type === "Nail Fin" ? "5 4" : undefined}
+        pointerEvents="none"
+      />
     );
   }
 
@@ -2295,15 +2327,24 @@ export default function WindowCanvas(
 
       <defs>
         <linearGradient id="pv-glass-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#eef8fc" stopOpacity="0.92" />
-          <stop offset="45%" stopColor="#cfe7f0" stopOpacity="0.74" />
-          <stop offset="100%" stopColor="#b7d6e1" stopOpacity="0.82" />
+          <stop offset="0%" stopColor={props.glassLowE ? "#dceff4" : "#eef8fc"} stopOpacity="0.92" />
+          <stop offset="45%" stopColor={props.glassLowE ? "#b9d7dd" : "#cfe7f0"} stopOpacity="0.74" />
+          <stop offset="100%" stopColor={props.glassLowE ? "#9fc4cc" : "#b7d6e1"} stopOpacity="0.82" />
         </linearGradient>
         <linearGradient id="pv-glass-sheen" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.34" />
           <stop offset="38%" stopColor="#ffffff" stopOpacity="0.06" />
           <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
+        <pattern
+          id="pv-obscure-pattern"
+          width="12"
+          height="12"
+          patternUnits="userSpaceOnUse"
+        >
+          <circle cx="3" cy="3" r="1.6" fill="#ffffff" opacity="0.28" />
+          <circle cx="9" cy="8" r="1.2" fill="#6f8f98" opacity="0.16" />
+        </pattern>
       </defs>
 
       <rect
@@ -2325,6 +2366,47 @@ export default function WindowCanvas(
         fill="url(#pv-glass-sheen)"
         pointerEvents="none"
       />
+
+      {props.glassAppearance === "Obscure" && (
+        <rect
+          x={FRAME.x + 9}
+          y={FRAME.y + 9}
+          width={Math.max(0, FRAME.width - 18)}
+          height={Math.max(0, FRAME.height - 18)}
+          rx="4"
+          fill="url(#pv-obscure-pattern)"
+          opacity="0.85"
+          pointerEvents="none"
+        />
+      )}
+
+      {props.glassPane === "Triple" && (
+        <rect
+          x={FRAME.x + 5}
+          y={FRAME.y + 5}
+          width={Math.max(0, FRAME.width - 10)}
+          height={Math.max(0, FRAME.height - 10)}
+          rx="4"
+          fill="none"
+          stroke="rgba(70,105,115,0.28)"
+          strokeWidth="2"
+          pointerEvents="none"
+        />
+      )}
+
+      {props.glassSafety && props.glassSafety !== "None" && (
+        <text
+          x={FRAME.x + FRAME.width - 16}
+          y={FRAME.y + FRAME.height - 12}
+          textAnchor="end"
+          fontSize="12"
+          fontWeight="600"
+          fill="rgba(45,65,72,0.72)"
+          pointerEvents="none"
+        >
+          {props.glassSafety === "Tempered" ? "T" : "LAM"}
+        </text>
+      )}
 
       {units.map(
         (unit) => {
