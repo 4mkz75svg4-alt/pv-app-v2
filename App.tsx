@@ -2543,9 +2543,24 @@ const [
 
       </header>
 
-      <main className="configurator-layout">
+      <main
+        className="configurator-layout"
+        style={{
+          height: "calc(100vh - 76px)",
+          overflow: "hidden"
+        }}
+      >
 
-        <aside className="config-panel">
+        <aside
+          className="config-panel"
+          style={{
+            height: "100%",
+            overflowY: "auto",
+            overflowX: "hidden",
+            overscrollBehavior: "contain",
+            paddingBottom: 40
+          }}
+        >
 
           <section className="config-section">
 
@@ -3989,7 +4004,14 @@ const [
 </section>
         </aside>
 
-        <section className="drawing-area">
+        <section
+          className="drawing-area"
+          style={{
+            height: "100%",
+            overflow: "hidden",
+            alignSelf: "start"
+          }}
+        >
 
           <div className="drawing-header">
 
@@ -4063,7 +4085,13 @@ const [
 
           </div>
 
-          <div className="canvas-wrap">
+          <div
+            className="canvas-wrap"
+            style={{
+              position: "sticky",
+              top: 0
+            }}
+          >
 
             <WindowCanvas
               widthInches={

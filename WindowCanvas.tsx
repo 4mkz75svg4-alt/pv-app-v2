@@ -1254,9 +1254,9 @@ export default function WindowCanvas(
   ) {
     const visualOperation =
       interiorView
-        ? visualOperation === "Casement Left"
+        ? operation === "Casement Left"
           ? "Casement Right"
-          : visualOperation === "Casement Right"
+          : operation === "Casement Right"
           ? "Casement Left"
           : operation
         : operation;
