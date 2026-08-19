@@ -74,6 +74,7 @@ type FlangeType =
 
 type MaterialType =
   | "Vinyl"
+  | "Aluminum"
   | "Wood";
 
 type VinylFinishType =
@@ -86,6 +87,10 @@ type WoodFinishType =
   | "Stained"
   | "Painted"
   | "Primed White";
+
+type GlassAppearance = "Clear" | "Obscure";
+type GlassPane = "Double" | "Triple";
+type GlassSafety = "None" | "Tempered" | "Laminated";
 
 type WoodSpecies =
   | "Pine"
@@ -671,6 +676,18 @@ const [
     "Exterior"
   );
 
+const [glassAppearance, setGlassAppearance] =
+  useState<GlassAppearance>("Clear");
+
+const [glassPane, setGlassPane] =
+  useState<GlassPane>("Double");
+
+const [glassLowE, setGlassLowE] =
+  useState(true);
+
+const [glassSafety, setGlassSafety] =
+  useState<GlassSafety>("None");
+
   const [
   gridStyle,
   setGridStyle
@@ -844,6 +861,10 @@ const [
     setViewMode(
       "Exterior"
     );
+    setGlassAppearance("Clear");
+    setGlassPane("Double");
+    setGlassLowE(true);
+    setGlassSafety("None");
 
     setGridStyle(
       "None"
@@ -3672,13 +3693,16 @@ const [
         <option value="Vinyl">
           Vinyl
         </option>
+        <option value="Aluminum">
+          Aluminum
+        </option>
         <option value="Wood">
           Wood
         </option>
       </select>
     </label>
 
-    {exteriorMaterial === "Vinyl" && (
+    {(exteriorMaterial === "Vinyl" || exteriorMaterial === "Aluminum") && (
       <label>
         Finish
 
@@ -3730,7 +3754,7 @@ const [
     )}
   </div>
 
-  {exteriorMaterial === "Vinyl" && (
+  {(exteriorMaterial === "Vinyl" || exteriorMaterial === "Aluminum") && (
     <div
       style={{
         marginTop: 10
@@ -3889,13 +3913,16 @@ const [
         <option value="Vinyl">
           Vinyl
         </option>
+        <option value="Aluminum">
+          Aluminum
+        </option>
         <option value="Wood">
           Wood
         </option>
       </select>
     </label>
 
-    {interiorMaterial === "Vinyl" && (
+    {(interiorMaterial === "Vinyl" || interiorMaterial === "Aluminum") && (
       <label>
         Finish
 
@@ -3947,7 +3974,7 @@ const [
     )}
   </div>
 
-  {interiorMaterial === "Vinyl" && (
+  {(interiorMaterial === "Vinyl" || interiorMaterial === "Aluminum") && (
     <div
       style={{
         marginTop: 10
@@ -4089,6 +4116,71 @@ const [
     }}
   >
     Screen colours are visual approximations.
+  </div>
+
+</section>
+
+<section className="config-section">
+
+  <div className="step-title">
+    Glass
+  </div>
+
+  <div className="number-row">
+    <label>
+      Appearance
+      <select
+        value={glassAppearance}
+        onChange={(event) =>
+          setGlassAppearance(event.target.value as GlassAppearance)
+        }
+      >
+        <option value="Clear">Clear</option>
+        <option value="Obscure">Obscure</option>
+      </select>
+    </label>
+
+    <label>
+      Panes
+      <select
+        value={glassPane}
+        onChange={(event) =>
+          setGlassPane(event.target.value as GlassPane)
+        }
+      >
+        <option value="Double">Double</option>
+        <option value="Triple">Triple</option>
+      </select>
+    </label>
+  </div>
+
+  <div className="number-row" style={{ marginTop: 10 }}>
+    <label>
+      Low-E
+      <select
+        value={glassLowE ? "Yes" : "No"}
+        onChange={(event) =>
+          setGlassLowE(event.target.value === "Yes")
+        }
+      >
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>
+      Safety Glass
+      <select
+        value={glassSafety}
+        onChange={(event) =>
+          setGlassSafety(event.target.value as GlassSafety)
+        }
+      >
+        <option value="None">None</option>
+        <option value="Tempered">Tempered</option>
+        <option value="Laminated">Laminated</option>
+      </select>
+    </label>
   </div>
 
 </section>
@@ -4326,6 +4418,12 @@ const [
               interiorWoodPaintColour={
                 interiorWoodPaintColour
               }
+
+              flangeType={flangeType}
+              glassAppearance={glassAppearance}
+              glassPane={glassPane}
+              glassLowE={glassLowE}
+              glassSafety={glassSafety}
 
               gridStyle={
                 gridStyle
