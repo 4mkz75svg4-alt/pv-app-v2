@@ -43,6 +43,16 @@ type SingleVentHanding =
   | "Left Vent"
   | "Right Vent";
 
+
+type PatioPanelCount =
+  | 2
+  | 3
+  | 4;
+
+type PatioHanding =
+  | "Active Left"
+  | "Active Right";
+
 type GridStyle =
   | "None"
   | "Colonial"
@@ -83,6 +93,10 @@ type Props = {
   verticalSliderType?: VerticalSliderType;
 
   singleVentHanding?: SingleVentHanding;
+
+  patioPanelCount?: PatioPanelCount;
+
+  patioHanding?: PatioHanding;
 
   viewMode?: ViewMode;
 
@@ -1426,6 +1440,15 @@ export default function WindowCanvas(
 
     if (
       props.productType ===
+      "Patio Door"
+    ) {
+      return renderPatioDoor(
+        unit
+      );
+    }
+
+    if (
+      props.productType ===
       "Slider"
     ) {
       setLitePopup(
@@ -1646,11 +1669,10 @@ export default function WindowCanvas(
                   true;
 
                 direction =
-                  interiorView
-                    ? index === 0
-                      ? "left"
-                      : "right"
-                    : index === 0
+                  sectionX +
+                    sectionWidth / 2 <
+                  unit.x +
+                    unit.w / 2
                     ? "right"
                     : "left";
               }
@@ -1668,9 +1690,12 @@ export default function WindowCanvas(
                   index === 0
                 ) {
                   direction =
-                    interiorView
-                      ? "left"
-                      : "right";
+                    sectionX +
+                      sectionWidth / 2 <
+                    unit.x +
+                      unit.w / 2
+                      ? "right"
+                      : "left";
                 }
 
                 if (
@@ -1678,7 +1703,10 @@ export default function WindowCanvas(
                   lastIndex
                 ) {
                   direction =
-                    interiorView
+                    sectionX +
+                      sectionWidth / 2 <
+                    unit.x +
+                      unit.w / 2
                       ? "right"
                       : "left";
                 }
@@ -2297,6 +2325,176 @@ export default function WindowCanvas(
           }
         )}
 
+      </>
+    );
+  }
+
+  function renderPatioDoor(
+    unit: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
+  ) {
+    const panels =
+      props.patioPanelCount ?? 2;
+
+    const panelWidth =
+      unit.w / panels;
+
+    const shownActiveIndex =
+      panels === 2
+        ? interiorView
+          ? props.patioHanding ===
+            "Active Right"
+            ? 0
+            : 1
+          : props.patioHanding ===
+            "Active Right"
+          ? 1
+          : 0
+        : -1;
+
+    return (
+      <>
+        {Array.from({
+          length: panels
+        }).map(
+          (_, index) => {
+            const x =
+              unit.x +
+              index *
+                panelWidth;
+
+            let operating =
+              false;
+
+            let direction:
+              | "left"
+              | "right"
+              | null =
+              null;
+
+            if (
+              panels === 2
+            ) {
+              operating =
+                index ===
+                shownActiveIndex;
+
+              if (
+                operating
+              ) {
+                direction =
+                  index === 0
+                    ? "right"
+                    : "left";
+              }
+            }
+
+            if (
+              panels === 3
+            ) {
+              operating =
+                index === 1;
+
+              if (
+                operating
+              ) {
+                direction =
+                  interiorView
+                    ? "right"
+                    : "left";
+              }
+            }
+
+            if (
+              panels === 4
+            ) {
+              operating =
+                index === 1 ||
+                index === 2;
+
+              if (
+                index === 1
+              ) {
+                direction =
+                  "left";
+              }
+
+              if (
+                index === 2
+              ) {
+                direction =
+                  "right";
+              }
+            }
+
+            return (
+              <g
+                key={
+                  `${unit.id}-patio-${index}`
+                }
+              >
+                {renderGrid(
+                  x,
+                  unit.y,
+                  panelWidth,
+                  unit.h
+                )}
+
+                {operating &&
+                  renderSash(
+                    x,
+                    unit.y,
+                    panelWidth,
+                    unit.h,
+                    true
+                  )}
+
+                {operating &&
+                  direction &&
+                  renderHorizontalArrow(
+                    x,
+                    unit.y,
+                    panelWidth,
+                    unit.h,
+                    direction
+                  )}
+
+                {index <
+                  panels - 1 && (
+                  <line
+                    x1={
+                      x +
+                      panelWidth
+                    }
+                    y1={
+                      unit.y + 4
+                    }
+                    x2={
+                      x +
+                      panelWidth
+                    }
+                    y2={
+                      unit.y +
+                      unit.h -
+                      4
+                    }
+                    style={{
+                      stroke:
+                        frameColour,
+                      strokeWidth: 8
+                    }}
+                    pointerEvents="none"
+                  />
+                )}
+              </g>
+            );
+          }
+        )}
       </>
     );
   }

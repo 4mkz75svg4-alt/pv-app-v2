@@ -44,6 +44,25 @@ type SliderSplitMode =
   | "center-feature"
   | "custom";
 
+
+type PatioPanelCount =
+  | 2
+  | 3
+  | 4;
+
+type PatioHanding =
+  | "Active Left"
+  | "Active Right";
+
+type PatioSizePreset =
+  | "5068"
+  | "6068"
+  | "8068"
+  | "1068"
+  | "12068"
+  | "16068"
+  | "Custom";
+
 type SizingMode =
   | "equal"
   | "center-feature"
@@ -90,12 +109,12 @@ type Brand =
   | "Cortizo";
 
 const PRODUCT_LINES: Record<Brand, string[]> = {
-  Vinyltek: ["Boréal", "Boréal+"],
-  "Sierra Pacific": ["H3 Fusion Tech", "Westchester", "Transcend", "Vinyl Collection"],
+  Vinyltek: ["Boréal", "Boréal+", "Primaria"],
+  "Sierra Pacific": ["H3 Fusion Tech", "Westchester", "SP", "Transcend", "Vinyl Collection"],
   ThermoProof: ["Pacific 6000", "Pacific 7000", "Pacific 8000", "Folding Sliding"],
   Kohltech: ["Supreme", "Tilt & Turn", "Select"],
   "All Weather": ["Apex Alloy 9950", "Ascent 6100", "Summit 9700", "Terra 2700", "Terra 2750", "Terrano 2100", "Atmosphere Folding Window"],
-  Durabuilt: ["Vinyl", "Delta Fiberglass"],
+  Durabuilt: ["Omega", "Alpha", "Delta Fiberglass"],
   Duxton: ["FiberWall 328", "FiberWall 458", "FiberWall 458 Plus", "FiberWall 658"],
   Cortizo: ["COR Vision", "COR Vision Plus", "Millennium"]
 };
@@ -503,6 +522,31 @@ export default function App() {
     setSliderCustomSizes
   ] =
     useState<string[]>([]);
+
+
+  const [
+    patioSizePreset,
+    setPatioSizePreset
+  ] =
+    useState<PatioSizePreset>(
+      "6068"
+    );
+
+  const [
+    patioPanelCount,
+    setPatioPanelCount
+  ] =
+    useState<PatioPanelCount>(
+      2
+    );
+
+  const [
+    patioHanding,
+    setPatioHanding
+  ] =
+    useState<PatioHanding>(
+      "Active Left"
+    );
 
   const [unitsWide, setUnitsWide] =
     useState(1);
@@ -2098,6 +2142,16 @@ const [
     setSliderCustomSizes(
       []
     );
+
+    setPatioSizePreset(
+      "6068"
+    );
+    setPatioPanelCount(
+      2
+    );
+    setPatioHanding(
+      "Active Left"
+    );
   }
 
   function applyVerticalSliderToUnit(
@@ -2401,6 +2455,114 @@ const [
     setWindowType("Vinyl");
   }
 
+  function setPatioOverallSize(
+    width: number,
+    height: number
+  ) {
+    setWidthInput(
+      String(width)
+    );
+    setHeightInput(
+      String(height)
+    );
+
+    setState(
+      (current) => ({
+        ...current,
+        overallWidth: width,
+        overallHeight: height,
+        verticalSplits: [],
+        horizontalSplits: [],
+        panelConfigs: {
+          "0-0": {
+            type: "Picture"
+          }
+        },
+        windowUnits: {
+          "0-0":
+            createWindowUnit(
+              "0-0"
+            )
+        }
+      })
+    );
+
+    setUnitsWide(1);
+    setUnitsTall(1);
+    setSelectedUnit(
+      "0-0"
+    );
+  }
+
+  function applyPatioPreset(
+    preset: PatioSizePreset
+  ) {
+    setPatioSizePreset(
+      preset
+    );
+
+    if (
+      preset === "Custom"
+    ) {
+      return;
+    }
+
+    const sizes: Record<
+      Exclude<
+        PatioSizePreset,
+        "Custom"
+      >,
+      {
+        width: number;
+        height: number;
+        panels: PatioPanelCount;
+      }
+    > = {
+      "5068": {
+        width: 60,
+        height: 80,
+        panels: 2
+      },
+      "6068": {
+        width: 72,
+        height: 80,
+        panels: 2
+      },
+      "8068": {
+        width: 96,
+        height: 80,
+        panels: 2
+      },
+      "1068": {
+        width: 120,
+        height: 80,
+        panels: 3
+      },
+      "12068": {
+        width: 144,
+        height: 80,
+        panels: 4
+      },
+      "16068": {
+        width: 192,
+        height: 80,
+        panels: 4
+      }
+    };
+
+    const next =
+      sizes[preset];
+
+    setPatioPanelCount(
+      next.panels
+    );
+
+    setPatioOverallSize(
+      next.width,
+      next.height
+    );
+  }
+
   function reset() {
     setState(initialState);
 
@@ -2519,6 +2681,9 @@ const [
         verticalSliderType,
         sliderPattern,
         sliderSplitMode,
+        patioSizePreset,
+        patioPanelCount,
+        patioHanding,
         unitsWide,
         unitsTall,
         pictureStyles
@@ -2579,11 +2744,17 @@ const [
       ? sliderOrientation === "Horizontal"
         ? `${horizontalSliderType} ${sliderPattern}`
         : verticalSliderType
+      : productType ===
+        "Patio Door"
+      ? `${patioPanelCount} Panel Patio Door`
       : productType;
 
   const configurationParts = [
     `${brand} / ${productLine}`,
     operationDescription,
+    productType === "Patio Door"
+      ? `${patioSizePreset === "Custom" ? "Custom" : patioSizePreset} / ${state.overallWidth}" x ${state.overallHeight}"`
+      : null,
     windowType,
     `Exterior: ${exteriorColour}`,
     `Interior: ${interiorFinishDescription}`,
@@ -2860,11 +3031,15 @@ const [
                     : ""
                 }
 
-                onClick={() =>
+                onClick={() => {
                   setProductType(
                     "Patio Door"
-                  )
-                }
+                  );
+
+                  applyPatioPreset(
+                    patioSizePreset
+                  );
+                }}
               >
                 Patio Door
               </button>
@@ -2872,6 +3047,130 @@ const [
             </div>
 
           </section>
+
+          {productType ===
+            "Patio Door" && (
+
+            <section className="config-section pv-wide-section">
+
+              <div className="step-title">
+                2. Patio Door Configuration
+              </div>
+
+              <div className="number-row">
+
+                <label>
+                  Standard Size
+
+                  <select
+                    value={
+                      patioSizePreset
+                    }
+                    onChange={(event) =>
+                      applyPatioPreset(
+                        event.target.value as PatioSizePreset
+                      )
+                    }
+                  >
+                    <option value="5068">
+                      5068
+                    </option>
+                    <option value="6068">
+                      6068
+                    </option>
+                    <option value="8068">
+                      8068
+                    </option>
+                    <option value="1068">
+                      1068
+                    </option>
+                    <option value="12068">
+                      12068 (12')
+                    </option>
+                    <option value="16068">
+                      16068 (16')
+                    </option>
+                    <option value="Custom">
+                      Custom
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Panels
+
+                  <select
+                    value={
+                      patioPanelCount
+                    }
+                    onChange={(event) =>
+                      setPatioPanelCount(
+                        Number(
+                          event.target.value
+                        ) as PatioPanelCount
+                      )
+                    }
+                  >
+                    <option value={2}>
+                      2 Panel
+                    </option>
+                    <option value={3}>
+                      3 Panel
+                    </option>
+                    <option value={4}>
+                      4 Panel
+                    </option>
+                  </select>
+                </label>
+
+              </div>
+
+              {patioPanelCount ===
+                2 && (
+
+                <div
+                  className="number-row"
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  <label>
+                    Moving Panel
+
+                    <select
+                      value={
+                        patioHanding
+                      }
+                      onChange={(event) =>
+                        setPatioHanding(
+                          event.target.value as PatioHanding
+                        )
+                      }
+                    >
+                      <option value="Active Left">
+                        Left Panel
+                      </option>
+                      <option value="Active Right">
+                        Right Panel
+                      </option>
+                    </select>
+                  </label>
+                </div>
+
+              )}
+
+              <div
+                className="split-note"
+                style={{
+                  marginTop: 10
+                }}
+              >
+                3 panel: centre panel operates. 4 panel: two centre panels operate.
+              </div>
+
+            </section>
+
+          )}
 
           {productType ===
             "Slider" && (
@@ -4353,6 +4652,14 @@ const [
 
               singleVentHanding={
                 singleVentHanding
+              }
+
+              patioPanelCount={
+                patioPanelCount
+              }
+
+              patioHanding={
+                patioHanding
               }
 
               viewMode={
