@@ -2845,7 +2845,7 @@ const [
 
           .pv-drawing-panel {
             order: 1;
-            flex: 0 0 clamp(270px, 43dvh, 370px);
+            flex: 0 0 clamp(300px, 46dvh, 400px);
             width: 100% !important;
             height: auto !important;
             min-height: 0 !important;
@@ -2860,14 +2860,20 @@ const [
             position: static !important;
             width: 100% !important;
             max-width: 100% !important;
+            height: 100% !important;
             overflow: hidden !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
           }
 
           .pv-canvas-wrap svg {
             display: block;
             width: 100% !important;
-            height: auto !important;
+            height: 100% !important;
             max-width: 100% !important;
+            max-height: 100% !important;
+            object-fit: contain;
           }
 
           .pv-options-panel {
