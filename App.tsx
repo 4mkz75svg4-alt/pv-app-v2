@@ -89,62 +89,15 @@ type Brand =
   | "Duxton"
   | "Cortizo";
 
-const PRODUCT_LINES: Record<
-  Brand,
-  string[]
-> = {
-  Vinyltek: [
-    "Boréal",
-    "Boréal+"
-  ],
-
-  "Sierra Pacific": [
-    "H3 Fusion Tech",
-    "Westchester",
-    "Transcend",
-    "Vinyl Collection"
-  ],
-
-  ThermoProof: [
-    "Pacific 6000",
-    "Pacific 7000",
-    "Pacific 8000",
-    "Folding Sliding"
-  ],
-
-  Kohltech: [
-    "Supreme",
-    "Tilt & Turn",
-    "Select"
-  ],
-
-  "All Weather": [
-    "Apex Alloy 9950",
-    "Ascent 6100",
-    "Summit 9700",
-    "Terra 2700",
-    "Terra 2750",
-    "Terrano 2100",
-    "Atmosphere Folding Window"
-  ],
-
-  Durabuilt: [
-    "Vinyl",
-    "Delta Fiberglass"
-  ],
-
-  Duxton: [
-    "FiberWall 328",
-    "FiberWall 458",
-    "FiberWall 458 Plus",
-    "FiberWall 658"
-  ],
-
-  Cortizo: [
-    "COR Vision",
-    "COR Vision Plus",
-    "Millennium"
-  ]
+const PRODUCT_LINES: Record<Brand, string[]> = {
+  Vinyltek: ["Boréal", "Boréal+"],
+  "Sierra Pacific": ["H3 Fusion Tech", "Westchester", "Transcend", "Vinyl Collection"],
+  ThermoProof: ["Pacific 6000", "Pacific 7000", "Pacific 8000", "Folding Sliding"],
+  Kohltech: ["Supreme", "Tilt & Turn", "Select"],
+  "All Weather": ["Apex Alloy 9950", "Ascent 6100", "Summit 9700", "Terra 2700", "Terra 2750", "Terrano 2100", "Atmosphere Folding Window"],
+  Durabuilt: ["Vinyl", "Delta Fiberglass"],
+  Duxton: ["FiberWall 328", "FiberWall 458", "FiberWall 458 Plus", "FiberWall 658"],
+  Cortizo: ["COR Vision", "COR Vision Plus", "Millennium"]
 };
 
 type WoodFinishType =
@@ -2426,51 +2379,26 @@ const [
   ) {
     if (
       nextBrand === "Duxton" ||
-      (
-        nextBrand === "Durabuilt" &&
-        nextLine === "Delta Fiberglass"
-      )
+      (nextBrand === "Durabuilt" && nextLine === "Delta Fiberglass")
     ) {
-      setWindowType(
-        "Fiberglass"
-      );
+      setWindowType("Fiberglass");
       return;
     }
 
-    if (
-      nextBrand ===
-      "Sierra Pacific"
-    ) {
-      setWindowType(
-        "Aluminum / Wood"
-      );
+    if (nextBrand === "Sierra Pacific") {
+      setWindowType("Aluminum / Wood");
       return;
     }
 
     if (
       nextBrand === "Cortizo" ||
-      (
-        nextBrand ===
-        "All Weather" &&
-        nextLine ===
-          "Apex Alloy 9950"
-      )
+      (nextBrand === "All Weather" && nextLine === "Apex Alloy 9950")
     ) {
-      setWindowType(
-        "Aluminum"
-      );
+      setWindowType("Aluminum");
       return;
     }
 
-    setBrand(
-      "Vinyltek"
-    );
-    setProductLine(
-      "Boréal"
-    );
-    setWindowType(
-      "Vinyl"
-    );
+    setWindowType("Vinyl");
   }
 
   function reset() {
@@ -2527,6 +2455,8 @@ const [
 
     setSelectedUnit(null);
 
+    setBrand("Vinyltek");
+    setProductLine("Boréal");
     setWindowType(
       "Vinyl"
     );
@@ -2678,11 +2608,18 @@ const [
     <>
       <style>{`
         .pv-responsive-layout {
+          display: grid !important;
+          grid-template-columns: minmax(430px, 500px) minmax(0, 1fr) !important;
+          gap: 14px;
           height: calc(100vh - 76px);
           overflow: hidden;
         }
 
         .pv-options-panel {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+          align-content: start;
           height: 100%;
           overflow-y: auto;
           overflow-x: hidden;
@@ -2690,15 +2627,39 @@ const [
           padding-bottom: 40px;
         }
 
+        .pv-options-panel > .config-section {
+          margin: 0 !important;
+          min-width: 0;
+        }
+
+        .pv-options-panel > .pv-wide-section {
+          grid-column: 1 / -1;
+        }
+
+        .pv-options-panel .number-row {
+          gap: 8px;
+        }
+
         .pv-drawing-panel {
           height: 100%;
           overflow: hidden;
           align-self: start;
+          min-width: 0;
         }
 
         .pv-canvas-wrap {
           position: sticky;
           top: 0;
+          width: 100%;
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .pv-canvas-wrap svg {
+          display: block;
+          width: 100% !important;
+          height: auto !important;
+          max-width: 100% !important;
         }
 
         @media (max-width: 760px) {
@@ -2716,43 +2677,31 @@ const [
             height: auto !important;
             overflow: visible !important;
             padding: 8px 10px 4px !important;
-          }
-
-          .pv-canvas-wrap {
-            position: static !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow: hidden !important;
-          }
-
-          .pv-canvas-wrap svg {
-            display: block;
-            width: 100% !important;
-            height: auto !important;
-            max-width: 100% !important;
+            box-sizing: border-box;
           }
 
           .pv-options-panel {
             order: 2;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
             width: 100% !important;
             height: auto !important;
-            max-height: none !important;
             overflow: visible !important;
             padding: 10px 12px 40px !important;
             box-sizing: border-box;
           }
 
+          .pv-options-panel > .config-section,
+          .pv-options-panel > .pv-wide-section {
+            grid-column: 1 !important;
+          }
+
+          .pv-canvas-wrap {
+            position: static !important;
+          }
+
           .pv-options-panel .number-row {
             grid-template-columns: 1fr !important;
-          }
-
-          .drawing-header {
-            gap: 8px;
-            flex-wrap: wrap;
-          }
-
-          .panel-dimension {
-            font-size: 12px;
           }
         }
       `}</style>
@@ -2782,7 +2731,53 @@ const [
 
         <aside className="config-panel pv-options-panel">
 
-          <section className="config-section">
+          <section className="config-section pv-wide-section">
+            <div className="step-title">
+              Brand & Product Line
+            </div>
+
+            <div className="number-row">
+              <label>
+                Brand
+                <select
+                  value={brand}
+                  onChange={(event) => {
+                    const nextBrand = event.target.value as Brand;
+                    const nextLine = PRODUCT_LINES[nextBrand][0];
+                    setBrand(nextBrand);
+                    setProductLine(nextLine);
+                    applyBrandDefaults(nextBrand, nextLine);
+                  }}
+                >
+                  {(Object.keys(PRODUCT_LINES) as Brand[]).map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Product Line
+                <select
+                  value={productLine}
+                  onChange={(event) => {
+                    const nextLine = event.target.value;
+                    setProductLine(nextLine);
+                    applyBrandDefaults(brand, nextLine);
+                  }}
+                >
+                  {PRODUCT_LINES[brand].map((line) => (
+                    <option key={line} value={line}>
+                      {line}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section className="config-section pv-wide-section">
 
             <div className="step-title">
               1. Product
@@ -2881,7 +2876,7 @@ const [
           {productType ===
             "Slider" && (
 
-            <section className="config-section">
+            <section className="config-section pv-wide-section">
 
               <div className="step-title">
                 2. Slider Configuration
@@ -3446,7 +3441,7 @@ const [
 
           {unitsWide > 1 && (
 
-            <section className="config-section">
+            <section className="config-section pv-wide-section">
 
               <div className="step-title">
                 Unit Widths
@@ -3568,7 +3563,7 @@ const [
 
           {unitsTall > 1 && (
 
-            <section className="config-section">
+            <section className="config-section pv-wide-section">
 
               <div className="step-title">
                 Unit Heights
@@ -3669,7 +3664,7 @@ const [
           {productType ===
             "Casement / Awning" && (
 
-            <section className="config-section">
+            <section className="config-section pv-wide-section">
 
               <div className="step-title">
                 Configure Unit
@@ -3873,7 +3868,7 @@ const [
 
 </section>
 
-<section className="config-section">
+<section className="config-section pv-wide-section">
 
   <div className="step-title">
     Window Type & Colour
@@ -4072,7 +4067,7 @@ const [
 
 </section>
 
-<section className="config-section">
+<section className="config-section pv-wide-section">
 
   <div className="step-title">
     Glass
