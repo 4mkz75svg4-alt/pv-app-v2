@@ -144,9 +144,7 @@ type ViewMode =
   | "Interior";
 
 
-type DisplayMode =
-  | "2D"
-  | "3D";
+type DisplayMode = "2D" | "3D";
 
 type GridStyle =
   | "None"
@@ -723,6 +721,35 @@ const [
   );
 
 const [
+  previewRotateY,
+  setPreviewRotateY
+] =
+  useState<number>(
+    -14
+  );
+
+const [
+  previewRotateX,
+  setPreviewRotateX
+] =
+  useState<number>(
+    5
+  );
+
+const [
+  previewDrag,
+  setPreviewDrag
+] =
+  useState<{
+    x: number;
+    y: number;
+    startY: number;
+    startX: number;
+  } | null>(
+    null
+  );
+
+const [
   glassAppearance,
   setGlassAppearance
 ] =
@@ -929,6 +956,12 @@ const [
     );
     setDisplayMode(
       "2D"
+    );
+    setPreviewRotateY(
+      -14
+    );
+    setPreviewRotateX(
+      5
     );
     setGlassAppearance("Clear");
     setGlassPane("Double");
@@ -2688,7 +2721,6 @@ const [
         woodFinish,
         woodStain,
         viewMode,
-        displayMode,
         glassAppearance,
         glassPane,
         lowEPackage,
@@ -2797,11 +2829,18 @@ const [
     <>
       <style>{`
         .pv-responsive-layout {
+          display: grid !important;
+          grid-template-columns: minmax(430px, 500px) minmax(0, 1fr) !important;
+          gap: 14px;
           height: calc(100vh - 76px);
           overflow: hidden;
         }
 
         .pv-options-panel {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+          align-content: start;
           height: 100%;
           overflow-y: auto;
           overflow-x: hidden;
@@ -2809,25 +2848,59 @@ const [
           padding-bottom: 40px;
         }
 
+        .pv-options-panel > .config-section {
+          margin: 0 !important;
+          min-width: 0;
+        }
+
+        .pv-options-panel > .pv-wide-section {
+          grid-column: 1 / -1;
+        }
+
+        .pv-options-panel .number-row {
+          gap: 8px;
+        }
+
         .pv-drawing-panel {
           height: 100%;
           overflow: hidden;
           align-self: start;
+          min-width: 0;
         }
 
         .pv-canvas-wrap {
-          position: sticky;
-          top: 0;
-          z-index: 3;
-          background: #fff;
+          width: 100%;
+          max-width: 100%;
+          overflow: visible;
+          transform-style: preserve-3d;
+          perspective: 1200px;
+        }
+
+        .pv-canvas-inner {
+          transform-style: preserve-3d;
+          transform-origin: center center;
+        }
+
+        .pv-canvas-wrap svg {
+          display: block;
+          width: 100% !important;
+          height: auto !important;
+          max-width: 100% !important;
+        }
+
+        .pv-view-tools {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          align-items: center;
         }
 
         @media (max-width: 760px) {
           .pv-responsive-layout {
             display: grid !important;
-            grid-template-rows: minmax(250px, 42vh) 1fr !important;
+            grid-template-columns: 1fr !important;
+            grid-template-rows: minmax(245px, 40vh) minmax(0, 1fr) !important;
             height: calc(100vh - 76px) !important;
-            min-height: 0 !important;
             overflow: hidden !important;
           }
 
@@ -2835,26 +2908,21 @@ const [
             order: 1;
             width: 100% !important;
             height: 100% !important;
-            min-height: 0 !important;
             overflow: hidden !important;
             padding: 8px 10px 4px !important;
             box-sizing: border-box;
-            background: #fff;
-            z-index: 4;
+            background: white;
+            position: relative;
+            z-index: 3;
           }
 
           .pv-canvas-wrap {
-            position: sticky !important;
-            top: 0 !important;
             width: 100% !important;
-            max-width: 100% !important;
-            height: 100% !important;
+            height: calc(100% - 58px) !important;
             overflow: hidden !important;
-            background: #fff !important;
           }
 
           .pv-canvas-wrap svg {
-            display: block;
             width: 100% !important;
             height: 100% !important;
             max-width: 100% !important;
@@ -2862,16 +2930,22 @@ const [
 
           .pv-options-panel {
             order: 2;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
             width: 100% !important;
             height: 100% !important;
             min-height: 0 !important;
-            max-height: none !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
             overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             padding: 10px 12px 40px !important;
             box-sizing: border-box;
-            -webkit-overflow-scrolling: touch;
+          }
+
+          .pv-options-panel > .config-section,
+          .pv-options-panel > .pv-wide-section {
+            grid-column: 1 !important;
           }
 
           .pv-options-panel .number-row {
@@ -2883,13 +2957,13 @@ const [
             flex-wrap: wrap;
           }
 
-          .panel-dimension {
-            font-size: 12px;
+          .pv-view-tools {
+            gap: 4px;
           }
 
-          .pv-view-tools {
-            gap: 6px !important;
-            flex-wrap: wrap;
+          .pv-view-tools button {
+            padding: 6px 9px !important;
+            font-size: 12px !important;
           }
         }
       `}</style>
@@ -4565,7 +4639,7 @@ const [
               </span>
             </div>
 
-            <div className="drawing-actions">
+            <div className="drawing-actions pv-view-tools">
 
               <button
                 className={
@@ -4600,1935 +4674,35 @@ const [
               </button>
 
               <button
-                onClick={reset}
-              >
-                Reset
-              </button>
-
-            </div>
-
-          </div>
-
-          <div className="canvas-wrap pv-canvas-wrap">
-
-            <WindowCanvas
-              key={`${productType}-${patioPanelCount}-${patioHanding}-${viewMode}-${displayMode}`}
-              widthInches={
-                state.overallWidth
-              }
-
-              heightInches={
-                state.overallHeight
-              }
-
-              verticalSplits={
-                state.verticalSplits
-              }
-
-              horizontalSplits={
-                state.horizontalSplits
-              }
-
-              selectedPanel={
-                selectedUnit
-              }
-
-              panelTypes={Object.fromEntries(
-                Object.entries(
-                  state.panelConfigs
-                ).map(
-                  ([key, value]) => [
-                    key,
-                    value.type
-                  ]
-                )
-              )}
-
-              windowUnits={
-                state.windowUnits
-              }
-
-              pictureStyles={
-                pictureStyles
-              }
-
-              productType={
-                productType
-              }
-
-              sliderOrientation={
-                sliderOrientation
-              }
-
-              horizontalSliderType={
-                horizontalSliderType
-              }
-
-              verticalSliderType={
-                verticalSliderType
-              }
-
-              singleVentHanding={
-                singleVentHanding
-              }
-
-              patioPanelCount={
-                patioPanelCount
-              }
-
-              patioHanding={
-                patioHanding
-              }
-
-              viewMode={
-                viewMode
-              }
-
-              displayMode={
-                displayMode
-              }
-
-              windowType={
-                windowType
-              }
-
-              exteriorColour={
-                exteriorColour
-              }
-
-              interiorColour={
-                interiorColour
-              }
-
-              woodSpecies={
-                woodSpecies
-              }
-
-              woodFinish={
-                woodFinish
-              }
-
-              woodStain={
-                woodStain
-              }
-
-              flangeType={flangeType}
-              glassAppearance={glassAppearance}
-              glassPane={glassPane}
-              glassLowEPackage={lowEPackage}
-              glassSafety={glassSafety}
-
-              gridStyle={
-                gridStyle
-              }
-
-              gridColumns={0}
-              gridRows={0}
-
-              mode={mode}
-
-              onAddVertical={() => {}}
-              onAddHorizontal={() => {}}
-
-              onMoveVertical={
-                moveVertical
-              }
-
-              onMoveHorizontal={
-                moveHorizontal
-              }
-
-              onSelectPanel={
-                handleSelectUnit
-              }
-
-              onOverallWidthChange={
-                handleFrameWidthChange
-              }
-
-              onOverallHeightChange={
-                handleFrameHeightChange
-              }
-
-              onMoveUnitHorizontalSplit={
-                moveUnitHorizontalSplit
-              }
-
-              onMoveUnitVerticalSplit={
-                moveUnitVerticalSplit
-              }
-
-              onSetLiteOperation={
-                setLiteOperation
-              }
-            />
-
-          </div>
-
-          <p className="hint">
-            Tap a unit to configure it.
-          </p>
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 12,
-              lineHeight: 1.45,
-              color: "#5f6670",
-              textAlign: "center",
-              maxWidth: 920
-            }}
-          >
-            <strong>
-              {viewMode} View
-            </strong>
-            {" • "}
-            {configurationSummary}
-          </div>
-
-        </section>
-
-      </main>
-    </>
-  );
-}
-
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              marginTop: 8
-            }}
-          >
-            <button
-              type="button"
-              className={
-                displayMode === "2D"
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                setDisplayMode(
+                className={
+                  displayMode ===
                   "2D"
-                )
-              }
-            >
-              2D
-            </button>
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setDisplayMode(
+                    "2D"
+                  )
+                }
+              >
+                2D
+              </button>
 
-            <button
-              type="button"
-              className={
-                displayMode === "3D"
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                setDisplayMode(
+              <button
+                className={
+                  displayMode ===
                   "3D"
-                )
-              }
-            >
-              3D Rotate
-            </button>
-          </div>
-
-
-          <div className="title">
-            Window Configurator
-          </div>
-        </div>
-
-        <button
-          id="save-button"
-          onClick={save}
-        >
-          Save
-        </button>
-
-      </header>
-
-      <main className="configurator-layout pv-responsive-layout">
-
-        <aside className="config-panel pv-options-panel">
-
-          <section className="config-section pv-wide-section">
-            <div className="step-title">
-              Brand & Product Line
-            </div>
-
-            <div className="number-row">
-              <label>
-                Brand
-                <select
-                  value={brand}
-                  onChange={(event) => {
-                    const nextBrand = event.target.value as Brand;
-                    const nextLine = PRODUCT_LINES[nextBrand][0];
-                    setBrand(nextBrand);
-                    setProductLine(nextLine);
-                    applyBrandDefaults(nextBrand, nextLine);
-                  }}
-                >
-                  {(Object.keys(PRODUCT_LINES) as Brand[]).map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                Product Line
-                <select
-                  value={productLine}
-                  onChange={(event) => {
-                    const nextLine = event.target.value;
-                    setProductLine(nextLine);
-                    applyBrandDefaults(brand, nextLine);
-                  }}
-                >
-                  {PRODUCT_LINES[brand].map((line) => (
-                    <option key={line} value={line}>
-                      {line}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </section>
-
-          <section className="config-section pv-wide-section">
-
-            <div className="step-title">
-              1. Product
-            </div>
-
-            <div className="option-buttons">
-
-              <button
-                className={
-                  productType ===
-                  "Casement / Awning"
-                    ? "active"
-                    : ""
-                }
-
-                onClick={() =>
-                  setProductType(
-                    "Casement / Awning"
-                  )
-                }
-              >
-                Casement / Awning
-              </button>
-
-              <button
-                className={
-                  productType ===
-                  "Slider"
-                    ? "active"
-                    : ""
-                }
-
-               onClick={() => {
-  const unitId =
-    selectedUnit ?? "0-0";
-
-  setProductType(
-    "Slider"
-  );
-
-  setSliderOrientation(
-    "Horizontal"
-  );
-
-  setHorizontalSliderType(
-    "Single Vent"
-  );
-
-  setSliderPattern(
-    "XO"
-  );
-
-  setSliderSplitMode(
-    "equal"
-  );
-
-  setSliderCustomSizes(
-    []
-  );
-
-  setSelectedUnit(
-    unitId
-  );
-
-  applyHorizontalSliderToUnit(
-    unitId,
-    "Single Vent",
-    "equal"
-  );
-}}
-              >
-                Slider
-              </button>
-
-              <button
-                className={
-                  productType ===
-                  "Patio Door"
-                    ? "active"
-                    : ""
-                }
-
-                onClick={() => {
-                  setProductType(
-                    "Patio Door"
-                  );
-
-                  applyPatioPreset(
-                    patioSizePreset
-                  );
-                }}
-              >
-                Patio Door
-              </button>
-
-            </div>
-
-          </section>
-
-          {productType ===
-            "Patio Door" && (
-
-            <section className="config-section pv-wide-section">
-
-              <div className="step-title">
-                2. Patio Door Configuration
-              </div>
-
-              <div className="number-row">
-
-                <label>
-                  Standard Size
-
-                  <select
-                    value={
-                      patioSizePreset
-                    }
-                    onChange={(event) =>
-                      applyPatioPreset(
-                        event.target.value as PatioSizePreset
-                      )
-                    }
-                  >
-                    <option value="5068">
-                      5068
-                    </option>
-                    <option value="6068">
-                      6068
-                    </option>
-                    <option value="8068">
-                      8068
-                    </option>
-                    <option value="1068">
-                      1068
-                    </option>
-                    <option value="12068">
-                      12068 (12')
-                    </option>
-                    <option value="16068">
-                      16068 (16')
-                    </option>
-                    <option value="Custom">
-                      Custom
-                    </option>
-                  </select>
-                </label>
-
-                <label>
-                  Panels
-
-                  <select
-                    value={
-                      patioPanelCount
-                    }
-                    onChange={(event) =>
-                      setPatioPanelCount(
-                        Number(
-                          event.target.value
-                        ) as PatioPanelCount
-                      )
-                    }
-                  >
-                    <option value={2}>
-                      2 Panel
-                    </option>
-                    <option value={3}>
-                      3 Panel
-                    </option>
-                    <option value={4}>
-                      4 Panel
-                    </option>
-                  </select>
-                </label>
-
-              </div>
-
-              {patioPanelCount ===
-                2 && (
-
-                <div
-                  className="number-row"
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-                  <label>
-                    Moving Panel
-
-                    <select
-                      value={
-                        patioHanding
-                      }
-                      onChange={(event) =>
-                        setPatioHanding(
-                          event.target.value as PatioHanding
-                        )
-                      }
-                    >
-                      <option value="Active Left">
-                        Left Panel
-                      </option>
-                      <option value="Active Right">
-                        Right Panel
-                      </option>
-                    </select>
-                  </label>
-                </div>
-
-              )}
-
-              <div
-                className="split-note"
-                style={{
-                  marginTop: 10
-                }}
-              >
-                3 panel: centre panel operates. 4 panel: two centre panels operate.
-              </div>
-
-            </section>
-
-          )}
-
-          {productType ===
-            "Slider" && (
-
-            <section className="config-section pv-wide-section">
-
-              <div className="step-title">
-                2. Slider Configuration
-              </div>
-
-              <div className="number-row">
-
-                <label>
-                  Orientation
-
-                  <select
-                    value={
-                      sliderOrientation
-                    }
-
-                    onChange={(event) => {
-                      const next =
-                        event.target.value as SliderOrientation;
-
-                      setSliderOrientation(
-                        next
-                      );
-
-                      setSliderCustomSizes(
-                        []
-                      );
-
-                      setSliderSplitMode(
-                        "equal"
-                      );
-
-                      if (
-                        next ===
-                        "Horizontal"
-                      ) {
-                        setHorizontalSliderType(
-                          "Single Vent"
-                        );
-
-                        setSliderPattern(
-                          "XO"
-                        );
-
-                        if (
-                          selectedUnit
-                        ) {
-                          applyHorizontalSliderToUnit(
-                            selectedUnit,
-                            "Single Vent",
-                            "equal"
-                          );
-                        }
-                      } else {
-                        setVerticalSliderType(
-                          "Single Hung"
-                        );
-
-                        if (
-                          selectedUnit
-                        ) {
-                          applyVerticalSliderToUnit(
-                            selectedUnit,
-                            "equal"
-                          );
-                        }
-                      }
-                    }}
-                  >
-                    <option value="Horizontal">
-                      Horizontal
-                    </option>
-
-                    <option value="Vertical">
-                      Vertical
-                    </option>
-                  </select>
-                </label>
-
-                {sliderOrientation ===
-                "Horizontal" ? (
-
-                  <label>
-                    Slider Type
-
-                    <select
-                      value={
-                        horizontalSliderType
-                      }
-
-                      onChange={(event) => {
-                        const next =
-                          event.target.value as HorizontalSliderType;
-
-                        setHorizontalSliderType(
-                          next
-                        );
-
-                        let pattern:
-                          SliderPattern =
-                          "XO";
-
-                        let split:
-                          SliderSplitMode =
-                          "equal";
-
-                        if (
-                          next ===
-                          "Double Slider"
-                        ) {
-                          pattern =
-                            "XX";
-                        }
-
-                        if (
-                          next ===
-                          "Double Vent + Centre Picture"
-                        ) {
-                          pattern =
-                            "XOX";
-
-                          split =
-                            "center-feature";
-                        }
-
-                        setSliderPattern(
-                          pattern
-                        );
-
-                        setSliderSplitMode(
-                          split
-                        );
-
-                        setSliderCustomSizes(
-                          []
-                        );
-
-                        if (
-                          selectedUnit
-                        ) {
-                          applyHorizontalSliderToUnit(
-                            selectedUnit,
-                            next,
-                            split
-                          );
-                        }
-                      }}
-                    >
-                      <option value="Single Vent">
-                        Single Vent
-                      </option>
-
-                      <option value="Double Slider">
-                        Double Slider
-                      </option>
-
-                      <option value="Double Vent + Centre Picture">
-                        Double Vent + Centre Picture
-                      </option>
-                    </select>
-                  </label>
-
-                ) : (
-
-                  <label>
-                    Hung Type
-
-                    <select
-                      value={
-                        verticalSliderType
-                      }
-
-                      onChange={(event) => {
-                        const next =
-                          event.target.value as VerticalSliderType;
-
-                        setVerticalSliderType(
-                          next
-                        );
-
-                        setSliderSplitMode(
-                          "equal"
-                        );
-
-                        setSliderCustomSizes(
-                          []
-                        );
-
-                        if (
-                          selectedUnit
-                        ) {
-                          applyVerticalSliderToUnit(
-                            selectedUnit,
-                            "equal"
-                          );
-                        }
-                      }}
-                    >
-                      <option value="Single Hung">
-                        Single Hung
-                      </option>
-
-                      <option value="Double Hung">
-                        Double Hung
-                      </option>
-                    </select>
-                  </label>
-
-                )}
-
-              </div>
-
-              {sliderOrientation ===
-                "Horizontal" &&
-                horizontalSliderType ===
-                  "Single Vent" && (
-
-                <div
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-
-                  <label>
-                    Configuration
-
-                    <select
-                      value={
-                        sliderPattern
-                      }
-
-                      onChange={(event) =>
-                        setSliderPattern(
-                          event.target.value as SliderPattern
-                        )
-                      }
-                    >
-                      <option value="XO">
-                        XO — Vent Left
-                      </option>
-
-                      <option value="OX">
-                        OX — Vent Right
-                      </option>
-                    </select>
-
-                  </label>
-
-                </div>
-
-              )}
-
-              {sliderOrientation ===
-                "Horizontal" &&
-                horizontalSliderType ===
-                  "Double Slider" && (
-
-                <div
-                  className="split-note"
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-                  Configuration: <strong>XX</strong> — both sashes operate
-                </div>
-
-              )}
-
-              {sliderOrientation ===
-                "Horizontal" &&
-                horizontalSliderType ===
-                  "Double Vent + Centre Picture" && (
-
-                <div
-                  className="split-note"
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-                  Configuration: <strong>XOX</strong> — outside vents operate, centre fixed
-                </div>
-
-              )}
-
-              {selectedUnit && (
-
-                <div
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-
-                  <label>
-                    Split
-
-                    <select
-                      value={
-                        sliderSplitMode
-                      }
-
-                      onChange={(event) => {
-                        const next =
-                          event.target.value as SliderSplitMode;
-
-                        setSliderSplitMode(
-                          next
-                        );
-
-                        if (
-                          sliderOrientation ===
-                          "Horizontal"
-                        ) {
-                          applyHorizontalSliderToUnit(
-                            selectedUnit,
-                            horizontalSliderType,
-                            next
-                          );
-                        } else {
-                          applyVerticalSliderToUnit(
-                            selectedUnit,
-                            next
-                          );
-                        }
-                      }}
-                    >
-
-                      {sliderOrientation ===
-                        "Horizontal" &&
-                        horizontalSliderType !==
-                          "Double Vent + Centre Picture" && (
-                          <>
-                            <option value="equal">
-                              1/2 - 1/2
-                            </option>
-
-                            <option value="one-third">
-                              1/3 - 2/3
-                            </option>
-
-                            <option value="two-thirds">
-                              2/3 - 1/3
-                            </option>
-
-                            <option value="custom">
-                              Custom
-                            </option>
-                          </>
-                        )}
-
-                      {sliderOrientation ===
-                        "Horizontal" &&
-                        horizontalSliderType ===
-                          "Double Vent + Centre Picture" && (
-                          <>
-                            <option value="center-feature">
-                              1/4 - 1/2 - 1/4
-                            </option>
-
-                            <option value="equal">
-                              1/3 - 1/3 - 1/3
-                            </option>
-
-                            <option value="custom">
-                              Custom
-                            </option>
-                          </>
-                        )}
-
-                      {sliderOrientation ===
-                        "Vertical" && (
-                          <>
-                            <option value="equal">
-                              1/2 - 1/2
-                            </option>
-
-                            <option value="one-third">
-                              1/3 - 2/3
-                            </option>
-
-                            <option value="two-thirds">
-                              2/3 - 1/3
-                            </option>
-
-                            <option value="custom">
-                              Custom
-                            </option>
-                          </>
-                        )}
-
-                    </select>
-                  </label>
-
-                  {sliderSplitMode ===
-                    "custom" && (
-
-                    <div
-                      className="number-row"
-                      style={{
-                        marginTop: 10
-                      }}
-                    >
-
-                      {sliderCustomSizes.map(
-                        (
-                          value,
-                          index
-                        ) => (
-
-                          <label
-                            key={index}
-                          >
-                            Section{" "}
-                            {index + 1}
-
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={value}
-
-                              onChange={(
-                                event
-                              ) =>
-                                updateSliderCustomSize(
-                                  index,
-                                  event.target.value
-                                )
-                              }
-                            />
-
-                          </label>
-
-                        )
-                      )}
-
-                    </div>
-
-                  )}
-
-                </div>
-
-              )}
-
-              {!selectedUnit && (
-
-                <div className="split-note">
-                  Tap a unit in the drawing to configure its slider.
-                </div>
-
-              )}
-
-            </section>
-
-          )}
-
-          <section className="config-section">
-
-            <div className="step-title">
-              Overall Window Size
-            </div>
-
-            <div className="number-row">
-
-              <label>
-                Width
-
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={widthInput}
-
-                  onChange={(event) =>
-                    updateOverallWidth(
-                      event.target.value
-                    )
-                  }
-                />
-              </label>
-
-              <label>
-                Height
-
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={heightInput}
-
-                  onChange={(event) =>
-                    updateOverallHeight(
-                      event.target.value
-                    )
-                  }
-                />
-              </label>
-
-            </div>
-
-          </section>
-          <section className="config-section">
-
-            <div className="step-title">
-              Number of Units
-            </div>
-
-            <div className="number-row">
-
-              <label>
-                How many wide?
-
-                <select
-                  value={unitsWide}
-
-                  onChange={(event) =>
-                    changeUnitsWide(
-                      Number(
-                        event.target.value
-                      )
-                    )
-                  }
-                >
-                  {[1, 2, 3, 4, 5, 6].map(
-                    (number) => (
-                      <option
-                        key={number}
-                        value={number}
-                      >
-                        {number}
-                      </option>
-                    )
-                  )}
-                </select>
-              </label>
-
-              <label>
-                How many tall?
-
-                <select
-                  value={unitsTall}
-
-                  onChange={(event) =>
-                    changeUnitsTall(
-                      Number(
-                        event.target.value
-                      )
-                    )
-                  }
-                >
-                  {[1, 2, 3, 4].map(
-                    (number) => (
-                      <option
-                        key={number}
-                        value={number}
-                      >
-                        {number}
-                      </option>
-                    )
-                  )}
-                </select>
-              </label>
-
-            </div>
-
-          </section>
-
-          {unitsWide > 1 && (
-
-            <section className="config-section pv-wide-section">
-
-              <div className="step-title">
-                Unit Widths
-              </div>
-
-              <div className="option-buttons">
-
-                <button
-                  className={
-                    horizontalSizingMode ===
-                    "equal"
-                      ? "active"
-                      : ""
-                  }
-
-                  onClick={
-                    applyEqualWidths
-                  }
-                >
-                  {unitsWide === 2
-                    ? "1/2 + 1/2"
-                    : unitsWide === 3
-                    ? "1/3 + 1/3 + 1/3"
-                    : "Equal Widths"}
-                </button>
-
-                {unitsWide === 3 && (
-
-                  <button
-                    className={
-                      horizontalSizingMode ===
-                      "center-feature"
-                        ? "active"
-                        : ""
-                    }
-
-                    onClick={
-                      applyCenterFeature
-                    }
-                  >
-                    1/4 + 1/2 + 1/4
-                  </button>
-
-                )}
-
-                <button
-                  className={
-                    horizontalSizingMode ===
-                    "custom"
-                      ? "active"
-                      : ""
-                  }
-
-                  onClick={
-                    startCustomWidths
-                  }
-                >
-                  Custom Sizes
-                </button>
-
-              </div>
-
-              {horizontalSizingMode ===
-                "custom" && (
-
-                <div
-                  style={{
-                    marginTop: 12
-                  }}
-                >
-
-                  <div className="number-row">
-
-                    {customWidths.map(
-                      (
-                        value,
-                        index
-                      ) => (
-
-                        <label
-                          key={index}
-                        >
-                          Unit{" "}
-                          {index + 1}
-                          {index ===
-                            widthAutoIndex
-                            ? " (auto)"
-                            : ""}
-
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={value}
-
-                            onChange={(
-                              event
-                            ) =>
-                              updateCustomWidth(
-                                index,
-                                event.target.value
-                              )
-                            }
-                          />
-
-                        </label>
-
-                      )
-                    )}
-
-                  </div>
-
-                </div>
-
-              )}
-
-            </section>
-
-          )}
-
-          {unitsTall > 1 && (
-
-            <section className="config-section pv-wide-section">
-
-              <div className="step-title">
-                Unit Heights
-              </div>
-
-              <div className="option-buttons">
-
-                <button
-                  className={
-                    verticalSizingMode ===
-                    "equal"
-                      ? "active"
-                      : ""
-                  }
-
-                  onClick={
-                    applyEqualHeights
-                  }
-                >
-                  Equal Heights
-                </button>
-
-                <button
-                  className={
-                    verticalSizingMode ===
-                    "custom"
-                      ? "active"
-                      : ""
-                  }
-
-                  onClick={
-                    startCustomHeights
-                  }
-                >
-                  Custom Heights
-                </button>
-
-              </div>
-
-              {verticalSizingMode ===
-                "custom" && (
-
-                <div
-                  style={{
-                    marginTop: 12
-                  }}
-                >
-
-                  <div className="number-row">
-
-                    {customHeights.map(
-                      (
-                        value,
-                        index
-                      ) => (
-
-                        <label
-                          key={index}
-                        >
-                          Unit Row{" "}
-                          {index + 1}
-                          {index ===
-                            heightAutoIndex
-                            ? " (auto)"
-                            : ""}
-
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={value}
-
-                            onChange={(
-                              event
-                            ) =>
-                              updateCustomHeight(
-                                index,
-                                event.target.value
-                              )
-                            }
-                          />
-
-                        </label>
-
-                      )
-                    )}
-
-                  </div>
-
-                </div>
-
-              )}
-
-            </section>
-
-          )}
-
-
-          {productType ===
-            "Casement / Awning" && (
-
-            <section className="config-section pv-wide-section">
-
-              <div className="step-title">
-                Configure Unit
-              </div>
-
-              <div className="selected-info">
-                {selectedUnit
-                  ? `Unit ${selectedUnit} selected`
-                  : "Tap a unit in the drawing"}
-              </div>
-
-              {selectedUnitConfig && (
-
-                <>
-                  <div className="number-row">
-
-                    <label>
-                      Number High
-
-                      <select
-                        value={
-                          selectedUnitConfig.litesTall
-                        }
-
-                        onChange={(event) =>
-                          changeSelectedNumberHigh(
-                            Number(
-                              event.target.value
-                            )
-                          )
-                        }
-                      >
-                        {[1, 2, 3, 4].map(
-                          (number) => (
-                            <option
-                              key={number}
-                              value={number}
-                            >
-                              {number}
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </label>
-
-                    {selectedUnitConfig.litesTall >
-                      1 && (
-
-                      <label>
-                        Split
-
-                        <select
-                          value={
-                            selectedSplitMode
-                          }
-
-                          onChange={(event) =>
-                            applyUnitSplit(
-                              event.target.value as UnitSplitMode
-                            )
-                          }
-                        >
-                          <option value="equal">
-                            {selectedUnitConfig.litesTall ===
-                            2
-                              ? "1/2 - 1/2"
-                              : selectedUnitConfig.litesTall ===
-                                3
-                              ? "1/3 - 1/3 - 1/3"
-                              : "Equal"}
-                          </option>
-
-                          {selectedUnitConfig.litesTall ===
-                            2 && (
-                            <>
-                              <option value="top-third">
-                                1/3 - 2/3
-                              </option>
-
-                              <option value="bottom-third">
-                                2/3 - 1/3
-                              </option>
-                            </>
-                          )}
-
-                          {selectedUnitConfig.litesTall ===
-                            3 && (
-                            <>
-                              <option value="center-feature">
-                                1/4 - 1/2 - 1/4
-                              </option>
-
-                              <option value="top-half">
-                                1/2 - 1/4 - 1/4
-                              </option>
-
-                              <option value="bottom-half">
-                                1/4 - 1/4 - 1/2
-                              </option>
-                            </>
-                          )}
-
-                          <option value="custom">
-                            Custom
-                          </option>
-                        </select>
-                      </label>
-
-                    )}
-
-                  </div>
-
-                  {selectedSplitMode ===
-                    "custom" &&
-                    selectedUnitConfig.litesTall >
-                      1 && (
-
-                    <div
-                      style={{
-                        marginTop: 10
-                      }}
-                    >
-
-                      <div className="number-row">
-
-                        {selectedCustomHeights.map(
-                          (
-                            value,
-                            index
-                          ) => (
-
-                            <label
-                              key={index}
-                            >
-                              Lite{" "}
-                              {index + 1}
-
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={value}
-
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateUnitCustomHeight(
-                                    index,
-                                    event.target.value
-                                  )
-                                }
-                              />
-
-                            </label>
-
-                          )
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-                </>
-
-              )}
-
-            </section>
-
-          )}
-<section className="config-section">
-
-  <div className="step-title">
-    Flange Type
-  </div>
-
-  <label>
-    Flange
-
-    <select
-      value={flangeType}
-      onChange={(event) =>
-        setFlangeType(
-          event.target.value as FlangeType
-        )
-      }
-    >
-      <option value="Nail Fin">
-        Nail Fin
-      </option>
-
-      <option value="Brick Mould">
-        Brick Mould
-      </option>
-
-      <option value="Reno Flange">
-        Reno Flange
-      </option>
-    </select>
-  </label>
-
-</section>
-
-<section className="config-section pv-wide-section">
-
-  <div className="step-title">
-    Window Type & Colour
-  </div>
-
-  <label>
-    Window Type
-
-    <select
-      value={windowType}
-      onChange={(event) =>
-        setWindowType(
-          event.target.value as WindowType
-        )
-      }
-    >
-      <option value="Vinyl">
-        Vinyl
-      </option>
-      <option value="Aluminum">
-        Aluminum
-      </option>
-      <option value="Aluminum / Wood">
-        Aluminum / Wood
-      </option>
-      <option value="Fiberglass">
-        Fiberglass
-      </option>
-    </select>
-  </label>
-
-  <div
-    className="number-row"
-    style={{
-      marginTop: 10
-    }}
-  >
-    <label>
-      Exterior Colour
-
-      <select
-        value={exteriorColour}
-        onChange={(event) =>
-          setExteriorColour(
-            event.target.value
-          )
-        }
-      >
-        {STANDARD_COLOURS.map(
-          ([name, code]) => (
-            <option
-              key={code}
-              value={name}
-            >
-              {name}
-              {code !== "CUSTOM"
-                ? ` (${code})`
-                : ""}
-            </option>
-          )
-        )}
-      </select>
-    </label>
-
-    <label>
-      Interior Colour
-
-      <select
-        value={interiorColour}
-        onChange={(event) =>
-          setInteriorColour(
-            event.target.value
-          )
-        }
-      >
-        {STANDARD_COLOURS.map(
-          ([name, code]) => (
-            <option
-              key={code}
-              value={name}
-            >
-              {name}
-              {code !== "CUSTOM"
-                ? ` (${code})`
-                : ""}
-            </option>
-          )
-        )}
-      </select>
-    </label>
-  </div>
-
-  {windowType ===
-    "Aluminum / Wood" && (
-    <>
-      <div
-        className="number-row"
-        style={{
-          marginTop: 10
-        }}
-      >
-        <label>
-          Wood Species
-
-          <select
-            value={woodSpecies}
-            onChange={(event) =>
-              setWoodSpecies(
-                event.target.value as WoodSpecies
-              )
-            }
-          >
-            {WOOD_SPECIES.map(
-              (species) => (
-                <option
-                  key={species}
-                  value={species}
-                >
-                  {species}
-                </option>
-              )
-            )}
-          </select>
-        </label>
-
-        <label>
-          Wood Finish
-
-          <select
-            value={woodFinish}
-            onChange={(event) =>
-              setWoodFinish(
-                event.target.value as WoodFinishType
-              )
-            }
-          >
-            <option value="Clear Coat">
-              Clear Coat
-            </option>
-            <option value="Stained">
-              Stained
-            </option>
-            <option value="Painted">
-              Painted
-            </option>
-            <option value="Primed White">
-              Primed White
-            </option>
-          </select>
-        </label>
-      </div>
-
-      {woodFinish ===
-        "Stained" && (
-        <div
-          style={{
-            marginTop: 10
-          }}
-        >
-          <label>
-            Stain
-
-            <select
-              value={woodStain}
-              onChange={(event) =>
-                setWoodStain(
-                  event.target.value
-                )
-              }
-            >
-              {WOOD_STAINS.map(
-                (finish) => (
-                  <option
-                    key={finish}
-                    value={finish}
-                  >
-                    {finish}
-                  </option>
-                )
-              )}
-            </select>
-          </label>
-        </div>
-      )}
-
-      <div
-        className="split-note"
-        style={{
-          marginTop: 10
-        }}
-      >
-        Interior colour applies when the wood interior is painted. Clear Coat shows the selected wood species.
-      </div>
-    </>
-  )}
-
-</section>
-
-<section className="config-section pv-wide-section">
-
-  <div className="step-title">
-    Glass
-  </div>
-
-  <div className="number-row">
-    <label>
-      Obscure Glass?
-
-      <select
-        value={glassAppearance}
-        onChange={(event) =>
-          setGlassAppearance(
-            event.target.value as GlassAppearance
-          )
-        }
-      >
-        <option value="No">
-          No
-        </option>
-        <option value="Yes">
-          Yes
-        </option>
-      </select>
-    </label>
-
-    <label>
-      Panes
-
-      <select
-        value={glassPane}
-        onChange={(event) => {
-          const next =
-            event.target.value as GlassPane;
-
-          setGlassPane(next);
-
-          setLowEPackage(
-            next === "Triple"
-              ? "272 / Clear / 180"
-              : "LoE2-270"
-          );
-        }}
-      >
-        <option value="Double">
-          Double
-        </option>
-        <option value="Triple">
-          Triple
-        </option>
-      </select>
-    </label>
-  </div>
-
-  <div
-    className="number-row"
-    style={{
-      marginTop: 10
-    }}
-  >
-    <label>
-      Low-E Package
-
-      <select
-        value={lowEPackage}
-        onChange={(event) =>
-          setLowEPackage(
-            event.target.value
-          )
-        }
-      >
-        {(glassPane === "Double"
-          ? DOUBLE_LOW_E_OPTIONS
-          : TRIPLE_LOW_E_OPTIONS
-        ).map(
-          (option) => (
-            <option
-              key={option}
-              value={option}
-            >
-              {option}
-            </option>
-          )
-        )}
-      </select>
-    </label>
-
-    <label>
-      Safety Glass
-
-      <select
-        value={glassSafety}
-        onChange={(event) =>
-          setGlassSafety(
-            event.target.value as GlassSafety
-          )
-        }
-      >
-        <option value="None">
-          None
-        </option>
-        <option value="Tempered">
-          Tempered
-        </option>
-        <option value="Laminated">
-          Laminated
-        </option>
-      </select>
-    </label>
-  </div>
-
-</section>
-
-<section className="config-section">
-
-  <div className="step-title">
-    Grids
-  </div>
-
-  <label>
-    Grid Style
-
-    <select
-      value={gridStyle}
-      onChange={(event) =>
-        setGridStyle(
-          event.target.value as GridStyle
-        )
-      }
-    >
-      <option value="None">
-        None
-      </option>
-
-      <option value="Colonial">
-        Colonial
-      </option>
-
-      <option value="Top Colonial">
-        Top Colonial
-      </option>
-
-      <option value="Prairie">
-        Prairie
-      </option>
-    </select>
-  </label>
-
-</section>
-        </aside>
-
-        <section className="drawing-area pv-drawing-panel">
-
-          <div className="drawing-header">
-
-            <div>
-              <strong>
-                {state.overallWidth.toFixed(
-                  2
-                )}
-                " ×{" "}
-                {state.overallHeight.toFixed(
-                  2
-                )}
-                "
-              </strong>
-
-              <span>
-                {unitsWide} unit
-                {unitsWide !== 1
-                  ? "s"
-                  : ""}{" "}
-                wide ×{" "}
-                {unitsTall} unit
-                {unitsTall !== 1
-                  ? "s"
-                  : ""}{" "}
-                tall
-              </span>
-            </div>
-
-            <div className="drawing-actions">
-
-              <button
-                className={
-                  viewMode ===
-                  "Exterior"
                     ? "active"
                     : ""
                 }
                 onClick={() =>
-                  setViewMode(
-                    "Exterior"
+                  setDisplayMode(
+                    "3D"
                   )
                 }
               >
-                Exterior
-              </button>
-
-              <button
-                className={
-                  viewMode ===
-                  "Interior"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setViewMode(
-                    "Interior"
-                  )
-                }
-              >
-                Interior
+                3D Rotate
               </button>
 
               <button
@@ -6543,6 +4717,104 @@ const [
 
           <div className="canvas-wrap pv-canvas-wrap">
 
+            <div
+              className="pv-canvas-inner"
+              style={{
+                transform:
+                  displayMode === "3D"
+                    ? `perspective(1200px) rotateX(${previewRotateX}deg) rotateY(${previewRotateY}deg)`
+                    : "none",
+                transition:
+                  previewDrag
+                    ? "none"
+                    : "transform 180ms ease",
+                cursor:
+                  displayMode === "3D"
+                    ? previewDrag
+                      ? "grabbing"
+                      : "grab"
+                    : "default",
+                touchAction:
+                  displayMode === "3D"
+                    ? "none"
+                    : "auto"
+              }}
+              onPointerDown={(event) => {
+                if (
+                  displayMode !== "3D"
+                ) {
+                  return;
+                }
+
+                setPreviewDrag({
+                  x: event.clientX,
+                  y: event.clientY,
+                  startY:
+                    previewRotateY,
+                  startX:
+                    previewRotateX
+                });
+
+                event.currentTarget.setPointerCapture?.(
+                  event.pointerId
+                );
+              }}
+              onPointerMove={(event) => {
+                if (
+                  displayMode !== "3D" ||
+                  !previewDrag
+                ) {
+                  return;
+                }
+
+                const dx =
+                  event.clientX -
+                  previewDrag.x;
+                const dy =
+                  event.clientY -
+                  previewDrag.y;
+
+                setPreviewRotateY(
+                  Math.max(
+                    -38,
+                    Math.min(
+                      38,
+                      previewDrag.startY +
+                        dx * 0.18
+                    )
+                  )
+                );
+
+                setPreviewRotateX(
+                  Math.max(
+                    -14,
+                    Math.min(
+                      14,
+                      previewDrag.startX -
+                        dy * 0.12
+                    )
+                  )
+                );
+              }}
+              onPointerUp={(event) => {
+                if (
+                  displayMode === "3D"
+                ) {
+                  setPreviewDrag(
+                    null
+                  );
+
+                  event.currentTarget.releasePointerCapture?.(
+                    event.pointerId
+                  );
+                }
+              }}
+              onPointerCancel={() =>
+                setPreviewDrag(
+                  null
+                )
+              }
+            >
             <WindowCanvas
               key={`${productType}-${patioPanelCount}-${patioHanding}-${viewMode}`}
               widthInches={
@@ -6690,11 +4962,14 @@ const [
                 setLiteOperation
               }
             />
+            </div>
 
           </div>
 
           <p className="hint">
-            Tap a unit to configure it.
+            {displayMode === "3D"
+              ? "Drag the preview left/right to rotate it."
+              : "Tap a unit to configure it."}
           </p>
           <div
             style={{

@@ -100,8 +100,6 @@ type Props = {
 
   viewMode?: ViewMode;
 
-  displayMode?: "2D" | "3D";
-
   windowType?: string;
   exteriorColour?: string;
   interiorColour?: string;
@@ -520,36 +518,6 @@ export default function WindowCanvas(
   ] =
     useState<boolean>(
       false
-    );
-
-
-  const [
-    rotateY,
-    setRotateY
-  ] =
-    useState<number>(
-      -14
-    );
-
-  const [
-    rotateX,
-    setRotateX
-  ] =
-    useState<number>(
-      7
-    );
-
-  const [
-    rotateDrag,
-    setRotateDrag
-  ] =
-    useState<{
-      x: number;
-      y: number;
-      startY: number;
-      startX: number;
-    } | null>(
-      null
     );
 
   const sortedVertical =
@@ -2764,141 +2732,7 @@ export default function WindowCanvas(
         pointerUp
       }
 
-      onPointerCancel={() =
-      style={{
-        touchAction:
-          props.displayMode === "3D"
-            ? "none"
-            : "auto",
-        cursor:
-          props.displayMode === "3D"
-            ? rotateDrag
-              ? "grabbing"
-              : "grab"
-            : "default"
-      }}
-      onPointerDown={(event) => {
-        if (
-          props.displayMode !== "3D"
-        ) {
-          return;
-        }
-
-        setRotateDrag({
-          x: event.clientX,
-          y: event.clientY,
-          startY: rotateY,
-          startX: rotateX
-        });
-
-        event.currentTarget.setPointerCapture?.(
-          event.pointerId
-        );
-      }}
-      onPointerMove={(event) => {
-        if (
-          props.displayMode !== "3D" ||
-          !rotateDrag
-        ) {
-          return;
-        }
-
-        const dx =
-          event.clientX -
-          rotateDrag.x;
-
-        const dy =
-          event.clientY -
-          rotateDrag.y;
-
-        setRotateY(
-          Math.max(
-            -42,
-            Math.min(
-              42,
-              rotateDrag.startY +
-                dx * 0.18
-            )
-          )
-        );
-
-        setRotateX(
-          Math.max(
-            -18,
-            Math.min(
-              18,
-              rotateDrag.startX -
-                dy * 0.12
-            )
-          )
-        );
-      }}
-      onPointerUp={(event) => {
-        if (
-          props.displayMode === "3D"
-        ) {
-          setRotateDrag(
-            null
-          );
-
-          event.currentTarget.releasePointerCapture?.(
-            event.pointerId
-          );
-        }
-      }}
-    >
-      {props.displayMode ===
-        "3D" && (
-        <>
-          <rect
-            x={FRAME.x + 18}
-            y={FRAME.y + 20}
-            width={FRAME.width}
-            height={FRAME.height}
-            rx="4"
-            fill="rgba(60,70,75,0.08)"
-            stroke="rgba(60,70,75,0.16)"
-            strokeWidth="2"
-            pointerEvents="none"
-            transform={
-              `translate(${rotateY * 0.9} ${-rotateX * 0.6})`
-            }
-          />
-
-          <polygon
-            points={`
-              ${FRAME.x + FRAME.width},${FRAME.y}
-              ${FRAME.x + FRAME.width + 24},${FRAME.y + 16}
-              ${FRAME.x + FRAME.width + 24},${FRAME.y + FRAME.height + 16}
-              ${FRAME.x + FRAME.width},${FRAME.y + FRAME.height}
-            `}
-            fill="rgba(70,80,84,0.16)"
-            stroke="rgba(70,80,84,0.22)"
-            strokeWidth="1.5"
-            pointerEvents="none"
-          />
-        </>
-      )}
-
-      <g
-        transform={
-          props.displayMode === "3D"
-            ? `
-              translate(${500 + rotateY * 0.55} ${312 + rotateX * 0.45})
-              skewY(${rotateX * 0.36})
-              scale(${1 - Math.abs(rotateY) * 0.0028} 1)
-              translate(-500 -312)
-            `
-            : undefined
-        }
-        style={{
-          transition:
-            rotateDrag
-              ? "none"
-              : "transform 160ms ease"
-        }}
-      >
- {
+      onPointerCancel={() => {
         setDragging(null);
 
         setFrameDragging(null);
@@ -3579,22 +3413,6 @@ export default function WindowCanvas(
         </foreignObject>
       )}
 
-    
-      </g>
-
-      {props.displayMode ===
-        "3D" && (
-        <text
-          x="500"
-          y="603"
-          textAnchor="middle"
-          fontSize="13"
-          fill="rgba(55,70,78,0.72)"
-          pointerEvents="none"
-        >
-          Drag left/right to rotate
-        </text>
-      )}
-</svg>
+    </svg>
   );
 }
