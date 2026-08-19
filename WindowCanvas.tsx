@@ -1646,7 +1646,11 @@ export default function WindowCanvas(
                   true;
 
                 direction =
-                  index === 0
+                  interiorView
+                    ? index === 0
+                      ? "left"
+                      : "right"
+                    : index === 0
                     ? "right"
                     : "left";
               }
@@ -1664,7 +1668,9 @@ export default function WindowCanvas(
                   index === 0
                 ) {
                   direction =
-                    "right";
+                    interiorView
+                      ? "left"
+                      : "right";
                 }
 
                 if (
@@ -1672,7 +1678,9 @@ export default function WindowCanvas(
                   lastIndex
                 ) {
                   direction =
-                    "left";
+                    interiorView
+                      ? "right"
+                      : "left";
                 }
               }
 
