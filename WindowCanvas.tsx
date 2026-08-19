@@ -434,6 +434,29 @@ export default function WindowCanvas(
     props.glassLowEPackage !==
       "No Low-E";
 
+  function displayUnit(
+    unit: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
+  ) {
+    if (!interiorView) {
+      return unit;
+    }
+
+    return {
+      ...unit,
+      x:
+        FRAME.x +
+        FRAME.width -
+        (unit.x - FRAME.x) -
+        unit.w
+    };
+  }
+
   const [
     dragging,
     setDragging
@@ -737,7 +760,9 @@ export default function WindowCanvas(
       props.onMoveUnitVerticalSplit?.(
         unitVerticalSplitDragging.unitId,
         unitVerticalSplitDragging.splitId,
-        position
+        interiorView
+          ? 1 - position
+          : position
       );
 
       return;
@@ -868,19 +893,23 @@ export default function WindowCanvas(
     if (
       dragging?.axis === "x"
     ) {
-      props.onMoveVertical(
-        dragging.id,
-
+      const displayPosition =
         clamp(
           (
             point.x -
             FRAME.x
           ) /
             FRAME.width,
-
           0.05,
           0.95
-        )
+        );
+
+      props.onMoveVertical(
+        dragging.id,
+        interiorView
+          ? 1 -
+            displayPosition
+          : displayPosition
       );
 
       return;
@@ -1537,12 +1566,7 @@ export default function WindowCanvas(
       2;
 
     const effectiveHanding =
-      interiorView
-        ? props.singleVentHanding ===
-          "Right Vent"
-          ? "Left Vent"
-          : "Right Vent"
-        : props.singleVentHanding;
+      props.singleVentHanding;
 
     return (
       <>
@@ -1559,9 +1583,13 @@ export default function WindowCanvas(
                 ];
 
               const sectionX =
-                unit.x +
-                start *
-                  unit.w;
+                interiorView
+                  ? unit.x +
+                    (1 - end) *
+                      unit.w
+                  : unit.x +
+                    start *
+                      unit.w;
 
               const sectionWidth =
                 (
@@ -1618,11 +1646,7 @@ export default function WindowCanvas(
                   true;
 
                 direction =
-                  interiorView
-                    ? index === 0
-                      ? "left"
-                      : "right"
-                    : index === 0
+                  index === 0
                     ? "right"
                     : "left";
               }
@@ -1640,9 +1664,7 @@ export default function WindowCanvas(
                   index === 0
                 ) {
                   direction =
-                    interiorView
-                      ? "left"
-                      : "right";
+                    "right";
                 }
 
                 if (
@@ -1650,9 +1672,7 @@ export default function WindowCanvas(
                   lastIndex
                 ) {
                   direction =
-                    interiorView
-                      ? "right"
-                      : "left";
+                    "left";
                 }
               }
 
@@ -1730,9 +1750,14 @@ export default function WindowCanvas(
 
         {splits.map(
           (split) => {
+            const displayPosition =
+              interiorView
+                ? 1 - split.position
+                : split.position;
+
             const x =
               unit.x +
-              split.position *
+              displayPosition *
                 unit.w;
 
             return (
@@ -2389,7 +2414,7 @@ export default function WindowCanvas(
         pointerEvents="none"
       />
 
-      {props.glassAppearance === "Obscure" && (
+      {props.glassAppearance === "Yes" && (
         <rect
           x={FRAME.x + 9}
           y={FRAME.y + 9}
@@ -2423,6 +2448,9 @@ export default function WindowCanvas(
             unit.id ===
             props.selectedPanel;
 
+          const shownUnit =
+            displayUnit(unit);
+
           return (
             <g
               key={
@@ -2440,43 +2468,43 @@ export default function WindowCanvas(
                 }
 
                 x={
-                  unit.x + 3
+                  shownUnit.x + 3
                 }
 
                 y={
-                  unit.y + 3
+                  shownUnit.y + 3
                 }
 
                 width={
                   Math.max(
                     0,
-                    unit.w - 6
+                    shownUnit.w - 6
                   )
                 }
 
                 height={
                   Math.max(
                     0,
-                    unit.h - 6
+                    shownUnit.h - 6
                   )
                 }
               />
 
               {renderUnit(
-                unit
+                shownUnit
               )}
 
               <text
                 className="panel-dimension"
 
                 x={
-                  unit.x +
-                  unit.w / 2
+                  shownUnit.x +
+                  shownUnit.w / 2
                 }
 
                 y={
-                  unit.y +
-                  unit.h -
+                  shownUnit.y +
+                  shownUnit.h -
                   18
                 }
 
@@ -2484,7 +2512,7 @@ export default function WindowCanvas(
               >
                 {(
                   (
-                    unit.w /
+                    shownUnit.w /
                     FRAME.width
                   ) *
                   props.widthInches
@@ -2492,7 +2520,7 @@ export default function WindowCanvas(
                 " ×{" "}
                 {(
                   (
-                    unit.h /
+                    shownUnit.h /
                     FRAME.height
                   ) *
                   props.heightInches
@@ -2507,9 +2535,14 @@ export default function WindowCanvas(
 
       {sortedVertical.map(
         (split) => {
+          const displayPosition =
+            interiorView
+              ? 1 - split.position
+              : split.position;
+
           const x =
             FRAME.x +
-            split.position *
+            displayPosition *
               FRAME.width;
 
           return (

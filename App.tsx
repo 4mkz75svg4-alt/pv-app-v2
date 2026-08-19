@@ -631,7 +631,7 @@ const [
   setGlassAppearance
 ] =
   useState<GlassAppearance>(
-    "Clear"
+    "No"
   );
 
 const [
@@ -2411,7 +2411,7 @@ const [
       "Exterior"
     );
     setGlassAppearance(
-      "Clear"
+      "No"
     );
     setGlassPane(
       "Double"
@@ -2511,14 +2511,27 @@ const [
         : verticalSliderType
       : productType;
 
+  const configurationParts = [
+    operationDescription,
+    windowType,
+    `Exterior: ${exteriorColour}`,
+    `Interior: ${interiorFinishDescription}`,
+    flangeType,
+    `${glassPane} Pane`,
+    lowEPackage,
+    glassAppearance === "Yes"
+      ? "Obscure"
+      : null,
+    glassSafety !== "None"
+      ? glassSafety
+      : null,
+    gridStyle !== "None"
+      ? `Grids: ${gridStyle}`
+      : null
+  ].filter(Boolean);
+
   const configurationSummary =
-    `${operationDescription} • ${windowType} • ` +
-    `Exterior: ${exteriorColour} • ` +
-    `Interior: ${interiorFinishDescription} • ` +
-    `${flangeType} • ${glassPane} Pane • ` +
-    `${glassAppearance} • ${lowEPackage} • ` +
-    `${glassSafety === "None" ? "Standard Glass" : glassSafety} • ` +
-    `Grids: ${gridStyle}`;
+    configurationParts.join(" • ");
 
   return (
     <>
@@ -3860,7 +3873,7 @@ const [
 
   <div className="number-row">
     <label>
-      Appearance
+      Obscure Glass?
 
       <select
         value={glassAppearance}
@@ -3870,11 +3883,11 @@ const [
           )
         }
       >
-        <option value="Clear">
-          Clear
+        <option value="No">
+          No
         </option>
-        <option value="Obscure">
-          Obscure
+        <option value="Yes">
+          Yes
         </option>
       </select>
     </label>
