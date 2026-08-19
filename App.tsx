@@ -4715,7 +4715,80 @@ const [
 
           </div>
 
-          <div className="canvas-wrap pv-canvas-wrap">
+          <div
+            className="canvas-wrap pv-canvas-wrap"
+            style={{
+              perspective: 1100
+            }}
+            onPointerDown={(event) => {
+              if (
+                displayMode !== "3D"
+              ) {
+                return;
+              }
+
+              setPreviewDragX(
+                event.clientX
+              );
+
+              event.currentTarget.setPointerCapture?.(
+                event.pointerId
+              );
+            }}
+            onPointerMove={(event) => {
+              if (
+                displayMode !== "3D" ||
+                previewDragX === null
+              ) {
+                return;
+              }
+
+              const dx =
+                event.clientX -
+                previewDragX;
+
+              setPreviewRotateY(
+                (current) =>
+                  Math.max(
+                    -42,
+                    Math.min(
+                      42,
+                      current +
+                        dx * 0.18
+                    )
+                  )
+              );
+
+              setPreviewDragX(
+                event.clientX
+              );
+            }}
+            onPointerUp={(event) => {
+              setPreviewDragX(
+                null
+              );
+
+              event.currentTarget.releasePointerCapture?.(
+                event.pointerId
+              );
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                transformStyle:
+                  "preserve-3d",
+                transform:
+                  displayMode === "3D"
+                    ? `rotateY(${previewRotateY}deg)`
+                    : "none",
+                transition:
+                  previewDragX === null
+                    ? "transform 180ms ease"
+                    : "none"
+              }}
+            >
 
             <div
               className="pv-canvas-inner"
@@ -4962,7 +5035,8 @@ const [
                 setLiteOperation
               }
             />
-            </div>
+                        </div>
+</div>
 
           </div>
 

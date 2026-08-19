@@ -520,6 +520,23 @@ export default function WindowCanvas(
       false
     );
 
+
+  const [
+    sliderWindowOpen,
+    setSliderWindowOpen
+  ] =
+    useState<boolean>(
+      false
+    );
+
+  const [
+    casementOpen,
+    setCasementOpen
+  ] =
+    useState<boolean>(
+      false
+    );
+
   const sortedVertical =
     useMemo(
       () =>
