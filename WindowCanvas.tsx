@@ -100,6 +100,8 @@ type Props = {
 
   viewMode?: ViewMode;
 
+  displayMode?: "2D" | "3D";
+
   windowType?: string;
   exteriorColour?: string;
   interiorColour?: string;
@@ -508,6 +510,45 @@ export default function WindowCanvas(
     setLitePopup
   ] =
     useState<LitePopup | null>(
+      null
+    );
+
+
+  const [
+    patioDoorOpen,
+    setPatioDoorOpen
+  ] =
+    useState<boolean>(
+      false
+    );
+
+
+  const [
+    rotateY,
+    setRotateY
+  ] =
+    useState<number>(
+      -14
+    );
+
+  const [
+    rotateX,
+    setRotateX
+  ] =
+    useState<number>(
+      7
+    );
+
+  const [
+    rotateDrag,
+    setRotateDrag
+  ] =
+    useState<{
+      x: number;
+      y: number;
+      startY: number;
+      startX: number;
+    } | null>(
       null
     );
 
@@ -1440,15 +1481,6 @@ export default function WindowCanvas(
 
     if (
       props.productType ===
-      "Patio Door"
-    ) {
-      return renderPatioDoor(
-        unit
-      );
-    }
-
-    if (
-      props.productType ===
       "Slider"
     ) {
       setLitePopup(
@@ -2357,6 +2389,60 @@ export default function WindowCanvas(
           : 0
         : -1;
 
+    function panelDirection(
+      index: number
+    ):
+      | "left"
+      | "right"
+      | null {
+      if (
+        panels === 2
+      ) {
+        if (
+          index !==
+          shownActiveIndex
+        ) {
+          return null;
+        }
+
+        return index === 0
+          ? "right"
+          : "left";
+      }
+
+      if (
+        panels === 3
+      ) {
+        if (
+          index !== 1
+        ) {
+          return null;
+        }
+
+        return interiorView
+          ? "right"
+          : "left";
+      }
+
+      if (
+        panels === 4
+      ) {
+        if (
+          index === 1
+        ) {
+          return "left";
+        }
+
+        if (
+          index === 2
+        ) {
+          return "right";
+        }
+      }
+
+      return null;
+    }
+
     return (
       <>
         {Array.from({
@@ -2368,69 +2454,45 @@ export default function WindowCanvas(
               index *
                 panelWidth;
 
-            let operating =
-              false;
+            const direction =
+              panelDirection(
+                index
+              );
 
-            let direction:
-              | "left"
-              | "right"
-              | null =
-              null;
+            const operating =
+              direction !== null;
 
-            if (
-              panels === 2
-            ) {
-              operating =
-                index ===
-                shownActiveIndex;
+            const travel =
+              patioDoorOpen &&
+              operating
+                ? panelWidth *
+                  0.62 *
+                  (
+                    direction ===
+                    "right"
+                      ? 1
+                      : -1
+                  )
+                : 0;
 
-              if (
-                operating
-              ) {
-                direction =
-                  index === 0
-                    ? "right"
-                    : "left";
-              }
-            }
+            const inset = 12;
 
-            if (
-              panels === 3
-            ) {
-              operating =
-                index === 1;
-
-              if (
-                operating
-              ) {
-                direction =
-                  interiorView
-                    ? "right"
-                    : "left";
-              }
-            }
-
-            if (
-              panels === 4
-            ) {
-              operating =
-                index === 1 ||
-                index === 2;
-
-              if (
-                index === 1
-              ) {
-                direction =
-                  "left";
-              }
-
-              if (
-                index === 2
-              ) {
-                direction =
-                  "right";
-              }
-            }
+            const sashX =
+              x + inset;
+            const sashY =
+              unit.y + inset;
+            const sashW =
+              Math.max(
+                0,
+                panelWidth -
+                  inset * 2
+              );
+            const sashH =
+              Math.max(
+                0,
+                unit.h -
+                  inset * 2
+              );
 
             return (
               <g
@@ -2445,24 +2507,104 @@ export default function WindowCanvas(
                   unit.h
                 )}
 
-                {operating &&
-                  renderSash(
-                    x,
-                    unit.y,
-                    panelWidth,
-                    unit.h,
-                    true
-                  )}
+                <g
+                  transform={
+                    `translate(${travel} 0)`
+                  }
+                  style={{
+                    transition:
+                      "transform 320ms ease"
+                  }}
+                >
+                  <rect
+                    x={sashX}
+                    y={sashY}
+                    width={sashW}
+                    height={sashH}
+                    rx="3"
+                    fill="rgba(255,255,255,0.02)"
+                    stroke={
+                      frameColour
+                    }
+                    strokeWidth={
+                      operating
+                        ? 12
+                        : 9
+                    }
+                    pointerEvents="none"
+                  />
 
-                {operating &&
-                  direction &&
-                  renderHorizontalArrow(
-                    x,
-                    unit.y,
-                    panelWidth,
-                    unit.h,
-                    direction
+                  <rect
+                    x={
+                      sashX + 7
+                    }
+                    y={
+                      sashY + 7
+                    }
+                    width={Math.max(
+                      0,
+                      sashW - 14
+                    )}
+                    height={Math.max(
+                      0,
+                      sashH - 14
+                    )}
+                    rx="2"
+                    fill="none"
+                    stroke="rgba(65,85,92,0.28)"
+                    strokeWidth="1.5"
+                    pointerEvents="none"
+                  />
+
+                  {operating && (
+                    <>
+                      <line
+                        x1={
+                          direction ===
+                          "right"
+                            ? sashX +
+                              sashW -
+                              20
+                            : sashX +
+                              20
+                        }
+                        y1={
+                          sashY +
+                          sashH *
+                            0.42
+                        }
+                        x2={
+                          direction ===
+                          "right"
+                            ? sashX +
+                              sashW -
+                              20
+                            : sashX +
+                              20
+                        }
+                        y2={
+                          sashY +
+                          sashH *
+                            0.58
+                        }
+                        stroke={
+                          frameColour
+                        }
+                        strokeWidth="5"
+                        strokeLinecap="round"
+                        pointerEvents="none"
+                      />
+
+                      {renderHorizontalArrow(
+                        x,
+                        unit.y,
+                        panelWidth,
+                        unit.h,
+                        direction
+                      )}
+                    </>
                   )}
+                </g>
 
                 {index <
                   panels - 1 && (
@@ -2491,10 +2633,59 @@ export default function WindowCanvas(
                     pointerEvents="none"
                   />
                 )}
+
+                {operating && (
+                  <rect
+                    x={x}
+                    y={unit.y}
+                    width={
+                      panelWidth
+                    }
+                    height={
+                      unit.h
+                    }
+                    fill="transparent"
+                    style={{
+                      cursor:
+                        "pointer"
+                    }}
+                    onPointerDown={(
+                      event
+                    ) => {
+                      event.stopPropagation();
+
+                      setPatioDoorOpen(
+                        (current) =>
+                          !current
+                      );
+                    }}
+                  />
+                )}
               </g>
             );
           }
         )}
+
+        <text
+          x={
+            unit.x +
+            unit.w / 2
+          }
+          y={
+            unit.y +
+            unit.h +
+            24
+          }
+          textAnchor="middle"
+          fontSize="13"
+          fill="rgba(55,70,78,0.72)"
+          pointerEvents="none"
+        >
+          Tap operating panel to
+          {patioDoorOpen
+            ? " close"
+            : " open"}
+        </text>
       </>
     );
   }
@@ -2515,6 +2706,15 @@ export default function WindowCanvas(
 
     if (!config) {
       return null;
+    }
+
+    if (
+      props.productType ===
+      "Patio Door"
+    ) {
+      return renderPatioDoor(
+        unit
+      );
     }
 
     if (
@@ -2564,7 +2764,141 @@ export default function WindowCanvas(
         pointerUp
       }
 
-      onPointerCancel={() => {
+      onPointerCancel={() =
+      style={{
+        touchAction:
+          props.displayMode === "3D"
+            ? "none"
+            : "auto",
+        cursor:
+          props.displayMode === "3D"
+            ? rotateDrag
+              ? "grabbing"
+              : "grab"
+            : "default"
+      }}
+      onPointerDown={(event) => {
+        if (
+          props.displayMode !== "3D"
+        ) {
+          return;
+        }
+
+        setRotateDrag({
+          x: event.clientX,
+          y: event.clientY,
+          startY: rotateY,
+          startX: rotateX
+        });
+
+        event.currentTarget.setPointerCapture?.(
+          event.pointerId
+        );
+      }}
+      onPointerMove={(event) => {
+        if (
+          props.displayMode !== "3D" ||
+          !rotateDrag
+        ) {
+          return;
+        }
+
+        const dx =
+          event.clientX -
+          rotateDrag.x;
+
+        const dy =
+          event.clientY -
+          rotateDrag.y;
+
+        setRotateY(
+          Math.max(
+            -42,
+            Math.min(
+              42,
+              rotateDrag.startY +
+                dx * 0.18
+            )
+          )
+        );
+
+        setRotateX(
+          Math.max(
+            -18,
+            Math.min(
+              18,
+              rotateDrag.startX -
+                dy * 0.12
+            )
+          )
+        );
+      }}
+      onPointerUp={(event) => {
+        if (
+          props.displayMode === "3D"
+        ) {
+          setRotateDrag(
+            null
+          );
+
+          event.currentTarget.releasePointerCapture?.(
+            event.pointerId
+          );
+        }
+      }}
+    >
+      {props.displayMode ===
+        "3D" && (
+        <>
+          <rect
+            x={FRAME.x + 18}
+            y={FRAME.y + 20}
+            width={FRAME.width}
+            height={FRAME.height}
+            rx="4"
+            fill="rgba(60,70,75,0.08)"
+            stroke="rgba(60,70,75,0.16)"
+            strokeWidth="2"
+            pointerEvents="none"
+            transform={
+              `translate(${rotateY * 0.9} ${-rotateX * 0.6})`
+            }
+          />
+
+          <polygon
+            points={`
+              ${FRAME.x + FRAME.width},${FRAME.y}
+              ${FRAME.x + FRAME.width + 24},${FRAME.y + 16}
+              ${FRAME.x + FRAME.width + 24},${FRAME.y + FRAME.height + 16}
+              ${FRAME.x + FRAME.width},${FRAME.y + FRAME.height}
+            `}
+            fill="rgba(70,80,84,0.16)"
+            stroke="rgba(70,80,84,0.22)"
+            strokeWidth="1.5"
+            pointerEvents="none"
+          />
+        </>
+      )}
+
+      <g
+        transform={
+          props.displayMode === "3D"
+            ? `
+              translate(${500 + rotateY * 0.55} ${312 + rotateX * 0.45})
+              skewY(${rotateX * 0.36})
+              scale(${1 - Math.abs(rotateY) * 0.0028} 1)
+              translate(-500 -312)
+            `
+            : undefined
+        }
+        style={{
+          transition:
+            rotateDrag
+              ? "none"
+              : "transform 160ms ease"
+        }}
+      >
+ {
         setDragging(null);
 
         setFrameDragging(null);
@@ -3245,6 +3579,22 @@ export default function WindowCanvas(
         </foreignObject>
       )}
 
-    </svg>
+    
+      </g>
+
+      {props.displayMode ===
+        "3D" && (
+        <text
+          x="500"
+          y="603"
+          textAnchor="middle"
+          fontSize="13"
+          fill="rgba(55,70,78,0.72)"
+          pointerEvents="none"
+        >
+          Drag left/right to rotate
+        </text>
+      )}
+</svg>
   );
 }
