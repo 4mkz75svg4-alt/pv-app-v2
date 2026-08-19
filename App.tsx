@@ -72,7 +72,20 @@ type FlangeType =
   | "Brick Mould"
   | "Reno Flange";
 
-type ExteriorColour = string;
+type MaterialType =
+  | "Vinyl"
+  | "Wood";
+
+type VinylFinishType =
+  | "Standard Vinyl"
+  | "Painted Vinyl"
+  | "Wrapped";
+
+type WoodFinishType =
+  | "Clear Coat"
+  | "Stained"
+  | "Painted"
+  | "Primed White";
 
 type WoodSpecies =
   | "Pine"
@@ -84,12 +97,6 @@ type WoodSpecies =
   | "Black Walnut"
   | "White Oak";
 
-type InteriorFinishType =
-  | "Ultra Stain"
-  | "Ultra Coat";
-
-type InteriorFinish = string;
-
 type ViewMode =
   | "Exterior"
   | "Interior";
@@ -100,8 +107,9 @@ type GridStyle =
   | "Top Colonial"
   | "Prairie";
 
-const EXTERIOR_COLOURS = [
+const STANDARD_COLOURS = [
   ["White", "001"],
+  ["Black", "023"],
   ["Linen", "032"],
   ["Colonial White", "313"],
   ["Sandstone", "003"],
@@ -134,7 +142,6 @@ const EXTERIOR_COLOURS = [
   ["Battleship Gray", "321"],
   ["Modern Onyx", "118"],
   ["Dark Bronze", "401"],
-  ["Black", "023"],
   ["Custom Colour", "CUSTOM"]
 ] as const;
 
@@ -149,30 +156,17 @@ const WOOD_SPECIES: WoodSpecies[] = [
   "White Oak"
 ];
 
-const ULTRA_STAIN_FINISHES = [
+const WOOD_STAINS = [
   "Bearstone Brown",
   "Briarwood",
   "Burlap",
   "Classic Gray",
-  "Clear Coat",
   "Frosted",
   "Tux Black",
   "Warm Sun",
   "Woven Basket"
 ] as const;
 
-const ULTRA_COAT_FINISHES = [
-  "White",
-  "Black",
-  "Dried Thyme",
-  "Creamy",
-  "Requisite Gray",
-  "Accessible Beige",
-  "Urbane Bronze",
-  "Iron Ore",
-  "Deep Forest Brown",
-  "Anchors Aweigh"
-] as const;
 function newId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(16)
@@ -558,35 +552,115 @@ const [
   );
 
 const [
+  exteriorMaterial,
+  setExteriorMaterial
+] =
+  useState<MaterialType>(
+    "Vinyl"
+  );
+
+const [
+  exteriorVinylFinish,
+  setExteriorVinylFinish
+] =
+  useState<VinylFinishType>(
+    "Standard Vinyl"
+  );
+
+const [
   exteriorColour,
   setExteriorColour
 ] =
-  useState<ExteriorColour>(
+  useState<string>(
     "White"
   );
 
 const [
-  woodSpecies,
-  setWoodSpecies
+  exteriorWoodSpecies,
+  setExteriorWoodSpecies
 ] =
   useState<WoodSpecies>(
-    "Pine"
+    "Douglas Fir"
   );
 
 const [
-  interiorFinishType,
-  setInteriorFinishType
+  exteriorWoodFinish,
+  setExteriorWoodFinish
 ] =
-  useState<InteriorFinishType>(
-    "Ultra Stain"
-  );
-
-const [
-  interiorFinish,
-  setInteriorFinish
-] =
-  useState<InteriorFinish>(
+  useState<WoodFinishType>(
     "Clear Coat"
+  );
+
+const [
+  exteriorWoodStain,
+  setExteriorWoodStain
+] =
+  useState<string>(
+    "Bearstone Brown"
+  );
+
+const [
+  exteriorWoodPaintColour,
+  setExteriorWoodPaintColour
+] =
+  useState<string>(
+    "White"
+  );
+
+const [
+  interiorMaterial,
+  setInteriorMaterial
+] =
+  useState<MaterialType>(
+    "Vinyl"
+  );
+
+const [
+  interiorVinylFinish,
+  setInteriorVinylFinish
+] =
+  useState<VinylFinishType>(
+    "Standard Vinyl"
+  );
+
+const [
+  interiorColour,
+  setInteriorColour
+] =
+  useState<string>(
+    "White"
+  );
+
+const [
+  interiorWoodSpecies,
+  setInteriorWoodSpecies
+] =
+  useState<WoodSpecies>(
+    "Douglas Fir"
+  );
+
+const [
+  interiorWoodFinish,
+  setInteriorWoodFinish
+] =
+  useState<WoodFinishType>(
+    "Clear Coat"
+  );
+
+const [
+  interiorWoodStain,
+  setInteriorWoodStain
+] =
+  useState<string>(
+    "Bearstone Brown"
+  );
+
+const [
+  interiorWoodPaintColour,
+  setInteriorWoodPaintColour
+] =
+  useState<string>(
+    "White"
   );
 
 const [
@@ -2323,6 +2397,54 @@ const [
     setPictureStyles({});
 
     setSelectedUnit(null);
+
+    setExteriorMaterial(
+      "Vinyl"
+    );
+    setExteriorVinylFinish(
+      "Standard Vinyl"
+    );
+    setExteriorColour(
+      "White"
+    );
+    setExteriorWoodSpecies(
+      "Douglas Fir"
+    );
+    setExteriorWoodFinish(
+      "Clear Coat"
+    );
+    setExteriorWoodStain(
+      "Bearstone Brown"
+    );
+    setExteriorWoodPaintColour(
+      "White"
+    );
+
+    setInteriorMaterial(
+      "Vinyl"
+    );
+    setInteriorVinylFinish(
+      "Standard Vinyl"
+    );
+    setInteriorColour(
+      "White"
+    );
+    setInteriorWoodSpecies(
+      "Douglas Fir"
+    );
+    setInteriorWoodFinish(
+      "Clear Coat"
+    );
+    setInteriorWoodStain(
+      "Bearstone Brown"
+    );
+    setInteriorWoodPaintColour(
+      "White"
+    );
+
+    setViewMode(
+      "Exterior"
+    );
   }
 
   function save() {
@@ -2333,10 +2455,20 @@ const [
         state,
         gridStyle,
         flangeType,
+        exteriorMaterial,
+        exteriorVinylFinish,
         exteriorColour,
-        woodSpecies,
-        interiorFinishType,
-        interiorFinish,
+        exteriorWoodSpecies,
+        exteriorWoodFinish,
+        exteriorWoodStain,
+        exteriorWoodPaintColour,
+        interiorMaterial,
+        interiorVinylFinish,
+        interiorColour,
+        interiorWoodSpecies,
+        interiorWoodFinish,
+        interiorWoodStain,
+        interiorWoodPaintColour,
         viewMode,
         productType,
         sliderOrientation,
@@ -2971,7 +3103,50 @@ const [
           <section className="config-section">
 
             <div className="step-title">
-              Units
+              Overall Window Size
+            </div>
+
+            <div className="number-row">
+
+              <label>
+                Width
+
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={widthInput}
+
+                  onChange={(event) =>
+                    updateOverallWidth(
+                      event.target.value
+                    )
+                  }
+                />
+              </label>
+
+              <label>
+                Height
+
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={heightInput}
+
+                  onChange={(event) =>
+                    updateOverallHeight(
+                      event.target.value
+                    )
+                  }
+                />
+              </label>
+
+            </div>
+
+          </section>
+          <section className="config-section">
+
+            <div className="step-title">
+              Number of Units
             </div>
 
             <div className="number-row">
@@ -3034,452 +3209,6 @@ const [
 
           </section>
 
-          <section className="config-section">
-
-            <div className="step-title">
-              Overall Window Size
-            </div>
-
-            <div className="number-row">
-
-              <label>
-                Width
-
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={widthInput}
-
-                  onChange={(event) =>
-                    updateOverallWidth(
-                      event.target.value
-                    )
-                  }
-                />
-              </label>
-
-              <label>
-                Height
-
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={heightInput}
-
-                  onChange={(event) =>
-                    updateOverallHeight(
-                      event.target.value
-                    )
-                  }
-                />
-              </label>
-
-            </div>
-
-          </section>
-          {productType ===
-            "Casement / Awning" && (
-
-            <section className="config-section">
-
-              <div className="step-title">
-                Configure Unit
-              </div>
-
-              <div className="selected-info">
-                {selectedUnit
-                  ? `Unit ${selectedUnit} selected`
-                  : "Tap a unit in the drawing"}
-              </div>
-
-              {selectedUnitConfig && (
-
-                <>
-                  <div className="number-row">
-
-                    <label>
-                      Number High
-
-                      <select
-                        value={
-                          selectedUnitConfig.litesTall
-                        }
-
-                        onChange={(event) =>
-                          changeSelectedNumberHigh(
-                            Number(
-                              event.target.value
-                            )
-                          )
-                        }
-                      >
-                        {[1, 2, 3, 4].map(
-                          (number) => (
-                            <option
-                              key={number}
-                              value={number}
-                            >
-                              {number}
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </label>
-
-                    {selectedUnitConfig.litesTall >
-                      1 && (
-
-                      <label>
-                        Split
-
-                        <select
-                          value={
-                            selectedSplitMode
-                          }
-
-                          onChange={(event) =>
-                            applyUnitSplit(
-                              event.target.value as UnitSplitMode
-                            )
-                          }
-                        >
-                          <option value="equal">
-                            {selectedUnitConfig.litesTall ===
-                            2
-                              ? "1/2 - 1/2"
-                              : selectedUnitConfig.litesTall ===
-                                3
-                              ? "1/3 - 1/3 - 1/3"
-                              : "Equal"}
-                          </option>
-
-                          {selectedUnitConfig.litesTall ===
-                            2 && (
-                            <>
-                              <option value="top-third">
-                                1/3 - 2/3
-                              </option>
-
-                              <option value="bottom-third">
-                                2/3 - 1/3
-                              </option>
-                            </>
-                          )}
-
-                          {selectedUnitConfig.litesTall ===
-                            3 && (
-                            <>
-                              <option value="center-feature">
-                                1/4 - 1/2 - 1/4
-                              </option>
-
-                              <option value="top-half">
-                                1/2 - 1/4 - 1/4
-                              </option>
-
-                              <option value="bottom-half">
-                                1/4 - 1/4 - 1/2
-                              </option>
-                            </>
-                          )}
-
-                          <option value="custom">
-                            Custom
-                          </option>
-                        </select>
-                      </label>
-
-                    )}
-
-                  </div>
-
-                  {selectedSplitMode ===
-                    "custom" &&
-                    selectedUnitConfig.litesTall >
-                      1 && (
-
-                    <div
-                      style={{
-                        marginTop: 10
-                      }}
-                    >
-
-                      <div className="number-row">
-
-                        {selectedCustomHeights.map(
-                          (
-                            value,
-                            index
-                          ) => (
-
-                            <label
-                              key={index}
-                            >
-                              Lite{" "}
-                              {index + 1}
-
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={value}
-
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateUnitCustomHeight(
-                                    index,
-                                    event.target.value
-                                  )
-                                }
-                              />
-
-                            </label>
-
-                          )
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-                </>
-
-              )}
-
-            </section>
-
-          )}
-<section className="config-section">
-
-  <div className="step-title">
-    Flange Type
-  </div>
-
-  <label>
-    Flange
-
-    <select
-      value={flangeType}
-      onChange={(event) =>
-        setFlangeType(
-          event.target.value as FlangeType
-        )
-      }
-    >
-      <option value="Nail Fin">
-        Nail Fin
-      </option>
-
-      <option value="Brick Mould">
-        Brick Mould
-      </option>
-
-      <option value="Reno Flange">
-        Reno Flange
-      </option>
-    </select>
-  </label>
-
-</section>
-
-<section className="config-section">
-
-  <div className="step-title">
-    Colour & Interior Finish
-  </div>
-
-  <label>
-    Exterior Colour
-
-    <select
-      value={exteriorColour}
-      onChange={(event) =>
-        setExteriorColour(
-          event.target.value
-        )
-      }
-    >
-      {EXTERIOR_COLOURS.map(
-        ([name, code]) => (
-          <option
-            key={code}
-            value={name}
-          >
-            {name}
-            {code !== "CUSTOM"
-              ? ` (${code})`
-              : ""}
-          </option>
-        )
-      )}
-    </select>
-  </label>
-
-  <div
-    className="split-note"
-    style={{
-      marginTop: 8
-    }}
-  >
-    Colours shown on screen are visual approximations.
-  </div>
-
-  <div
-    style={{
-      marginTop: 14
-    }}
-  >
-    <label>
-      Interior Material
-
-      <select
-        value="Wood"
-        disabled
-      >
-        <option value="Wood">
-          Wood
-        </option>
-      </select>
-    </label>
-  </div>
-
-  <div
-    className="number-row"
-    style={{
-      marginTop: 10
-    }}
-  >
-    <label>
-      Wood Species
-
-      <select
-        value={woodSpecies}
-        onChange={(event) =>
-          setWoodSpecies(
-            event.target.value as WoodSpecies
-          )
-        }
-      >
-        {WOOD_SPECIES.map(
-          (species) => (
-            <option
-              key={species}
-              value={species}
-            >
-              {species}
-            </option>
-          )
-        )}
-      </select>
-    </label>
-
-    <label>
-      Finish Type
-
-      <select
-        value={
-          interiorFinishType
-        }
-        onChange={(event) => {
-          const next =
-            event.target.value as InteriorFinishType;
-
-          setInteriorFinishType(
-            next
-          );
-
-          setInteriorFinish(
-            next === "Ultra Stain"
-              ? "Clear Coat"
-              : "White"
-          );
-        }}
-      >
-        <option value="Ultra Stain">
-          Ultra Stain
-        </option>
-
-        <option value="Ultra Coat">
-          Ultra Coat
-        </option>
-      </select>
-    </label>
-  </div>
-
-  <div
-    style={{
-      marginTop: 10
-    }}
-  >
-    <label>
-      Interior Finish
-
-      <select
-        value={interiorFinish}
-        onChange={(event) =>
-          setInteriorFinish(
-            event.target.value
-          )
-        }
-      >
-        {(interiorFinishType ===
-        "Ultra Stain"
-          ? ULTRA_STAIN_FINISHES
-          : ULTRA_COAT_FINISHES
-        ).map(
-          (finish) => (
-            <option
-              key={finish}
-              value={finish}
-            >
-              {finish}
-            </option>
-          )
-        )}
-      </select>
-    </label>
-  </div>
-
-</section>
-
-<section className="config-section">
-
-  <div className="step-title">
-    Grids
-  </div>
-
-  <label>
-    Grid Style
-
-    <select
-      value={gridStyle}
-      onChange={(event) =>
-        setGridStyle(
-          event.target.value as GridStyle
-        )
-      }
-    >
-      <option value="None">
-        None
-      </option>
-
-      <option value="Colonial">
-        Colonial
-      </option>
-
-      <option value="Top Colonial">
-        Top Colonial
-      </option>
-
-      <option value="Prairie">
-        Prairie
-      </option>
-    </select>
-  </label>
-
-</section>
           {unitsWide > 1 && (
 
             <section className="config-section">
@@ -3702,6 +3431,704 @@ const [
           )}
 
 
+          {productType ===
+            "Casement / Awning" && (
+
+            <section className="config-section">
+
+              <div className="step-title">
+                Configure Unit
+              </div>
+
+              <div className="selected-info">
+                {selectedUnit
+                  ? `Unit ${selectedUnit} selected`
+                  : "Tap a unit in the drawing"}
+              </div>
+
+              {selectedUnitConfig && (
+
+                <>
+                  <div className="number-row">
+
+                    <label>
+                      Number High
+
+                      <select
+                        value={
+                          selectedUnitConfig.litesTall
+                        }
+
+                        onChange={(event) =>
+                          changeSelectedNumberHigh(
+                            Number(
+                              event.target.value
+                            )
+                          )
+                        }
+                      >
+                        {[1, 2, 3, 4].map(
+                          (number) => (
+                            <option
+                              key={number}
+                              value={number}
+                            >
+                              {number}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </label>
+
+                    {selectedUnitConfig.litesTall >
+                      1 && (
+
+                      <label>
+                        Split
+
+                        <select
+                          value={
+                            selectedSplitMode
+                          }
+
+                          onChange={(event) =>
+                            applyUnitSplit(
+                              event.target.value as UnitSplitMode
+                            )
+                          }
+                        >
+                          <option value="equal">
+                            {selectedUnitConfig.litesTall ===
+                            2
+                              ? "1/2 - 1/2"
+                              : selectedUnitConfig.litesTall ===
+                                3
+                              ? "1/3 - 1/3 - 1/3"
+                              : "Equal"}
+                          </option>
+
+                          {selectedUnitConfig.litesTall ===
+                            2 && (
+                            <>
+                              <option value="top-third">
+                                1/3 - 2/3
+                              </option>
+
+                              <option value="bottom-third">
+                                2/3 - 1/3
+                              </option>
+                            </>
+                          )}
+
+                          {selectedUnitConfig.litesTall ===
+                            3 && (
+                            <>
+                              <option value="center-feature">
+                                1/4 - 1/2 - 1/4
+                              </option>
+
+                              <option value="top-half">
+                                1/2 - 1/4 - 1/4
+                              </option>
+
+                              <option value="bottom-half">
+                                1/4 - 1/4 - 1/2
+                              </option>
+                            </>
+                          )}
+
+                          <option value="custom">
+                            Custom
+                          </option>
+                        </select>
+                      </label>
+
+                    )}
+
+                  </div>
+
+                  {selectedSplitMode ===
+                    "custom" &&
+                    selectedUnitConfig.litesTall >
+                      1 && (
+
+                    <div
+                      style={{
+                        marginTop: 10
+                      }}
+                    >
+
+                      <div className="number-row">
+
+                        {selectedCustomHeights.map(
+                          (
+                            value,
+                            index
+                          ) => (
+
+                            <label
+                              key={index}
+                            >
+                              Lite{" "}
+                              {index + 1}
+
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={value}
+
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateUnitCustomHeight(
+                                    index,
+                                    event.target.value
+                                  )
+                                }
+                              />
+
+                            </label>
+
+                          )
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                </>
+
+              )}
+
+            </section>
+
+          )}
+<section className="config-section">
+
+  <div className="step-title">
+    Flange Type
+  </div>
+
+  <label>
+    Flange
+
+    <select
+      value={flangeType}
+      onChange={(event) =>
+        setFlangeType(
+          event.target.value as FlangeType
+        )
+      }
+    >
+      <option value="Nail Fin">
+        Nail Fin
+      </option>
+
+      <option value="Brick Mould">
+        Brick Mould
+      </option>
+
+      <option value="Reno Flange">
+        Reno Flange
+      </option>
+    </select>
+  </label>
+
+</section>
+
+<section className="config-section">
+
+  <div className="step-title">
+    Exterior & Interior Finish
+  </div>
+
+  <div
+    className="split-note"
+    style={{
+      marginBottom: 12
+    }}
+  >
+    Default: Vinyl / White inside and out.
+  </div>
+
+  <div className="finish-side-heading">
+    Exterior
+  </div>
+
+  <div className="number-row">
+    <label>
+      Material
+
+      <select
+        value={exteriorMaterial}
+        onChange={(event) =>
+          setExteriorMaterial(
+            event.target.value as MaterialType
+          )
+        }
+      >
+        <option value="Vinyl">
+          Vinyl
+        </option>
+        <option value="Wood">
+          Wood
+        </option>
+      </select>
+    </label>
+
+    {exteriorMaterial === "Vinyl" && (
+      <label>
+        Finish
+
+        <select
+          value={exteriorVinylFinish}
+          onChange={(event) =>
+            setExteriorVinylFinish(
+              event.target.value as VinylFinishType
+            )
+          }
+        >
+          <option value="Standard Vinyl">
+            Standard Vinyl
+          </option>
+          <option value="Painted Vinyl">
+            Painted Vinyl
+          </option>
+          <option value="Wrapped">
+            Wrapped
+          </option>
+        </select>
+      </label>
+    )}
+
+    {exteriorMaterial === "Wood" && (
+      <label>
+        Wood Species
+
+        <select
+          value={exteriorWoodSpecies}
+          onChange={(event) =>
+            setExteriorWoodSpecies(
+              event.target.value as WoodSpecies
+            )
+          }
+        >
+          {WOOD_SPECIES.map(
+            (species) => (
+              <option
+                key={species}
+                value={species}
+              >
+                {species}
+              </option>
+            )
+          )}
+        </select>
+      </label>
+    )}
+  </div>
+
+  {exteriorMaterial === "Vinyl" && (
+    <div
+      style={{
+        marginTop: 10
+      }}
+    >
+      <label>
+        Colour
+
+        <select
+          value={exteriorColour}
+          onChange={(event) =>
+            setExteriorColour(
+              event.target.value
+            )
+          }
+        >
+          {STANDARD_COLOURS.map(
+            ([name, code]) => (
+              <option
+                key={code}
+                value={name}
+              >
+                {name}
+                {code !== "CUSTOM"
+                  ? ` (${code})`
+                  : ""}
+              </option>
+            )
+          )}
+        </select>
+      </label>
+    </div>
+  )}
+
+  {exteriorMaterial === "Wood" && (
+    <>
+      <div
+        style={{
+          marginTop: 10
+        }}
+      >
+        <label>
+          Wood Finish
+
+          <select
+            value={exteriorWoodFinish}
+            onChange={(event) =>
+              setExteriorWoodFinish(
+                event.target.value as WoodFinishType
+              )
+            }
+          >
+            <option value="Clear Coat">
+              Clear Coat
+            </option>
+            <option value="Stained">
+              Stained
+            </option>
+            <option value="Painted">
+              Painted
+            </option>
+            <option value="Primed White">
+              Primed White
+            </option>
+          </select>
+        </label>
+      </div>
+
+      {exteriorWoodFinish === "Stained" && (
+        <div
+          style={{
+            marginTop: 10
+          }}
+        >
+          <label>
+            Stain
+
+            <select
+              value={exteriorWoodStain}
+              onChange={(event) =>
+                setExteriorWoodStain(
+                  event.target.value
+                )
+              }
+            >
+              {WOOD_STAINS.map(
+                (finish) => (
+                  <option
+                    key={finish}
+                    value={finish}
+                  >
+                    {finish}
+                  </option>
+                )
+              )}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {exteriorWoodFinish === "Painted" && (
+        <div
+          style={{
+            marginTop: 10
+          }}
+        >
+          <label>
+            Paint Colour
+
+            <select
+              value={exteriorWoodPaintColour}
+              onChange={(event) =>
+                setExteriorWoodPaintColour(
+                  event.target.value
+                )
+              }
+            >
+              {STANDARD_COLOURS.map(
+                ([name, code]) => (
+                  <option
+                    key={code}
+                    value={name}
+                  >
+                    {name}
+                  </option>
+                )
+              )}
+            </select>
+          </label>
+        </div>
+      )}
+    </>
+  )}
+
+  <div
+    className="finish-side-heading"
+    style={{
+      marginTop: 18
+    }}
+  >
+    Interior
+  </div>
+
+  <div className="number-row">
+    <label>
+      Material
+
+      <select
+        value={interiorMaterial}
+        onChange={(event) =>
+          setInteriorMaterial(
+            event.target.value as MaterialType
+          )
+        }
+      >
+        <option value="Vinyl">
+          Vinyl
+        </option>
+        <option value="Wood">
+          Wood
+        </option>
+      </select>
+    </label>
+
+    {interiorMaterial === "Vinyl" && (
+      <label>
+        Finish
+
+        <select
+          value={interiorVinylFinish}
+          onChange={(event) =>
+            setInteriorVinylFinish(
+              event.target.value as VinylFinishType
+            )
+          }
+        >
+          <option value="Standard Vinyl">
+            Standard Vinyl
+          </option>
+          <option value="Painted Vinyl">
+            Painted Vinyl
+          </option>
+          <option value="Wrapped">
+            Wrapped
+          </option>
+        </select>
+      </label>
+    )}
+
+    {interiorMaterial === "Wood" && (
+      <label>
+        Wood Species
+
+        <select
+          value={interiorWoodSpecies}
+          onChange={(event) =>
+            setInteriorWoodSpecies(
+              event.target.value as WoodSpecies
+            )
+          }
+        >
+          {WOOD_SPECIES.map(
+            (species) => (
+              <option
+                key={species}
+                value={species}
+              >
+                {species}
+              </option>
+            )
+          )}
+        </select>
+      </label>
+    )}
+  </div>
+
+  {interiorMaterial === "Vinyl" && (
+    <div
+      style={{
+        marginTop: 10
+      }}
+    >
+      <label>
+        Colour
+
+        <select
+          value={interiorColour}
+          onChange={(event) =>
+            setInteriorColour(
+              event.target.value
+            )
+          }
+        >
+          {STANDARD_COLOURS.map(
+            ([name, code]) => (
+              <option
+                key={code}
+                value={name}
+              >
+                {name}
+                {code !== "CUSTOM"
+                  ? ` (${code})`
+                  : ""}
+              </option>
+            )
+          )}
+        </select>
+      </label>
+    </div>
+  )}
+
+  {interiorMaterial === "Wood" && (
+    <>
+      <div
+        style={{
+          marginTop: 10
+        }}
+      >
+        <label>
+          Wood Finish
+
+          <select
+            value={interiorWoodFinish}
+            onChange={(event) =>
+              setInteriorWoodFinish(
+                event.target.value as WoodFinishType
+              )
+            }
+          >
+            <option value="Clear Coat">
+              Clear Coat
+            </option>
+            <option value="Stained">
+              Stained
+            </option>
+            <option value="Painted">
+              Painted
+            </option>
+            <option value="Primed White">
+              Primed White
+            </option>
+          </select>
+        </label>
+      </div>
+
+      {interiorWoodFinish === "Stained" && (
+        <div
+          style={{
+            marginTop: 10
+          }}
+        >
+          <label>
+            Stain
+
+            <select
+              value={interiorWoodStain}
+              onChange={(event) =>
+                setInteriorWoodStain(
+                  event.target.value
+                )
+              }
+            >
+              {WOOD_STAINS.map(
+                (finish) => (
+                  <option
+                    key={finish}
+                    value={finish}
+                  >
+                    {finish}
+                  </option>
+                )
+              )}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {interiorWoodFinish === "Painted" && (
+        <div
+          style={{
+            marginTop: 10
+          }}
+        >
+          <label>
+            Paint Colour
+
+            <select
+              value={interiorWoodPaintColour}
+              onChange={(event) =>
+                setInteriorWoodPaintColour(
+                  event.target.value
+                )
+              }
+            >
+              {STANDARD_COLOURS.map(
+                ([name, code]) => (
+                  <option
+                    key={code}
+                    value={name}
+                  >
+                    {name}
+                  </option>
+                )
+              )}
+            </select>
+          </label>
+        </div>
+      )}
+    </>
+  )}
+
+  <div
+    className="split-note"
+    style={{
+      marginTop: 10
+    }}
+  >
+    Screen colours are visual approximations.
+  </div>
+
+</section>
+
+<section className="config-section">
+
+  <div className="step-title">
+    Grids
+  </div>
+
+  <label>
+    Grid Style
+
+    <select
+      value={gridStyle}
+      onChange={(event) =>
+        setGridStyle(
+          event.target.value as GridStyle
+        )
+      }
+    >
+      <option value="None">
+        None
+      </option>
+
+      <option value="Colonial">
+        Colonial
+      </option>
+
+      <option value="Top Colonial">
+        Top Colonial
+      </option>
+
+      <option value="Prairie">
+        Prairie
+      </option>
+    </select>
+  </label>
+
+</section>
         </aside>
 
         <section className="drawing-area">
@@ -3844,20 +4271,60 @@ const [
                 viewMode
               }
 
+              exteriorMaterial={
+                exteriorMaterial
+              }
+
+              exteriorVinylFinish={
+                exteriorVinylFinish
+              }
+
               exteriorColour={
                 exteriorColour
               }
 
-              woodSpecies={
-                woodSpecies
+              exteriorWoodSpecies={
+                exteriorWoodSpecies
               }
 
-              interiorFinishType={
-                interiorFinishType
+              exteriorWoodFinish={
+                exteriorWoodFinish
               }
 
-              interiorFinish={
-                interiorFinish
+              exteriorWoodStain={
+                exteriorWoodStain
+              }
+
+              exteriorWoodPaintColour={
+                exteriorWoodPaintColour
+              }
+
+              interiorMaterial={
+                interiorMaterial
+              }
+
+              interiorVinylFinish={
+                interiorVinylFinish
+              }
+
+              interiorColour={
+                interiorColour
+              }
+
+              interiorWoodSpecies={
+                interiorWoodSpecies
+              }
+
+              interiorWoodFinish={
+                interiorWoodFinish
+              }
+
+              interiorWoodStain={
+                interiorWoodStain
+              }
+
+              interiorWoodPaintColour={
+                interiorWoodPaintColour
               }
 
               gridStyle={
