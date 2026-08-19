@@ -2930,6 +2930,180 @@ const [
             </div>
 
           </section>
+          {productType ===
+            "Casement / Awning" && (
+
+            <section className="config-section">
+
+              <div className="step-title">
+                Configure Unit
+              </div>
+
+              <div className="selected-info">
+                {selectedUnit
+                  ? `Unit ${selectedUnit} selected`
+                  : "Tap a unit in the drawing"}
+              </div>
+
+              {selectedUnitConfig && (
+
+                <>
+                  <div className="number-row">
+
+                    <label>
+                      Number High
+
+                      <select
+                        value={
+                          selectedUnitConfig.litesTall
+                        }
+
+                        onChange={(event) =>
+                          changeSelectedNumberHigh(
+                            Number(
+                              event.target.value
+                            )
+                          )
+                        }
+                      >
+                        {[1, 2, 3, 4].map(
+                          (number) => (
+                            <option
+                              key={number}
+                              value={number}
+                            >
+                              {number}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </label>
+
+                    {selectedUnitConfig.litesTall >
+                      1 && (
+
+                      <label>
+                        Split
+
+                        <select
+                          value={
+                            selectedSplitMode
+                          }
+
+                          onChange={(event) =>
+                            applyUnitSplit(
+                              event.target.value as UnitSplitMode
+                            )
+                          }
+                        >
+                          <option value="equal">
+                            {selectedUnitConfig.litesTall ===
+                            2
+                              ? "1/2 - 1/2"
+                              : selectedUnitConfig.litesTall ===
+                                3
+                              ? "1/3 - 1/3 - 1/3"
+                              : "Equal"}
+                          </option>
+
+                          {selectedUnitConfig.litesTall ===
+                            2 && (
+                            <>
+                              <option value="top-third">
+                                1/3 - 2/3
+                              </option>
+
+                              <option value="bottom-third">
+                                2/3 - 1/3
+                              </option>
+                            </>
+                          )}
+
+                          {selectedUnitConfig.litesTall ===
+                            3 && (
+                            <>
+                              <option value="center-feature">
+                                1/4 - 1/2 - 1/4
+                              </option>
+
+                              <option value="top-half">
+                                1/2 - 1/4 - 1/4
+                              </option>
+
+                              <option value="bottom-half">
+                                1/4 - 1/4 - 1/2
+                              </option>
+                            </>
+                          )}
+
+                          <option value="custom">
+                            Custom
+                          </option>
+                        </select>
+                      </label>
+
+                    )}
+
+                  </div>
+
+                  {selectedSplitMode ===
+                    "custom" &&
+                    selectedUnitConfig.litesTall >
+                      1 && (
+
+                    <div
+                      style={{
+                        marginTop: 10
+                      }}
+                    >
+
+                      <div className="number-row">
+
+                        {selectedCustomHeights.map(
+                          (
+                            value,
+                            index
+                          ) => (
+
+                            <label
+                              key={index}
+                            >
+                              Lite{" "}
+                              {index + 1}
+
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={value}
+
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateUnitCustomHeight(
+                                    index,
+                                    event.target.value
+                                  )
+                                }
+                              />
+
+                            </label>
+
+                          )
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                </>
+
+              )}
+
+            </section>
+
+          )}
 <section className="config-section">
 
   <div className="step-title">
@@ -3289,180 +3463,6 @@ const [
 
           )}
 
-          {productType ===
-            "Casement / Awning" && (
-
-            <section className="config-section">
-
-              <div className="step-title">
-                Configure Unit
-              </div>
-
-              <div className="selected-info">
-                {selectedUnit
-                  ? `Unit ${selectedUnit} selected`
-                  : "Tap a unit in the drawing"}
-              </div>
-
-              {selectedUnitConfig && (
-
-                <>
-                  <div className="number-row">
-
-                    <label>
-                      Number High
-
-                      <select
-                        value={
-                          selectedUnitConfig.litesTall
-                        }
-
-                        onChange={(event) =>
-                          changeSelectedNumberHigh(
-                            Number(
-                              event.target.value
-                            )
-                          )
-                        }
-                      >
-                        {[1, 2, 3, 4].map(
-                          (number) => (
-                            <option
-                              key={number}
-                              value={number}
-                            >
-                              {number}
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </label>
-
-                    {selectedUnitConfig.litesTall >
-                      1 && (
-
-                      <label>
-                        Split
-
-                        <select
-                          value={
-                            selectedSplitMode
-                          }
-
-                          onChange={(event) =>
-                            applyUnitSplit(
-                              event.target.value as UnitSplitMode
-                            )
-                          }
-                        >
-                          <option value="equal">
-                            {selectedUnitConfig.litesTall ===
-                            2
-                              ? "1/2 - 1/2"
-                              : selectedUnitConfig.litesTall ===
-                                3
-                              ? "1/3 - 1/3 - 1/3"
-                              : "Equal"}
-                          </option>
-
-                          {selectedUnitConfig.litesTall ===
-                            2 && (
-                            <>
-                              <option value="top-third">
-                                1/3 - 2/3
-                              </option>
-
-                              <option value="bottom-third">
-                                2/3 - 1/3
-                              </option>
-                            </>
-                          )}
-
-                          {selectedUnitConfig.litesTall ===
-                            3 && (
-                            <>
-                              <option value="center-feature">
-                                1/4 - 1/2 - 1/4
-                              </option>
-
-                              <option value="top-half">
-                                1/2 - 1/4 - 1/4
-                              </option>
-
-                              <option value="bottom-half">
-                                1/4 - 1/4 - 1/2
-                              </option>
-                            </>
-                          )}
-
-                          <option value="custom">
-                            Custom
-                          </option>
-                        </select>
-                      </label>
-
-                    )}
-
-                  </div>
-
-                  {selectedSplitMode ===
-                    "custom" &&
-                    selectedUnitConfig.litesTall >
-                      1 && (
-
-                    <div
-                      style={{
-                        marginTop: 10
-                      }}
-                    >
-
-                      <div className="number-row">
-
-                        {selectedCustomHeights.map(
-                          (
-                            value,
-                            index
-                          ) => (
-
-                            <label
-                              key={index}
-                            >
-                              Lite{" "}
-                              {index + 1}
-
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={value}
-
-                                onChange={(
-                                  event
-                                ) =>
-                                  updateUnitCustomHeight(
-                                    index,
-                                    event.target.value
-                                  )
-                                }
-                              />
-
-                            </label>
-
-                          )
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-                </>
-
-              )}
-
-            </section>
-
-          )}
 
         </aside>
 
