@@ -86,13 +86,21 @@ type Props = {
 
   viewMode?: ViewMode;
 
+  exteriorMaterial?: string;
+  exteriorVinylFinish?: string;
   exteriorColour?: string;
+  exteriorWoodSpecies?: string;
+  exteriorWoodFinish?: string;
+  exteriorWoodStain?: string;
+  exteriorWoodPaintColour?: string;
 
-  woodSpecies?: string;
-
-  interiorFinishType?: string;
-
-  interiorFinish?: string;
+  interiorMaterial?: string;
+  interiorVinylFinish?: string;
+  interiorColour?: string;
+  interiorWoodSpecies?: string;
+  interiorWoodFinish?: string;
+  interiorWoodStain?: string;
+  interiorWoodPaintColour?: string;
 
   gridStyle?: GridStyle;
 
@@ -199,7 +207,7 @@ type LitePopup = {
 const MAX_FRAME_WIDTH = 960;
 const MAX_FRAME_HEIGHT = 585;
 
-const EXTERIOR_COLOUR_MAP: Record<
+const STANDARD_COLOUR_MAP: Record<
   string,
   string
 > = {
@@ -372,26 +380,64 @@ export default function WindowCanvas(
       ]
     );
 
+  function colourForWood(
+    species: string | undefined,
+    finish: string | undefined,
+    stain: string | undefined,
+    paintColour: string | undefined
+  ) {
+    if (finish === "Painted") {
+      return (
+        STANDARD_COLOUR_MAP[
+          paintColour ?? "White"
+        ] ?? "#f4f2ec"
+      );
+    }
+
+    if (finish === "Primed White") {
+      return "#f4f2ec";
+    }
+
+    if (finish === "Stained") {
+      return (
+        ULTRA_STAIN_COLOUR_MAP[
+          stain ?? "Bearstone Brown"
+        ] ??
+        WOOD_SPECIES_COLOUR_MAP[
+          species ?? "Douglas Fir"
+        ] ??
+        "#d7b27a"
+      );
+    }
+
+    return (
+      WOOD_SPECIES_COLOUR_MAP[
+        species ?? "Douglas Fir"
+      ] ?? "#d7b27a"
+    );
+  }
+
   const frameColour =
     props.viewMode === "Interior"
-      ? props.interiorFinishType ===
-        "Ultra Coat"
-        ? ULTRA_COAT_COLOUR_MAP[
-            props.interiorFinish ??
-              "White"
-          ] ?? "#f1efe9"
-        : ULTRA_STAIN_COLOUR_MAP[
-            props.interiorFinish ??
-              "Clear Coat"
-          ] ||
-          WOOD_SPECIES_COLOUR_MAP[
-            props.woodSpecies ??
-              "Pine"
-          ] ||
-          "#d7b27a"
-      : EXTERIOR_COLOUR_MAP[
-          props.exteriorColour ??
-            "White"
+      ? props.interiorMaterial === "Wood"
+        ? colourForWood(
+            props.interiorWoodSpecies,
+            props.interiorWoodFinish,
+            props.interiorWoodStain,
+            props.interiorWoodPaintColour
+          )
+        : STANDARD_COLOUR_MAP[
+            props.interiorColour ?? "White"
+          ] ?? "#f4f2ec"
+      : props.exteriorMaterial === "Wood"
+      ? colourForWood(
+          props.exteriorWoodSpecies,
+          props.exteriorWoodFinish,
+          props.exteriorWoodStain,
+          props.exteriorWoodPaintColour
+        )
+      : STANDARD_COLOUR_MAP[
+          props.exteriorColour ?? "White"
         ] ?? "#f4f2ec";
 
   const [
@@ -891,13 +937,23 @@ export default function WindowCanvas(
     h: number,
     slider = false
   ) {
-    const inset = 14;
-    const sashX = x + inset;
-    const sashY = y + inset;
-    const sashW = Math.max(0, w - inset * 2);
-    const sashH = Math.max(0, h - inset * 2);
-    const profileInset = slider ? 5 : 6;
-    const glassInset = slider ? 11 : 12;
+    const inset =
+      slider ? 17 : 18;
+
+    const sashX =
+      x + inset;
+    const sashY =
+      y + inset;
+    const sashW =
+      Math.max(
+        0,
+        w - inset * 2
+      );
+    const sashH =
+      Math.max(
+        0,
+        h - inset * 2
+      );
 
     return (
       <g
@@ -914,29 +970,25 @@ export default function WindowCanvas(
           width={sashW}
           height={sashH}
           rx="3"
-          fill="rgba(255,255,255,0.035)"
-          stroke={frameColour}
-          strokeWidth="4"
-        />
-        <rect
-          x={sashX + profileInset}
-          y={sashY + profileInset}
-          width={Math.max(0, sashW - profileInset * 2)}
-          height={Math.max(0, sashH - profileInset * 2)}
-          rx="2"
           fill="none"
           stroke={frameColour}
-          strokeWidth="1.25"
-          opacity="0.6"
+          strokeWidth="9"
         />
+
         <rect
-          x={sashX + glassInset}
-          y={sashY + glassInset}
-          width={Math.max(0, sashW - glassInset * 2)}
-          height={Math.max(0, sashH - glassInset * 2)}
-          rx="1.5"
-          fill="rgba(185,220,235,0.16)"
-          stroke="rgba(75,100,110,0.55)"
+          x={sashX + 5}
+          y={sashY + 5}
+          width={Math.max(
+            0,
+            sashW - 10
+          )}
+          height={Math.max(
+            0,
+            sashH - 10
+          )}
+          rx="2"
+          fill="none"
+          stroke="rgba(65,85,92,0.32)"
           strokeWidth="1"
         />
       </g>
@@ -1647,6 +1699,7 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
+                  stroke={frameColour}
 
                   x1={x}
                   y1={
@@ -1893,6 +1946,7 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
+                  stroke={frameColour}
 
                   x1={
                     unit.x
@@ -2106,6 +2160,7 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
+                  stroke={frameColour}
 
                   x1={
                     unit.x
@@ -2375,6 +2430,7 @@ export default function WindowCanvas(
 
               <line
                 className="split-line"
+                stroke={frameColour}
 
                 x1={x}
                 y1={
@@ -2448,6 +2504,7 @@ export default function WindowCanvas(
 
               <line
                 className="split-line"
+                stroke={frameColour}
 
                 x1={
                   FRAME.x
@@ -2536,7 +2593,7 @@ export default function WindowCanvas(
           height={Math.max(0, FRAME.height - 26)}
           rx="3"
           fill="none"
-          stroke="rgba(45,60,65,0.45)"
+          stroke={frameColour}
           strokeWidth="1"
         />
       </g>
