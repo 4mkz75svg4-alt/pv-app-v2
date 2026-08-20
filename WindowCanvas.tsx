@@ -43,25 +43,11 @@ type SingleVentHanding =
   | "Left Vent"
   | "Right Vent";
 
-
-type PatioPanelCount =
-  | 2
-  | 3
-  | 4;
-
-type PatioHanding =
-  | "Active Left"
-  | "Active Right";
-
 type GridStyle =
   | "None"
   | "Colonial"
   | "Top Colonial"
   | "Prairie";
-
-type ViewMode =
-  | "Exterior"
-  | "Interior";
 
 type Props = {
   widthInches: number;
@@ -93,25 +79,6 @@ type Props = {
   verticalSliderType?: VerticalSliderType;
 
   singleVentHanding?: SingleVentHanding;
-
-  patioPanelCount?: PatioPanelCount;
-
-  patioHanding?: PatioHanding;
-
-  viewMode?: ViewMode;
-
-  windowType?: string;
-  exteriorColour?: string;
-  interiorColour?: string;
-  woodSpecies?: string;
-  woodFinish?: string;
-  woodStain?: string;
-
-  flangeType?: string;
-  glassAppearance?: string;
-  glassPane?: string;
-  glassLowEPackage?: string;
-  glassSafety?: string;
 
   gridStyle?: GridStyle;
 
@@ -218,92 +185,6 @@ type LitePopup = {
 const MAX_FRAME_WIDTH = 960;
 const MAX_FRAME_HEIGHT = 585;
 
-const STANDARD_COLOUR_MAP: Record<
-  string,
-  string
-> = {
-  White: "#f4f2ec",
-  Linen: "#d9d0be",
-  "Colonial White": "#eee9df",
-  Sandstone: "#b6a68e",
-  Beige: "#c7b79e",
-  Tan: "#9e866d",
-  "Gull Gray": "#9b9d99",
-  "French Linen": "#aaa394",
-  "Morning Dove Gray": "#a9aaa7",
-  Seawolf: "#6f7778",
-  "Fashion Gray": "#777875",
-  "Aqua Mist": "#8fa8a4",
-  "Light Blue": "#7797ac",
-  "Slate Blue": "#526b7c",
-  "Black Sable": "#252422",
-  Indigo: "#354554",
-  Green: "#3f5a45",
-  "Hartford Green": "#244739",
-  "Forest Green": "#2e4937",
-  "Patina Green": "#667b69",
-  "Hemlock Green": "#465b49",
-  "Greek Olive": "#6f7357",
-  Clay: "#756c5e",
-  "Harvest Cranberry": "#7e3335",
-  "Colonial Red": "#6e2c2b",
-  "Bahama Brown": "#58443a",
-  Brown: "#5b4233",
-  "TW Brown": "#4c3b32",
-  "Antique Bronze": "#514a3f",
-  Bronze: "#625849",
-  "Battleship Gray": "#5f6261",
-  "Modern Onyx": "#343536",
-  "Dark Bronze": "#3e3932",
-  Black: "#1f2020",
-  "Custom Colour": "#68717a"
-};
-
-const WOOD_SPECIES_COLOUR_MAP: Record<
-  string,
-  string
-> = {
-  Pine: "#d7b27a",
-  Maple: "#d8bf91",
-  Alder: "#c79062",
-  Mahogany: "#855039",
-  Cherry: "#a86345",
-  "Douglas Fir": "#b77d4f",
-  "Black Walnut": "#644735",
-  "White Oak": "#b79c70"
-};
-
-const ULTRA_STAIN_COLOUR_MAP: Record<
-  string,
-  string
-> = {
-  "Bearstone Brown": "#72533e",
-  Briarwood: "#8c674a",
-  Burlap: "#a98867",
-  "Classic Gray": "#857f77",
-  "Clear Coat": "",
-  Frosted: "#c8b89e",
-  "Tux Black": "#2f2c29",
-  "Warm Sun": "#b37d49",
-  "Woven Basket": "#927054"
-};
-
-const ULTRA_COAT_COLOUR_MAP: Record<
-  string,
-  string
-> = {
-  White: "#f1efe9",
-  Black: "#202120",
-  "Dried Thyme": "#6e725f",
-  Creamy: "#e8dfca",
-  "Requisite Gray": "#9c9690",
-  "Accessible Beige": "#b9ac98",
-  "Urbane Bronze": "#5d574d",
-  "Iron Ore": "#464746",
-  "Deep Forest Brown": "#4c453c",
-  "Anchors Aweigh": "#344553"
-};
-
 function clamp(
   value: number,
   min: number,
@@ -391,86 +272,6 @@ export default function WindowCanvas(
       ]
     );
 
-  function colourForWood() {
-    if (
-      props.woodFinish === "Painted"
-    ) {
-      return (
-        STANDARD_COLOUR_MAP[
-          props.interiorColour ?? "White"
-        ] ?? "#f4f2ec"
-      );
-    }
-
-    if (
-      props.woodFinish === "Primed White"
-    ) {
-      return "#f4f2ec";
-    }
-
-    if (
-      props.woodFinish === "Stained"
-    ) {
-      return (
-        ULTRA_STAIN_COLOUR_MAP[
-          props.woodStain ?? "Bearstone Brown"
-        ] ??
-        WOOD_SPECIES_COLOUR_MAP[
-          props.woodSpecies ?? "Douglas Fir"
-        ] ??
-        "#d7b27a"
-      );
-    }
-
-    return (
-      WOOD_SPECIES_COLOUR_MAP[
-        props.woodSpecies ?? "Douglas Fir"
-      ] ?? "#d7b27a"
-    );
-  }
-
-  const interiorView =
-    props.viewMode === "Interior";
-
-  const frameColour =
-    interiorView &&
-    props.windowType ===
-      "Aluminum / Wood"
-      ? colourForWood()
-      : STANDARD_COLOUR_MAP[
-          interiorView
-            ? props.interiorColour ?? "White"
-            : props.exteriorColour ?? "White"
-        ] ?? "#f4f2ec";
-
-  const hasLowE =
-    !!props.glassLowEPackage &&
-    props.glassLowEPackage !==
-      "No Low-E";
-
-  function displayUnit(
-    unit: {
-      id: string;
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    }
-  ) {
-    if (!interiorView) {
-      return unit;
-    }
-
-    return {
-      ...unit,
-      x:
-        FRAME.x +
-        FRAME.width -
-        (unit.x - FRAME.x) -
-        unit.w
-    };
-  }
-
   const [
     dragging,
     setDragging
@@ -513,20 +314,19 @@ export default function WindowCanvas(
 
 
   const [
-    patioDoorOpen,
-    setPatioDoorOpen
-  ] =
-    useState<boolean>(
-      false
-    );
-
-
-  const [
     sliderWindowOpen,
     setSliderWindowOpen
   ] =
     useState<boolean>(
       false
+    );
+
+  const [
+    openCasementLites,
+    setOpenCasementLites
+  ] =
+    useState<Record<string, boolean>>(
+      {}
     );
 
   const sortedVertical =
@@ -792,9 +592,7 @@ export default function WindowCanvas(
       props.onMoveUnitVerticalSplit?.(
         unitVerticalSplitDragging.unitId,
         unitVerticalSplitDragging.splitId,
-        interiorView
-          ? 1 - position
-          : position
+        position
       );
 
       return;
@@ -925,23 +723,19 @@ export default function WindowCanvas(
     if (
       dragging?.axis === "x"
     ) {
-      const displayPosition =
+      props.onMoveVertical(
+        dragging.id,
+
         clamp(
           (
             point.x -
             FRAME.x
           ) /
             FRAME.width,
+
           0.05,
           0.95
-        );
-
-      props.onMoveVertical(
-        dragging.id,
-        interiorView
-          ? 1 -
-            displayPosition
-          : displayPosition
+        )
       );
 
       return;
@@ -985,32 +779,6 @@ export default function WindowCanvas(
     );
   }
 
-  function renderFlange() {
-    const type = props.flangeType ?? "Nail Fin";
-    const offset =
-      type === "Brick Mould" ? 18 :
-      type === "Reno Flange" ? 8 : 10;
-    const strokeWidth =
-      type === "Brick Mould" ? 10 :
-      type === "Reno Flange" ? 5 : 2;
-
-    return (
-      <rect
-        x={FRAME.x - offset}
-        y={FRAME.y - offset}
-        width={FRAME.width + offset * 2}
-        height={FRAME.height + offset * 2}
-        rx="4"
-        fill="none"
-        stroke={frameColour}
-        strokeWidth={strokeWidth}
-        opacity={type === "Nail Fin" ? 0.5 : 0.8}
-        strokeDasharray={type === "Nail Fin" ? "5 4" : undefined}
-        pointerEvents="none"
-      />
-    );
-  }
-
   function renderSash(
     x: number,
     y: number,
@@ -1018,61 +786,42 @@ export default function WindowCanvas(
     h: number,
     slider = false
   ) {
-    const inset =
-      slider ? 17 : 18;
-
-    const sashX =
-      x + inset;
-    const sashY =
-      y + inset;
-    const sashW =
-      Math.max(
-        0,
-        w - inset * 2
-      );
-    const sashH =
-      Math.max(
-        0,
-        h - inset * 2
-      );
+   const inset = 14;
 
     return (
-      <g
+      <rect
         className={
           slider
-            ? "slider-sash-profile"
-            : "sash-profile"
+            ? "slider-sash-outline"
+            : "sash-outline"
         }
-        pointerEvents="none"
-      >
-        <rect
-          x={sashX}
-          y={sashY}
-          width={sashW}
-          height={sashH}
-          rx="3"
-          fill="none"
-          stroke={frameColour}
-          strokeWidth="9"
-        />
 
-        <rect
-          x={sashX + 5}
-          y={sashY + 5}
-          width={Math.max(
+        x={
+          x + inset
+        }
+
+        y={
+          y + inset
+        }
+
+        width={
+          Math.max(
             0,
-            sashW - 10
-          )}
-          height={Math.max(
+            w -
+              inset * 2
+          )
+        }
+
+        height={
+          Math.max(
             0,
-            sashH - 10
-          )}
-          rx="2"
-          fill="none"
-          stroke="rgba(65,85,92,0.32)"
-          strokeWidth="1"
-        />
-      </g>
+            h -
+              inset * 2
+          )
+        }
+
+        rx="2"
+      />
     );
   }
 
@@ -1106,7 +855,7 @@ export default function WindowCanvas(
       return (
         <g
           className="grid-pattern"
-          stroke={frameColour}
+          stroke="currentColor"
           strokeWidth={2}
           opacity={0.7}
           pointerEvents="none"
@@ -1125,7 +874,7 @@ export default function WindowCanvas(
       return (
         <g
           className="grid-pattern"
-          stroke={frameColour}
+          stroke="currentColor"
           strokeWidth={2}
           opacity={0.7}
           pointerEvents="none"
@@ -1144,7 +893,7 @@ export default function WindowCanvas(
       return (
         <g
           className="grid-pattern"
-          stroke={frameColour}
+          stroke="currentColor"
           strokeWidth={2}
           opacity={0.7}
           pointerEvents="none"
@@ -1313,15 +1062,6 @@ export default function WindowCanvas(
     w: number,
     h: number
   ) {
-    const visualOperation =
-      interiorView
-        ? operation === "Casement Left"
-          ? "Casement Right"
-          : operation === "Casement Right"
-          ? "Casement Left"
-          : operation
-        : operation;
-
     const pad =
       clamp(
         Math.min(
@@ -1357,14 +1097,14 @@ export default function WindowCanvas(
       h / 2;
 
     if (
-      visualOperation ===
+      operation ===
       "Picture"
     ) {
       return null;
     }
 
     if (
-      visualOperation ===
+      operation ===
       "Awning"
     ) {
       return (
@@ -1389,7 +1129,7 @@ export default function WindowCanvas(
     }
 
     if (
-      visualOperation ===
+      operation ===
       "Casement Left"
     ) {
       return (
@@ -1414,7 +1154,7 @@ export default function WindowCanvas(
     }
 
     if (
-      visualOperation ===
+      operation ===
       "Casement Right"
     ) {
       return (
@@ -1539,6 +1279,14 @@ export default function WindowCanvas(
       operation
     );
 
+    setOpenCasementLites(
+      (current) => ({
+        ...current,
+        [`${litePopup.unitId}:${litePopup.liteId}`]:
+          false
+      })
+    );
+
     setLitePopup(
       null
     );
@@ -1597,9 +1345,6 @@ export default function WindowCanvas(
       positions.length -
       2;
 
-    const effectiveHanding =
-      props.singleVentHanding;
-
     return (
       <>
         {positions
@@ -1615,13 +1360,9 @@ export default function WindowCanvas(
                 ];
 
               const sectionX =
-                interiorView
-                  ? unit.x +
-                    (1 - end) *
-                      unit.w
-                  : unit.x +
-                    start *
-                      unit.w;
+                unit.x +
+                start *
+                  unit.w;
 
               const sectionWidth =
                 (
@@ -1644,7 +1385,7 @@ export default function WindowCanvas(
                 "Single Vent"
               ) {
                 if (
-                  effectiveHanding ===
+                  props.singleVentHanding ===
                   "Right Vent"
                 ) {
                   operating =
@@ -1678,10 +1419,7 @@ export default function WindowCanvas(
                   true;
 
                 direction =
-                  sectionX +
-                    sectionWidth / 2 <
-                  unit.x +
-                    unit.w / 2
+                  index === 0
                     ? "right"
                     : "left";
               }
@@ -1699,12 +1437,7 @@ export default function WindowCanvas(
                   index === 0
                 ) {
                   direction =
-                    sectionX +
-                      sectionWidth / 2 <
-                    unit.x +
-                      unit.w / 2
-                      ? "right"
-                      : "left";
+                    "right";
                 }
 
                 if (
@@ -1712,12 +1445,7 @@ export default function WindowCanvas(
                   lastIndex
                 ) {
                   direction =
-                    sectionX +
-                      sectionWidth / 2 <
-                    unit.x +
-                      unit.w / 2
-                      ? "right"
-                      : "left";
+                    "left";
                 }
               }
 
@@ -1823,14 +1551,9 @@ export default function WindowCanvas(
 
         {splits.map(
           (split) => {
-            const displayPosition =
-              interiorView
-                ? 1 - split.position
-                : split.position;
-
             const x =
               unit.x +
-              displayPosition *
+              split.position *
                 unit.w;
 
             return (
@@ -1842,10 +1565,6 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
-                  style={{
-                    stroke: frameColour,
-                    strokeWidth: 6
-                  }}
 
                   x1={x}
                   y1={
@@ -2092,10 +1811,6 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
-                  style={{
-                    stroke: frameColour,
-                    strokeWidth: 6
-                  }}
 
                   x1={
                     unit.x
@@ -2238,55 +1953,186 @@ export default function WindowCanvas(
                     liteHeight
                   )}
 
-                  {hasSash &&
-                    renderSash(
-                      unit.x,
-                      liteY,
-                      unit.w,
-                      liteHeight
-                    )}
+                  {(() => {
+                    const casementKey =
+                      `${unit.id}:${liteId}`;
 
-                  {renderOpeningSymbol(
-                    operation,
-                    unit.x,
-                    liteY,
-                    unit.w,
-                    liteHeight
-                  )}
+                    const isOperating =
+                      operation ===
+                        "Casement Left" ||
+                      operation ===
+                        "Casement Right" ||
+                      operation ===
+                        "Awning";
 
-                  <rect
-                    className="lite-hit"
+                    const isOpen =
+                      !!openCasementLites[
+                        casementKey
+                      ];
 
-                    x={
-                      unit.x
-                    }
+                    const openTransform =
+                      !isOperating ||
+                      !isOpen
+                        ? undefined
+                        : operation ===
+                          "Casement Left"
+                        ? `translate(${unit.w * 0.12} 0) scale(0.82 1)`
+                        : operation ===
+                          "Casement Right"
+                        ? `translate(${-unit.w * 0.12} 0) scale(0.82 1)`
+                        : `translate(0 ${liteHeight * 0.10}) scale(1 0.84)`;
 
-                    y={
-                      liteY
-                    }
+                    return (
+                      <>
+                        <g
+                          transform={
+                            openTransform
+                          }
+                          style={{
+                            transition:
+                              "transform 280ms ease"
+                          }}
+                        >
+                          {hasSash &&
+                            renderSash(
+                              unit.x,
+                              liteY,
+                              unit.w,
+                              liteHeight
+                            )}
 
-                    width={
-                      unit.w
-                    }
+                          {renderOpeningSymbol(
+                            operation,
+                            unit.x,
+                            liteY,
+                            unit.w,
+                            liteHeight
+                          )}
+                        </g>
 
-                    height={
-                      liteHeight
-                    }
+                        <rect
+                          className="lite-hit"
 
-                    onPointerDown={(
-                      event
-                    ) =>
-                      openLitePopup(
-                        unit.id,
-                        liteId,
-                        unit.x,
-                        liteY,
-                        unit.w,
-                        liteHeight,
-                        event
-                      )
-                    }
-                  />
+                          x={
+                            unit.x
+                          }
+
+                          y={
+                            liteY
+                          }
+
+                          width={
+                            unit.w
+                          }
+
+                          height={
+                            liteHeight
+                          }
+
+                          onPointerDown={(
+                            event
+                          ) => {
+                            event.stopPropagation();
+
+                            props.onSelectPanel(
+                              unit.id
+                            );
+
+                            if (
+                              isOperating
+                            ) {
+                              setLitePopup(
+                                null
+                              );
+
+                              setOpenCasementLites(
+                                (current) => ({
+                                  ...current,
+                                  [casementKey]:
+                                    !current[
+                                      casementKey
+                                    ]
+                                })
+                              );
+
+                              return;
+                            }
+
+                            openLitePopup(
+                              unit.id,
+                              liteId,
+                              unit.x,
+                              liteY,
+                              unit.w,
+                              liteHeight,
+                              event
+                            );
+                          }}
+                        />
+
+                        {props.selectedPanel ===
+                          unit.id &&
+                          isOperating && (
+                          <g
+                            style={{
+                              cursor:
+                                "pointer"
+                            }}
+                            onPointerDown={(
+                              event
+                            ) => {
+                              event.stopPropagation();
+
+                              openLitePopup(
+                                unit.id,
+                                liteId,
+                                unit.x,
+                                liteY,
+                                unit.w,
+                                liteHeight,
+                                event
+                              );
+                            }}
+                          >
+                            <rect
+                              x={
+                                unit.x +
+                                unit.w -
+                                126
+                              }
+                              y={
+                                liteY + 10
+                              }
+                              width="116"
+                              height="28"
+                              rx="7"
+                              fill="rgba(255,255,255,0.92)"
+                              stroke="rgba(55,70,78,0.28)"
+                              strokeWidth="1"
+                            />
+
+                            <text
+                              x={
+                                unit.x +
+                                unit.w -
+                                68
+                              }
+                              y={
+                                liteY + 29
+                              }
+                              textAnchor="middle"
+                              fontSize="12"
+                              fontWeight="600"
+                              fill="#39474d"
+                              pointerEvents="none"
+                            >
+                              Change Opening
+                            </text>
+                          </g>
+                        )}
+                      </>
+                    );
+                  })()}
 
                 </g>
               );
@@ -2309,10 +2155,6 @@ export default function WindowCanvas(
 
                 <line
                   className="lite-split-line"
-                  style={{
-                    stroke: frameColour,
-                    strokeWidth: 6
-                  }}
 
                   x1={
                     unit.x
@@ -2366,335 +2208,6 @@ export default function WindowCanvas(
     );
   }
 
-  function renderPatioDoor(
-    unit: {
-      id: string;
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    }
-  ) {
-    const panels =
-      props.patioPanelCount ?? 2;
-
-    const panelWidth =
-      unit.w / panels;
-
-    const shownActiveIndex =
-      panels === 2
-        ? interiorView
-          ? props.patioHanding ===
-            "Active Right"
-            ? 0
-            : 1
-          : props.patioHanding ===
-            "Active Right"
-          ? 1
-          : 0
-        : -1;
-
-    function panelDirection(
-      index: number
-    ):
-      | "left"
-      | "right"
-      | null {
-      if (
-        panels === 2
-      ) {
-        if (
-          index !==
-          shownActiveIndex
-        ) {
-          return null;
-        }
-
-        return index === 0
-          ? "right"
-          : "left";
-      }
-
-      if (
-        panels === 3
-      ) {
-        if (
-          index !== 1
-        ) {
-          return null;
-        }
-
-        return interiorView
-          ? "right"
-          : "left";
-      }
-
-      if (
-        panels === 4
-      ) {
-        if (
-          index === 1
-        ) {
-          return "left";
-        }
-
-        if (
-          index === 2
-        ) {
-          return "right";
-        }
-      }
-
-      return null;
-    }
-
-    return (
-      <>
-        {Array.from({
-          length: panels
-        }).map(
-          (_, index) => {
-            const x =
-              unit.x +
-              index *
-                panelWidth;
-
-            const direction =
-              panelDirection(
-                index
-              );
-
-            const operating =
-              direction !== null;
-
-            const travel =
-              patioDoorOpen &&
-              operating
-                ? panelWidth *
-                  0.62 *
-                  (
-                    direction ===
-                    "right"
-                      ? 1
-                      : -1
-                  )
-                : 0;
-
-            const inset = 12;
-
-            const sashX =
-              x + inset;
-            const sashY =
-              unit.y + inset;
-            const sashW =
-              Math.max(
-                0,
-                panelWidth -
-                  inset * 2
-              );
-            const sashH =
-              Math.max(
-                0,
-                unit.h -
-                  inset * 2
-              );
-
-            return (
-              <g
-                key={
-                  `${unit.id}-patio-${index}`
-                }
-              >
-                {renderGrid(
-                  x,
-                  unit.y,
-                  panelWidth,
-                  unit.h
-                )}
-
-                <g
-                  transform={
-                    `translate(${travel} 0)`
-                  }
-                  style={{
-                    transition:
-                      "transform 320ms ease"
-                  }}
-                >
-                  <rect
-                    x={sashX}
-                    y={sashY}
-                    width={sashW}
-                    height={sashH}
-                    rx="3"
-                    fill="rgba(255,255,255,0.02)"
-                    stroke={
-                      frameColour
-                    }
-                    strokeWidth={
-                      operating
-                        ? 12
-                        : 9
-                    }
-                    pointerEvents="none"
-                  />
-
-                  <rect
-                    x={
-                      sashX + 7
-                    }
-                    y={
-                      sashY + 7
-                    }
-                    width={Math.max(
-                      0,
-                      sashW - 14
-                    )}
-                    height={Math.max(
-                      0,
-                      sashH - 14
-                    )}
-                    rx="2"
-                    fill="none"
-                    stroke="rgba(65,85,92,0.28)"
-                    strokeWidth="1.5"
-                    pointerEvents="none"
-                  />
-
-                  {operating && (
-                    <>
-                      <line
-                        x1={
-                          direction ===
-                          "right"
-                            ? sashX +
-                              sashW -
-                              20
-                            : sashX +
-                              20
-                        }
-                        y1={
-                          sashY +
-                          sashH *
-                            0.42
-                        }
-                        x2={
-                          direction ===
-                          "right"
-                            ? sashX +
-                              sashW -
-                              20
-                            : sashX +
-                              20
-                        }
-                        y2={
-                          sashY +
-                          sashH *
-                            0.58
-                        }
-                        stroke={
-                          frameColour
-                        }
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        pointerEvents="none"
-                      />
-
-                      {renderHorizontalArrow(
-                        x,
-                        unit.y,
-                        panelWidth,
-                        unit.h,
-                        direction
-                      )}
-                    </>
-                  )}
-                </g>
-
-                {index <
-                  panels - 1 && (
-                  <line
-                    x1={
-                      x +
-                      panelWidth
-                    }
-                    y1={
-                      unit.y + 4
-                    }
-                    x2={
-                      x +
-                      panelWidth
-                    }
-                    y2={
-                      unit.y +
-                      unit.h -
-                      4
-                    }
-                    style={{
-                      stroke:
-                        frameColour,
-                      strokeWidth: 8
-                    }}
-                    pointerEvents="none"
-                  />
-                )}
-
-                {operating && (
-                  <rect
-                    x={x}
-                    y={unit.y}
-                    width={
-                      panelWidth
-                    }
-                    height={
-                      unit.h
-                    }
-                    fill="transparent"
-                    style={{
-                      cursor:
-                        "pointer"
-                    }}
-                    onPointerDown={(
-                      event
-                    ) => {
-                      event.stopPropagation();
-
-                      setPatioDoorOpen(
-                        (current) =>
-                          !current
-                      );
-                    }}
-                  />
-                )}
-              </g>
-            );
-          }
-        )}
-
-        <text
-          x={
-            unit.x +
-            unit.w / 2
-          }
-          y={
-            unit.y +
-            unit.h +
-            24
-          }
-          textAnchor="middle"
-          fontSize="13"
-          fill="rgba(55,70,78,0.72)"
-          pointerEvents="none"
-        >
-          Tap operating panel to
-          {patioDoorOpen
-            ? " close"
-            : " open"}
-        </text>
-      </>
-    );
-  }
-
   function renderUnit(
     unit: {
       id: string;
@@ -2711,15 +2224,6 @@ export default function WindowCanvas(
 
     if (!config) {
       return null;
-    }
-
-    if (
-      props.productType ===
-      "Patio Door"
-    ) {
-      return renderPatioDoor(
-        unit
-      );
     }
 
     if (
@@ -2754,12 +2258,7 @@ export default function WindowCanvas(
 
       className="window-svg"
 
-      style={{
-        color: frameColour
-      }}
-
       viewBox="0 0 1000 625"
-      preserveAspectRatio="xMidYMin meet"
 
       onPointerMove={
         pointerMove
@@ -2784,84 +2283,33 @@ export default function WindowCanvas(
       }}
     >
 
-      <defs>
-        <linearGradient id="pv-glass-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={hasLowE ? "#dceff4" : "#eef8fc"} stopOpacity="0.92" />
-          <stop offset="45%" stopColor={hasLowE ? "#b9d7dd" : "#cfe7f0"} stopOpacity="0.74" />
-          <stop offset="100%" stopColor={hasLowE ? "#9fc4cc" : "#b7d6e1"} stopOpacity="0.82" />
-        </linearGradient>
-        <linearGradient id="pv-glass-sheen" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.34" />
-          <stop offset="38%" stopColor="#ffffff" stopOpacity="0.06" />
-          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
-        <pattern
-          id="pv-obscure-pattern"
-          width="12"
-          height="12"
-          patternUnits="userSpaceOnUse"
-        >
-          <circle cx="3" cy="3" r="1.6" fill="#ffffff" opacity="0.28" />
-          <circle cx="9" cy="8" r="1.2" fill="#6f8f98" opacity="0.16" />
-        </pattern>
-      </defs>
-
       <rect
         className="glass-background"
-        x={FRAME.x}
-        y={FRAME.y}
-        width={FRAME.width}
-        height={FRAME.height}
-        rx="5"
-        fill="url(#pv-glass-gradient)"
-      />
 
-      <rect
-        x={FRAME.x + 8}
-        y={FRAME.y + 8}
-        width={Math.max(0, FRAME.width - 16)}
-        height={Math.max(0, FRAME.height - 16)}
+        x={
+          FRAME.x
+        }
+
+        y={
+          FRAME.y
+        }
+
+        width={
+          FRAME.width
+        }
+
+        height={
+          FRAME.height
+        }
+
         rx="4"
-        fill="url(#pv-glass-sheen)"
-        pointerEvents="none"
       />
-
-      {props.glassAppearance === "Yes" && (
-        <rect
-          x={FRAME.x + 9}
-          y={FRAME.y + 9}
-          width={Math.max(0, FRAME.width - 18)}
-          height={Math.max(0, FRAME.height - 18)}
-          rx="4"
-          fill="url(#pv-obscure-pattern)"
-          opacity="0.85"
-          pointerEvents="none"
-        />
-      )}
-
-      {props.glassPane === "Triple" && (
-        <rect
-          x={FRAME.x + 5}
-          y={FRAME.y + 5}
-          width={Math.max(0, FRAME.width - 10)}
-          height={Math.max(0, FRAME.height - 10)}
-          rx="4"
-          fill="none"
-          stroke="rgba(70,105,115,0.28)"
-          strokeWidth="2"
-          pointerEvents="none"
-        />
-      )}
-
 
       {units.map(
         (unit) => {
           const selected =
             unit.id ===
             props.selectedPanel;
-
-          const shownUnit =
-            displayUnit(unit);
 
           return (
             <g
@@ -2880,43 +2328,43 @@ export default function WindowCanvas(
                 }
 
                 x={
-                  shownUnit.x + 3
+                  unit.x + 3
                 }
 
                 y={
-                  shownUnit.y + 3
+                  unit.y + 3
                 }
 
                 width={
                   Math.max(
                     0,
-                    shownUnit.w - 6
+                    unit.w - 6
                   )
                 }
 
                 height={
                   Math.max(
                     0,
-                    shownUnit.h - 6
+                    unit.h - 6
                   )
                 }
               />
 
               {renderUnit(
-                shownUnit
+                unit
               )}
 
               <text
                 className="panel-dimension"
 
                 x={
-                  shownUnit.x +
-                  shownUnit.w / 2
+                  unit.x +
+                  unit.w / 2
                 }
 
                 y={
-                  shownUnit.y +
-                  shownUnit.h -
+                  unit.y +
+                  unit.h -
                   18
                 }
 
@@ -2924,7 +2372,7 @@ export default function WindowCanvas(
               >
                 {(
                   (
-                    shownUnit.w /
+                    unit.w /
                     FRAME.width
                   ) *
                   props.widthInches
@@ -2932,7 +2380,7 @@ export default function WindowCanvas(
                 " ×{" "}
                 {(
                   (
-                    shownUnit.h /
+                    unit.h /
                     FRAME.height
                   ) *
                   props.heightInches
@@ -2947,14 +2395,9 @@ export default function WindowCanvas(
 
       {sortedVertical.map(
         (split) => {
-          const displayPosition =
-            interiorView
-              ? 1 - split.position
-              : split.position;
-
           const x =
             FRAME.x +
-            displayPosition *
+            split.position *
               FRAME.width;
 
           return (
@@ -2966,10 +2409,6 @@ export default function WindowCanvas(
 
               <line
                 className="split-line"
-                style={{
-                  stroke: frameColour,
-                  strokeWidth: 8
-                }}
 
                 x1={x}
                 y1={
@@ -3043,10 +2482,6 @@ export default function WindowCanvas(
 
               <line
                 className="split-line"
-                style={{
-                  stroke: frameColour,
-                  strokeWidth: 8
-                }}
 
                 x1={
                   FRAME.x
@@ -3106,84 +2541,27 @@ export default function WindowCanvas(
         }
       )}
 
-      <g className="outer-frame-profile" pointerEvents="none">
-        <rect
-          x={FRAME.x}
-          y={FRAME.y}
-          width={FRAME.width}
-          height={FRAME.height}
-          rx="5"
-          fill="none"
-          stroke={frameColour}
-          strokeWidth="12"
-        />
-        <rect
-          x={FRAME.x + 7}
-          y={FRAME.y + 7}
-          width={Math.max(0, FRAME.width - 14)}
-          height={Math.max(0, FRAME.height - 14)}
-          rx="4"
-          fill="none"
-          stroke={frameColour}
-          strokeWidth="2"
-          opacity="0.62"
-        />
-        <rect
-          x={FRAME.x + 13}
-          y={FRAME.y + 13}
-          width={Math.max(0, FRAME.width - 26)}
-          height={Math.max(0, FRAME.height - 26)}
-          rx="3"
-          fill="none"
-          stroke={frameColour}
-          strokeWidth="1"
-        />
-      </g>
+      <rect
+        className="outer-frame"
 
-      {props.glassSafety &&
-        props.glassSafety !==
-          "None" && (
-        <g pointerEvents="none">
-          <rect
-            x={
-              FRAME.x +
-              FRAME.width -
-              55
-            }
-            y={
-              FRAME.y +
-              FRAME.height -
-              38
-            }
-            width="38"
-            height="22"
-            rx="4"
-            fill="rgba(255,255,255,0.82)"
-            stroke="rgba(55,70,78,0.45)"
-          />
-          <text
-            x={
-              FRAME.x +
-              FRAME.width -
-              36
-            }
-            y={
-              FRAME.y +
-              FRAME.height -
-              22
-            }
-            textAnchor="middle"
-            fontSize="13"
-            fontWeight="700"
-            fill="#39474d"
-          >
-            {props.glassSafety ===
-            "Tempered"
-              ? "T"
-              : "LAM"}
-          </text>
-        </g>
-      )}
+        x={
+          FRAME.x
+        }
+
+        y={
+          FRAME.y
+        }
+
+        width={
+          FRAME.width
+        }
+
+        height={
+          FRAME.height
+        }
+
+        rx="4"
+      />
 
       <line
         className="frame-resize-hit"
