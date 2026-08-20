@@ -1976,11 +1976,26 @@ export default function WindowCanvas(
                         ? undefined
                         : operation ===
                           "Casement Left"
-                        ? `translate(${unit.w * 0.12} 0) scale(0.82 1)`
+                        ? `
+                          translate(${unit.x} ${liteY + liteHeight / 2})
+                          skewY(-8)
+                          scale(0.68 1)
+                          translate(${-unit.x} ${-(liteY + liteHeight / 2)})
+                        `
                         : operation ===
                           "Casement Right"
-                        ? `translate(${-unit.w * 0.12} 0) scale(0.82 1)`
-                        : `translate(0 ${liteHeight * 0.10}) scale(1 0.84)`;
+                        ? `
+                          translate(${unit.x + unit.w} ${liteY + liteHeight / 2})
+                          skewY(8)
+                          scale(0.68 1)
+                          translate(${-(unit.x + unit.w)} ${-(liteY + liteHeight / 2)})
+                        `
+                        : `
+                          translate(${unit.x + unit.w / 2} ${liteY})
+                          skewX(-7)
+                          scale(1 0.70)
+                          translate(${-(unit.x + unit.w / 2)} ${-liteY})
+                        `;
 
                     return (
                       <>
@@ -2009,6 +2024,91 @@ export default function WindowCanvas(
                             liteHeight
                           )}
                         </g>
+
+                        {isOperating &&
+                          isOpen && (
+                          <g
+                            pointerEvents="none"
+                          >
+                            {operation ===
+                              "Casement Left" && (
+                              <line
+                                x1={
+                                  unit.x +
+                                  unit.w *
+                                    0.68
+                                }
+                                y1={
+                                  liteY + 8
+                                }
+                                x2={
+                                  unit.x +
+                                  unit.w *
+                                    0.80
+                                }
+                                y2={
+                                  liteY +
+                                  liteHeight -
+                                  8
+                                }
+                                stroke="rgba(45,58,64,0.34)"
+                                strokeWidth="3"
+                              />
+                            )}
+
+                            {operation ===
+                              "Casement Right" && (
+                              <line
+                                x1={
+                                  unit.x +
+                                  unit.w *
+                                    0.32
+                                }
+                                y1={
+                                  liteY + 8
+                                }
+                                x2={
+                                  unit.x +
+                                  unit.w *
+                                    0.20
+                                }
+                                y2={
+                                  liteY +
+                                  liteHeight -
+                                  8
+                                }
+                                stroke="rgba(45,58,64,0.34)"
+                                strokeWidth="3"
+                              />
+                            )}
+
+                            {operation ===
+                              "Awning" && (
+                              <line
+                                x1={
+                                  unit.x + 10
+                                }
+                                y1={
+                                  liteY +
+                                  liteHeight *
+                                    0.70
+                                }
+                                x2={
+                                  unit.x +
+                                  unit.w -
+                                  10
+                                }
+                                y2={
+                                  liteY +
+                                  liteHeight *
+                                    0.76
+                                }
+                                stroke="rgba(45,58,64,0.34)"
+                                strokeWidth="3"
+                              />
+                            )}
+                          </g>
+                        )}
 
                         <rect
                           className="lite-hit"
