@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import WindowCanvas from "./WindowCanvas";
 
 import type {
@@ -142,6 +142,29 @@ type WoodSpecies =
 type ViewMode =
   | "Exterior"
   | "Interior";
+
+type DrawingView =
+  | "Configurator"
+  | "On Home";
+
+type HomeOverlay = {
+  x: number;
+  y: number;
+  width: number;
+};
+
+type HomeDrag =
+  | {
+      type: "move";
+      startX: number;
+      startY: number;
+      startOverlay: HomeOverlay;
+    }
+  | {
+      type: "resize";
+      startX: number;
+      startWidth: number;
+    };
 
 type GridStyle =
   | "None"
@@ -706,6 +729,50 @@ const [
 ] =
   useState<ViewMode>(
     "Exterior"
+  );
+
+const [
+  drawingView,
+  setDrawingView
+] =
+  useState<DrawingView>(
+    "Configurator"
+  );
+
+const [
+  homePhoto,
+  setHomePhoto
+] =
+  useState<string | null>(
+    null
+  );
+
+const [
+  homeOverlay,
+  setHomeOverlay
+] =
+  useState<HomeOverlay>({
+    x: 32,
+    y: 24,
+    width: 36
+  });
+
+const [
+  homeDrag,
+  setHomeDrag
+] =
+  useState<HomeDrag | null>(
+    null
+  );
+
+const homePhotoInputRef =
+  useRef<HTMLInputElement | null>(
+    null
+  );
+
+const homeStageRef =
+  useRef<HTMLDivElement | null>(
+    null
   );
 
 const [
@@ -2654,6 +2721,134 @@ const [
     );
   }
 
+  function handleHomePhoto(
+    file: File | null
+  ) {
+    if (!file) {
+      return;
+    }
+
+    const reader =
+      new FileReader();
+
+    reader.onload = () => {
+      if (
+        typeof reader.result ===
+        "string"
+      ) {
+        setHomePhoto(
+          reader.result
+        );
+
+        setHomeOverlay({
+          x: 32,
+          y: 24,
+          width: 36
+        });
+
+        setDrawingView(
+          "On Home"
+        );
+
+        setViewMode(
+          "Exterior"
+        );
+      }
+    };
+
+    reader.readAsDataURL(
+      file
+    );
+  }
+
+  function updateHomeDrag(
+    event: React.PointerEvent<HTMLDivElement>
+  ) {
+    if (!homeDrag) {
+      return;
+    }
+
+    const stage =
+      homeStageRef.current;
+
+    if (!stage) {
+      return;
+    }
+
+    const rect =
+      stage.getBoundingClientRect();
+
+    if (
+      rect.width <= 0 ||
+      rect.height <= 0
+    ) {
+      return;
+    }
+
+    if (
+      homeDrag.type ===
+      "move"
+    ) {
+      const dx =
+        ((event.clientX -
+          homeDrag.startX) /
+          rect.width) *
+        100;
+
+      const dy =
+        ((event.clientY -
+          homeDrag.startY) /
+          rect.height) *
+        100;
+
+      setHomeOverlay(
+        (current) => ({
+          ...current,
+          x: Math.max(
+            0,
+            Math.min(
+              92,
+              homeDrag
+                .startOverlay.x +
+                dx
+            )
+          ),
+          y: Math.max(
+            0,
+            Math.min(
+              90,
+              homeDrag
+                .startOverlay.y +
+                dy
+            )
+          )
+        })
+      );
+
+      return;
+    }
+
+    const dx =
+      ((event.clientX -
+        homeDrag.startX) /
+        rect.width) *
+      100;
+
+    setHomeOverlay(
+      (current) => ({
+        ...current,
+        width: Math.max(
+          12,
+          Math.min(
+            85,
+            homeDrag.startWidth +
+              dx
+          )
+        )
+      })
+    );
+  }
+
   function save() {
     localStorage.setItem(
       "pv-app-react-v17",
@@ -2833,6 +3028,85 @@ const [
           max-width: 100% !important;
         }
 
+        .home-photo-view {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .home-photo-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .home-photo-stage {
+          position: relative;
+          flex: 1 1 auto;
+          min-height: 320px;
+          overflow: hidden;
+          border-radius: 10px;
+          background: #e8ebed;
+          touch-action: none;
+        }
+
+        .home-photo-stage > img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          user-select: none;
+          pointer-events: none;
+        }
+
+        .home-window-overlay {
+          position: absolute;
+          cursor: move;
+          touch-action: none;
+          filter: drop-shadow(0 5px 8px rgba(0,0,0,0.22));
+        }
+
+        .home-window-overlay .window-svg {
+          display: block;
+          width: 100% !important;
+          height: 100% !important;
+          pointer-events: none;
+        }
+
+        .home-resize-handle {
+          position: absolute;
+          right: -10px;
+          bottom: -10px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 2px solid #fff;
+          background: #24292f;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+          cursor: nwse-resize;
+          touch-action: none;
+        }
+
+        .home-empty-state {
+          height: 100%;
+          min-height: 320px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 24px;
+          box-sizing: border-box;
+          border: 1px dashed #a8afb5;
+          border-radius: 10px;
+          background: #f7f8f9;
+        }
+
         @media (max-width: 760px) {
           .pv-responsive-layout {
             display: flex !important;
@@ -2899,6 +3173,12 @@ const [
 
           .pv-options-panel .number-row {
             grid-template-columns: 1fr !important;
+          }
+
+          .home-photo-stage,
+          .home-empty-state {
+            min-height: 0;
+            height: 100%;
           }
         }
       `}</style>
@@ -4583,11 +4863,15 @@ const [
                     ? "active"
                     : ""
                 }
-                onClick={() =>
+                onClick={() => {
+                  setDrawingView(
+                    "Configurator"
+                  );
+
                   setViewMode(
                     "Exterior"
-                  )
-                }
+                  );
+                }}
               >
                 Exterior
               </button>
@@ -4599,13 +4883,37 @@ const [
                     ? "active"
                     : ""
                 }
-                onClick={() =>
+                onClick={() => {
+                  setDrawingView(
+                    "Configurator"
+                  );
+
                   setViewMode(
                     "Interior"
-                  )
-                }
+                  );
+                }}
               >
                 Interior
+              </button>
+
+              <button
+                className={
+                  drawingView ===
+                  "On Home"
+                    ? "active"
+                    : ""
+                }
+                onClick={() => {
+                  setDrawingView(
+                    "On Home"
+                  );
+
+                  setViewMode(
+                    "Exterior"
+                  );
+                }}
+              >
+                View on Home
               </button>
 
               <button
@@ -4618,8 +4926,10 @@ const [
 
           </div>
 
-          <div className="canvas-wrap pv-canvas-wrap">
-
+          {drawingView ===
+          "Configurator" ? (
+            <>
+              <div className="canvas-wrap pv-canvas-wrap">
             <WindowCanvas
               key={`${productType}-${patioPanelCount}-${patioHanding}-${viewMode}`}
               widthInches={
@@ -4767,28 +5077,325 @@ const [
                 setLiteOperation
               }
             />
+              </div>
 
-          </div>
+              <p className="hint">
+                Tap a unit to configure it.
+              </p>
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  color: "#5f6670",
+                  textAlign: "center",
+                  maxWidth: 920
+                }}
+              >
+                <strong>
+                  {viewMode} View
+                </strong>
+                {" • "}
+                {configurationSummary}
+              </div>
+            </>
+          ) : (
+            <div className="home-photo-view">
+              <input
+                ref={homePhotoInputRef}
+                type="file"
+                accept="image/*"
+                style={{
+                  display: "none"
+                }}
+                onChange={(event) =>
+                  handleHomePhoto(
+                    event.target.files?.[0] ??
+                      null
+                  )
+                }
+              />
 
-          <p className="hint">
-            Tap a unit to configure it.
-          </p>
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 12,
-              lineHeight: 1.45,
-              color: "#5f6670",
-              textAlign: "center",
-              maxWidth: 920
-            }}
-          >
-            <strong>
-              {viewMode} View
-            </strong>
-            {" • "}
-            {configurationSummary}
-          </div>
+              <div className="home-photo-toolbar">
+                <div>
+                  <strong>
+                    View on Home
+                  </strong>
+                  <span
+                    style={{
+                      marginLeft: 8,
+                      fontSize: 12,
+                      color: "#697178"
+                    }}
+                  >
+                    Drag the window. Use the corner handle to resize it.
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    homePhotoInputRef.current?.click()
+                  }
+                >
+                  {homePhoto
+                    ? "Change Photo"
+                    : "Upload Photo"}
+                </button>
+              </div>
+
+              {homePhoto ? (
+                <div
+                  ref={homeStageRef}
+                  className="home-photo-stage"
+                  onPointerMove={
+                    updateHomeDrag
+                  }
+                  onPointerUp={() =>
+                    setHomeDrag(
+                      null
+                    )
+                  }
+                  onPointerCancel={() =>
+                    setHomeDrag(
+                      null
+                    )
+                  }
+                >
+                  <img
+                    src={homePhoto}
+                    alt="Customer home"
+                  />
+
+                  <div
+                    className="home-window-overlay"
+                    style={{
+                      left: `${homeOverlay.x}%`,
+                      top: `${homeOverlay.y}%`,
+                      width: `${homeOverlay.width}%`,
+                      aspectRatio: `${state.overallWidth} / ${state.overallHeight}`
+                    }}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+
+                      setHomeDrag({
+                        type: "move",
+                        startX:
+                          event.clientX,
+                        startY:
+                          event.clientY,
+                        startOverlay: {
+                          ...homeOverlay
+                        }
+                      });
+
+                      event.currentTarget.setPointerCapture?.(
+                        event.pointerId
+                      );
+                    }}
+                  >
+            <WindowCanvas
+              key={`home-${productType}-${patioPanelCount}-${patioHanding}-${viewMode}`}
+              widthInches={
+                state.overallWidth
+              }
+
+              heightInches={
+                state.overallHeight
+              }
+
+              verticalSplits={
+                state.verticalSplits
+              }
+
+              horizontalSplits={
+                state.horizontalSplits
+              }
+
+              selectedPanel={null}
+
+              panelTypes={Object.fromEntries(
+                Object.entries(
+                  state.panelConfigs
+                ).map(
+                  ([key, value]) => [
+                    key,
+                    value.type
+                  ]
+                )
+              )}
+
+              windowUnits={
+                state.windowUnits
+              }
+
+              pictureStyles={
+                pictureStyles
+              }
+
+              productType={
+                productType
+              }
+
+              sliderOrientation={
+                sliderOrientation
+              }
+
+              horizontalSliderType={
+                horizontalSliderType
+              }
+
+              verticalSliderType={
+                verticalSliderType
+              }
+
+              singleVentHanding={
+                singleVentHanding
+              }
+
+              patioPanelCount={
+                patioPanelCount
+              }
+
+              patioHanding={
+                patioHanding
+              }
+
+              viewMode={
+                viewMode
+              }
+
+              windowType={
+                windowType
+              }
+
+              exteriorColour={
+                exteriorColour
+              }
+
+              interiorColour={
+                interiorColour
+              }
+
+              woodSpecies={
+                woodSpecies
+              }
+
+              woodFinish={
+                woodFinish
+              }
+
+              woodStain={
+                woodStain
+              }
+
+              flangeType={flangeType}
+              glassAppearance={glassAppearance}
+              glassPane={glassPane}
+              glassLowEPackage={lowEPackage}
+              glassSafety={glassSafety}
+
+              gridStyle={
+                gridStyle
+              }
+
+              gridColumns={0}
+              gridRows={0}
+
+              mode={mode}
+
+              onAddVertical={() => {}}
+              onAddHorizontal={() => {}}
+
+              onMoveVertical={
+                moveVertical
+              }
+
+              onMoveHorizontal={
+                moveHorizontal
+              }
+
+              onSelectPanel={
+                handleSelectUnit
+              }
+
+              onOverallWidthChange={
+                handleFrameWidthChange
+              }
+
+              onOverallHeightChange={
+                handleFrameHeightChange
+              }
+
+              onMoveUnitHorizontalSplit={
+                moveUnitHorizontalSplit
+              }
+
+              onMoveUnitVerticalSplit={
+                moveUnitVerticalSplit
+              }
+
+              onSetLiteOperation={
+                setLiteOperation
+              }
+              presentationMode={true}
+            />
+
+                    <div
+                      className="home-resize-handle"
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+
+                        setHomeDrag({
+                          type: "resize",
+                          startX:
+                            event.clientX,
+                          startWidth:
+                            homeOverlay.width
+                        });
+
+                        event.currentTarget.setPointerCapture?.(
+                          event.pointerId
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="home-empty-state">
+                  <div>
+                    <strong
+                      style={{
+                        display: "block",
+                        marginBottom: 8
+                      }}
+                    >
+                      Put this window on the customer's home
+                    </strong>
+
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "#697178",
+                        marginBottom: 14
+                      }}
+                    >
+                      Upload or take a photo, then position and resize the configured window over the opening.
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        homePhotoInputRef.current?.click()
+                      }
+                    >
+                      Upload Home Photo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
         </section>
 

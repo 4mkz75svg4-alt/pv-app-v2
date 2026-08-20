@@ -135,6 +135,8 @@ type Props = {
     operation: LiteOperation,
     pictureStyle?: PictureStyle
   ) => void;
+
+  presentationMode?: boolean;
 };
 
 type FrameEdge =
@@ -2025,91 +2027,6 @@ export default function WindowCanvas(
                           )}
                         </g>
 
-                        {isOperating &&
-                          isOpen && (
-                          <g
-                            pointerEvents="none"
-                          >
-                            {operation ===
-                              "Casement Left" && (
-                              <line
-                                x1={
-                                  unit.x +
-                                  unit.w *
-                                    0.68
-                                }
-                                y1={
-                                  liteY + 8
-                                }
-                                x2={
-                                  unit.x +
-                                  unit.w *
-                                    0.80
-                                }
-                                y2={
-                                  liteY +
-                                  liteHeight -
-                                  8
-                                }
-                                stroke="rgba(45,58,64,0.34)"
-                                strokeWidth="3"
-                              />
-                            )}
-
-                            {operation ===
-                              "Casement Right" && (
-                              <line
-                                x1={
-                                  unit.x +
-                                  unit.w *
-                                    0.32
-                                }
-                                y1={
-                                  liteY + 8
-                                }
-                                x2={
-                                  unit.x +
-                                  unit.w *
-                                    0.20
-                                }
-                                y2={
-                                  liteY +
-                                  liteHeight -
-                                  8
-                                }
-                                stroke="rgba(45,58,64,0.34)"
-                                strokeWidth="3"
-                              />
-                            )}
-
-                            {operation ===
-                              "Awning" && (
-                              <line
-                                x1={
-                                  unit.x + 10
-                                }
-                                y1={
-                                  liteY +
-                                  liteHeight *
-                                    0.70
-                                }
-                                x2={
-                                  unit.x +
-                                  unit.w -
-                                  10
-                                }
-                                y2={
-                                  liteY +
-                                  liteHeight *
-                                    0.76
-                                }
-                                stroke="rgba(45,58,64,0.34)"
-                                strokeWidth="3"
-                              />
-                            )}
-                          </g>
-                        )}
-
                         <rect
                           className="lite-hit"
 
@@ -2358,7 +2275,11 @@ export default function WindowCanvas(
 
       className="window-svg"
 
-      viewBox="0 0 1000 625"
+      viewBox={
+        props.presentationMode
+          ? `${FRAME.x - 16} ${FRAME.y - 16} ${FRAME.width + 32} ${FRAME.height + 32}`
+          : "0 0 1000 625"
+      }
 
       onPointerMove={
         pointerMove
@@ -2418,6 +2339,7 @@ export default function WindowCanvas(
               }
             >
 
+              {!props.presentationMode && (
               <rect
                 className={
                   `panel-outline ${
@@ -2450,10 +2372,13 @@ export default function WindowCanvas(
                 }
               />
 
+              )}
+
               {renderUnit(
                 unit
               )}
 
+              {!props.presentationMode && (
               <text
                 className="panel-dimension"
 
@@ -2487,6 +2412,7 @@ export default function WindowCanvas(
                 ).toFixed(1)}
                 "
               </text>
+              )}
 
             </g>
           );
@@ -2787,7 +2713,8 @@ export default function WindowCanvas(
         }
       />
 
-      {litePopup && (
+      {!props.presentationMode &&
+        litePopup && (
         <foreignObject
           x={
             litePopup.x
