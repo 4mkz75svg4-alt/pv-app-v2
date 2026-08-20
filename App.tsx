@@ -731,6 +731,40 @@ const [
     "Exterior"
   );
 
+
+const [
+  previewZoom,
+  setPreviewZoom
+] =
+  useState<number>(
+    1
+  );
+
+const [
+  previewPan,
+  setPreviewPan
+] =
+  useState({
+    x: 0,
+    y: 0
+  });
+
+const [
+  previewDrag,
+  setPreviewDrag
+] =
+  useState<{
+    x: number;
+    y: number;
+    startX: number;
+    startY: number;
+  } | null>(
+    null
+  );
+
+const detailMode =
+  previewZoom > 1;
+
 const [
   drawingView,
   setDrawingView
@@ -980,6 +1014,13 @@ const [
     setViewMode(
       "Exterior"
     );
+    setPreviewZoom(
+      1
+    );
+    setPreviewPan({
+      x: 0,
+      y: 0
+    });
     setGlassAppearance("Clear");
     setGlassPane("Double");
     setGlassLowE(true);
@@ -4916,6 +4957,109 @@ const [
                 View on Home
               </button>
 
+
+              <button
+                className={
+                  detailMode
+                    ? "active"
+                    : ""
+                }
+                onClick={() => {
+                  setDrawingView(
+                    "Configurator"
+                  );
+
+                  if (
+                    detailMode
+                  ) {
+                    setPreviewZoom(
+                      1
+                    );
+
+                    setPreviewPan({
+                      x: 0,
+                      y: 0
+                    });
+                  } else {
+                    setPreviewZoom(
+                      2
+                    );
+                  }
+                }}
+              >
+                Frame Detail
+              </button>
+
+              <button
+                onClick={() => {
+                  setDrawingView(
+                    "Configurator"
+                  );
+
+                  setPreviewZoom(
+                    (current) =>
+                      Math.max(
+                        1,
+                        Number(
+                          (
+                            current -
+                            0.25
+                          ).toFixed(
+                            2
+                          )
+                        )
+                      )
+                  );
+                }}
+                disabled={
+                  previewZoom <= 1
+                }
+              >
+                −
+              </button>
+
+              <span
+                style={{
+                  minWidth: 46,
+                  textAlign: "center",
+                  fontSize: 12,
+                  fontWeight: 600
+                }}
+              >
+                {Math.round(
+                  previewZoom *
+                    100
+                )}%
+              </span>
+
+              <button
+                onClick={() => {
+                  setDrawingView(
+                    "Configurator"
+                  );
+
+                  setPreviewZoom(
+                    (current) =>
+                      Math.min(
+                        3,
+                        Number(
+                          (
+                            current +
+                            0.25
+                          ).toFixed(
+                            2
+                          )
+                        )
+                      )
+                  );
+                }}
+                disabled={
+                  previewZoom >= 3
+                }
+              >
+                +
+              </button>
+
               <button
                 onClick={reset}
               >
@@ -4929,7 +5073,119 @@ const [
           {drawingView ===
           "Configurator" ? (
             <>
-              <div className="canvas-wrap pv-canvas-wrap">
+              <div
+                className="canvas-wrap pv-canvas-wrap"
+                style={{
+                  cursor:
+                    detailMode
+                      ? previewDrag
+                        ? "grabbing"
+                        : "grab"
+                      : "default",
+                  touchAction:
+                    detailMode
+                      ? "none"
+                      : "auto"
+                }}
+                onPointerDownCapture={(event) => {
+                  if (
+                    !detailMode
+                  ) {
+                    return;
+                  }
+
+                  event.stopPropagation();
+
+                  setPreviewDrag({
+                    x: event.clientX,
+                    y: event.clientY,
+                    startX:
+                      previewPan.x,
+                    startY:
+                      previewPan.y
+                  });
+
+                  event.currentTarget.setPointerCapture?.(
+                    event.pointerId
+                  );
+                }}
+                onPointerMove={(event) => {
+                  if (
+                    !detailMode ||
+                    !previewDrag
+                  ) {
+                    return;
+                  }
+
+                  const pixelsToSvg =
+                    1000 /
+                    Math.max(
+                      360,
+                      event.currentTarget.clientWidth
+                    );
+
+                  setPreviewPan({
+                    x:
+                      previewDrag.startX -
+                      (
+                        event.clientX -
+                        previewDrag.x
+                      ) *
+                        pixelsToSvg /
+                        previewZoom,
+                    y:
+                      previewDrag.startY -
+                      (
+                        event.clientY -
+                        previewDrag.y
+                      ) *
+                        pixelsToSvg /
+                        previewZoom
+                  });
+                }}
+                onPointerUp={(event) => {
+                  if (
+                    !detailMode
+                  ) {
+                    return;
+                  }
+
+                  setPreviewDrag(
+                    null
+                  );
+
+                  event.currentTarget.releasePointerCapture?.(
+                    event.pointerId
+                  );
+                }}
+              >
+                {detailMode && (
+                  <div
+                    style={{
+                      position:
+                        "absolute",
+                      zIndex: 5,
+                      left: 12,
+                      top: 12,
+                      padding:
+                        "7px 10px",
+                      borderRadius: 7,
+                      background:
+                        "rgba(255,255,255,0.92)",
+                      border:
+                        "1px solid rgba(55,70,78,0.14)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color:
+                        "#39474d",
+                      pointerEvents:
+                        "none"
+                    }}
+                  >
+                    Drag to inspect frame
+                  </div>
+                )}
+
             <WindowCanvas
               key={`${productType}-${patioPanelCount}-${patioHanding}-${viewMode}`}
               widthInches={
@@ -5001,6 +5257,22 @@ const [
 
               viewMode={
                 viewMode
+              }
+
+              previewZoom={
+                previewZoom
+              }
+
+              previewPanX={
+                previewPan.x
+              }
+
+              previewPanY={
+                previewPan.y
+              }
+
+              detailMode={
+                detailMode
               }
 
               windowType={

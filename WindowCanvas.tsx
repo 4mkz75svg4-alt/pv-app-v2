@@ -137,6 +137,11 @@ type Props = {
   ) => void;
 
   presentationMode?: boolean;
+
+  previewZoom?: number;
+  previewPanX?: number;
+  previewPanY?: number;
+  detailMode?: boolean;
 };
 
 type FrameEdge =
@@ -791,39 +796,117 @@ export default function WindowCanvas(
    const inset = 14;
 
     return (
-      <rect
-        className={
-          slider
-            ? "slider-sash-outline"
-            : "sash-outline"
-        }
+      <>
+        <rect
+          className={
+            slider
+              ? "slider-sash-outline"
+              : "sash-outline"
+          }
 
-        x={
-          x + inset
-        }
+          x={
+            x + inset
+          }
 
-        y={
-          y + inset
-        }
+          y={
+            y + inset
+          }
 
-        width={
-          Math.max(
-            0,
-            w -
-              inset * 2
-          )
-        }
+          width={
+            Math.max(
+              0,
+              w -
+                inset * 2
+            )
+          }
 
-        height={
-          Math.max(
-            0,
-            h -
-              inset * 2
-          )
-        }
+          height={
+            Math.max(
+              0,
+              h -
+                inset * 2
+            )
+          }
 
-        rx="2"
-      />
+          rx="2"
+        />
+
+        {props.detailMode && (
+          <>
+            <rect
+              x={
+                x +
+                inset +
+                6
+              }
+              y={
+                y +
+                inset +
+                6
+              }
+              width={
+                Math.max(
+                  0,
+                  w -
+                    inset *
+                      2 -
+                    12
+                )
+              }
+              height={
+                Math.max(
+                  0,
+                  h -
+                    inset *
+                      2 -
+                    12
+                )
+              }
+              rx="2"
+              fill="none"
+              stroke="rgba(52,65,71,0.36)"
+              strokeWidth="2"
+              pointerEvents="none"
+            />
+
+            <rect
+              x={
+                x +
+                inset +
+                11
+              }
+              y={
+                y +
+                inset +
+                11
+              }
+              width={
+                Math.max(
+                  0,
+                  w -
+                    inset *
+                      2 -
+                    22
+                )
+              }
+              height={
+                Math.max(
+                  0,
+                  h -
+                    inset *
+                      2 -
+                    22
+                )
+              }
+              rx="1"
+              fill="none"
+              stroke="rgba(52,65,71,0.20)"
+              strokeWidth="1.5"
+              pointerEvents="none"
+            />
+          </>
+        )}
+      </>
     );
   }
 
@@ -2278,6 +2361,35 @@ export default function WindowCanvas(
       viewBox={
         props.presentationMode
           ? `${FRAME.x - 16} ${FRAME.y - 16} ${FRAME.width + 32} ${FRAME.height + 32}`
+          : (props.previewZoom ?? 1) > 1
+          ? (() => {
+              const zoom =
+                Math.max(
+                  1,
+                  Math.min(
+                    3,
+                    props.previewZoom ?? 1
+                  )
+                );
+
+              const viewWidth =
+                1000 / zoom;
+
+              const viewHeight =
+                625 / zoom;
+
+              const centerX =
+                500 +
+                (props.previewPanX ??
+                  0);
+
+              const centerY =
+                312.5 +
+                (props.previewPanY ??
+                  0);
+
+              return `${centerX - viewWidth / 2} ${centerY - viewHeight / 2} ${viewWidth} ${viewHeight}`;
+            })()
           : "0 0 1000 625"
       }
 
@@ -2306,6 +2418,10 @@ export default function WindowCanvas(
 
       <rect
         className="glass-background"
+
+        fill="rgba(226, 242, 246, 0.34)"
+        stroke="rgba(112, 145, 154, 0.18)"
+        strokeWidth="1"
 
         x={
           FRAME.x
@@ -2588,6 +2704,50 @@ export default function WindowCanvas(
 
         rx="4"
       />
+
+      {props.detailMode && (
+        <g
+          pointerEvents="none"
+        >
+          <rect
+            x={
+              FRAME.x + 8
+            }
+            y={
+              FRAME.y + 8
+            }
+            width={
+              FRAME.width - 16
+            }
+            height={
+              FRAME.height - 16
+            }
+            rx="3"
+            fill="none"
+            stroke="rgba(52,65,71,0.42)"
+            strokeWidth="2"
+          />
+
+          <rect
+            x={
+              FRAME.x + 19
+            }
+            y={
+              FRAME.y + 19
+            }
+            width={
+              FRAME.width - 38
+            }
+            height={
+              FRAME.height - 38
+            }
+            rx="2"
+            fill="none"
+            stroke="rgba(52,65,71,0.22)"
+            strokeWidth="2"
+          />
+        </g>
+      )}
 
       <line
         className="frame-resize-hit"
